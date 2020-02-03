@@ -50,6 +50,10 @@ dependencies {
 
 }
 
+application {
+    mainClassName = "com.github.seliba.devcordbot.LauncherKt"
+}
+
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "13"
