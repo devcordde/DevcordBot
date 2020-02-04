@@ -30,6 +30,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(kotlin("reflect"))
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.3")
 
     implementation("io.github.microutils", "kotlin-logging", "1.7.7")
     implementation("org.slf4j", "slf4j-api", "1.7.30")
@@ -56,10 +58,10 @@ application {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "13"
+        kotlinOptions.jvmTarget = "12"
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "13"
+        kotlinOptions.jvmTarget = "12"
     }
 
     jar {
@@ -67,6 +69,9 @@ tasks {
     }
 }
 
+/**
+ * Represents the mutable value of a [Property].
+ */
 var <T> Property<T>.value: T?
     get() = orNull
     set(value) = set(value)
