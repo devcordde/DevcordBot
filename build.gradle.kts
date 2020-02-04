@@ -58,10 +58,10 @@ application {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "13"
+        kotlinOptions.jvmTarget = "12"
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "13"
+        kotlinOptions.jvmTarget = "12"
     }
 
     jar {
@@ -69,6 +69,9 @@ tasks {
     }
 }
 
+/**
+ * Represents the mutable value of a [Property].
+ */
 var <T> Property<T>.value: T?
     get() = orNull
     set(value) = set(value)
