@@ -67,6 +67,9 @@ tasks {
     }
 }
 
+/**
+ * Represents the mutable value of a [Property].
+ */
 var <T> Property<T>.value: T?
     get() = orNull
     set(value) = set(value)
