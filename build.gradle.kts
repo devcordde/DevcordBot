@@ -43,6 +43,7 @@ dependencies {
     implementation("org.jetbrains.exposed", "exposed-dao", "0.20.1")
     implementation("org.jetbrains.exposed", "exposed-jdbc", "0.20.1")
     implementation("org.postgresql", "postgresql", "42.2.9")
+    implementation("com.zaxxer", "HikariCP", "3.4.2")
 
     implementation("net.dv8tion", "JDA", "4.1.1_105") {
         exclude(module = "opus-java")
