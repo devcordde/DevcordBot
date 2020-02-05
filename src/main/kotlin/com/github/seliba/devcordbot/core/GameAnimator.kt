@@ -24,12 +24,13 @@ import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Activity
+import java.io.Closeable
 import java.util.concurrent.TimeUnit
 
 /**
- * Animates the bots activity status.
+ * Animates the bot's activity status.
  */
-class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) {
+class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>): Closeable {
 
     @ObsoleteCoroutinesApi
     private val channel = ticker(TimeUnit.SECONDS.toMillis(30), 0)
@@ -49,6 +50,15 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
 
     private fun animate() {
         jda.presence.activity = games.random().animate(jda)
+    }
+
+    /**
+     * Closes the resources used by the [GameAnimator].
+     */
+    @ObsoleteCoroutinesApi
+    override fun close() {
+        channel.cancel()
+        pool.close()
     }
 
     /**

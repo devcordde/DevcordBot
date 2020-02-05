@@ -19,15 +19,18 @@ package com.github.seliba.devcordbot
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.core.GameAnimator
 import io.github.cdimascio.dotenv.dotenv
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Activity
 import kotlin.system.exitProcess
+
 
 private val logger = KotlinLogging.logger {}
 
 /**
  * DevCordBot entry point.
  */
+@ObsoleteCoroutinesApi
 fun main() {
     val env = dotenv()
     val token = env["DISCORD_TOKEN"]
@@ -49,5 +52,5 @@ fun main() {
     }
 
     logger.info { "Launching DevCordBot..." }
-    DevCordBot(token, games)
+    DevCordBot(token, games, env)
 }
