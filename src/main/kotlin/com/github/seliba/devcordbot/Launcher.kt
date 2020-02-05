@@ -16,6 +16,7 @@
 
 package com.github.seliba.devcordbot
 
+import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.core.GameAnimator
 import io.github.cdimascio.dotenv.dotenv
 import mu.KotlinLogging
@@ -25,7 +26,7 @@ import kotlin.system.exitProcess
 private val logger = KotlinLogging.logger {}
 
 /**
- * DevcordBot entry point.
+ * DevCordBot entry point.
  */
 fun main() {
     val env = dotenv()
@@ -39,7 +40,7 @@ fun main() {
     }
 
     if (token == null) {
-        logger.error { "The Discord bot token can't be null" }
+        logger.error { "The Discord bot token must not be null" }
         exitProcess(1)
     }
     if (games == null) {
@@ -47,6 +48,6 @@ fun main() {
         games = listOf(GameAnimator.AnimatedGame("with errors"))
     }
 
-    logger.info { "Launching DevcordBot..." }
-    DevcordBot(token, games)
+    logger.info { "Launching DevCordBot..." }
+    DevCordBot(token, games)
 }
