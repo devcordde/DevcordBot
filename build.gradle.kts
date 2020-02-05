@@ -60,7 +60,6 @@ tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "12"
     }
-
     compileTestKotlin {
         kotlinOptions.jvmTarget = "12"
     }

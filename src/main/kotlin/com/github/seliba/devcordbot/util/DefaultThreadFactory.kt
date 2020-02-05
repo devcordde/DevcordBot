@@ -16,12 +16,13 @@
 
 package com.github.seliba.devcordbot.util
 
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Modified version of [java.util.concurrent.Executors] default thread factory with custom name support.
+ * A modified version of [java.util.concurrent.Executors] default thread factory with custom name support.
  * Format `name-pool-poolNumber-thread-threadNumber`
  *
  * @see java.util.concurrent.Executors
@@ -39,6 +40,11 @@ class DefaultThreadFactory(poolName: String?) : ThreadFactory {
                 "-thread-"
     }
 
+    /**
+     * Creates a new [Thread] and returns it
+     * @return The newly created [Thread]
+     * @see Thread
+     */
     override fun newThread(runnable: Runnable): Thread {
         val t = Thread(
             group, runnable,
@@ -56,6 +62,7 @@ class DefaultThreadFactory(poolName: String?) : ThreadFactory {
         /**
          * Creates a new [Executors.newSingleThreadExecutor] using [poolName].
          */
-        fun newSingleThreadExecutor(poolName: String?) = Executors.newSingleThreadExecutor(DefaultThreadFactory(poolName))
+        fun newSingleThreadExecutor(poolName: String?): ExecutorService =
+            Executors.newSingleThreadExecutor(DefaultThreadFactory(poolName))
     }
 }
