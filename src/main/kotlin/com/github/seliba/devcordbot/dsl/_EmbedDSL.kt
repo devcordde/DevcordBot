@@ -174,7 +174,7 @@ class EmbedConvention {
         setThumbnail(thumbnail)
         setImage(image)
         setTimestamp(timeStamp)
-        this@EmbedConvention.fields.addAll(fields)
+        this@EmbedConvention.fields.forEach { addField(it) }
     }
 
     /**

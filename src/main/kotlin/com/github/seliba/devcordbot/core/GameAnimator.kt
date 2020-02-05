@@ -41,7 +41,6 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
     @ObsoleteCoroutinesApi
     fun start() {
         GlobalScope.launch(pool) {
-
             for (unit in channel) {
                 animate()
             }
