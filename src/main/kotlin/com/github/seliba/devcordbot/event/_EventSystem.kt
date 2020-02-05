@@ -14,6 +14,8 @@
  *    limitations under the License.
  */
 
+@file:Suppress("ReplaceNotNullAssertionWithElvisReturn")
+
 package com.github.seliba.devcordbot.event
 
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
