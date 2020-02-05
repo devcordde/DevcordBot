@@ -48,6 +48,11 @@ typealias TitleBuilder = EmbedConvention.TitleConvention.() -> Unit
 typealias AuthorBuilder = EmbedConvention.AuthorConvention.() -> Unit
 
 /**
+ * DSL builder for [MessageEmbed] footers.
+ */
+typealias FooterBuilder = EmbedConvention.FooterConvention.() -> Unit
+
+/**
  * DSL builder for [MessageEmbed]s.
  * @see EmbedCreator
  */
@@ -105,6 +110,22 @@ class EmbedConvention {
      */
     fun author(builder: AuthorBuilder) {
         this.author = AuthorConvention().apply(builder)
+    }
+
+    /**
+     * Set's the text of the footer to [text].
+     */
+    fun footer(text: String) {
+        this.footer = FooterConvention(text)
+    }
+
+    /**
+     * Sets the footer of the embed to the author provided by the [builder].
+     * @see FooterBuilder
+     * @see FooterConvention
+     */
+    fun footer(builder: FooterBuilder) {
+        this.footer = FooterConvention().apply(builder)
     }
 
     /**
