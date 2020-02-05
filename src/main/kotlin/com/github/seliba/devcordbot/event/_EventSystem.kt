@@ -14,8 +14,6 @@
  *    limitations under the License.
  */
 
-@file:Suppress("ReplaceNotNullAssertionWithElvisReturn")
-
 package com.github.seliba.devcordbot.event
 
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
@@ -31,6 +29,9 @@ import kotlin.reflect.KType
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.*
 
+/**
+ * @see SubscribeEvent
+ */
 typealias EventSubscriber = SubscribeEvent
 
 /**
@@ -49,12 +50,21 @@ class AnnotatedEventManger : IEventManager {
     private val listeners = mutableListOf<Any>()
     private val functions = mutableMapOf<KType, MutableSet<InstanceFunction>>()
 
+    /**
+     * @see IEventManager.getRegisteredListeners
+     */
     override fun getRegisteredListeners(): List<Any> = listeners.toList()
 
+    /**
+     * @see IEventManager.register
+     */
     override fun register(listener: Any): Unit = if (this.listeners.add(listeners)) {
         addMethods(listener)
     } else Unit
 
+    /**
+     * @see IEventManager.unregister
+     */
     override fun unregister(listener: Any): Unit = if (listeners.remove(listener)) {
         removeMethods(listener)
     } else Unit
@@ -106,18 +116,27 @@ class AnnotatedEventManger : IEventManager {
         list.removeIf { it.instance == listener }
     }
 
+    /**
+     * @see IEventManager.handle
+     */
     override fun handle(event: GenericEvent) {
-        var eventType: KClass<*>? = event::class
-        val callParents = eventType!!.findAnnotation<EventDescriber>()?.callParents ?: true
-        while (eventType != null) {
-            val functions = findSubscriberList(eventType.starProjectedType) ?: return
+        val eventType: KClass<*>? = event::class
+        @Suppress("ReplaceNotNullAssertionWithElvisReturn") val callParents =
+            eventType!!.findAnnotation<EventDescriber>()?.callParents ?: true
+
+        tailrec fun callEvent(eventClass: KClass<*>) {
+            val functions = this.functions[eventClass.starProjectedType] ?: return
             functions.forEach {
                 GlobalScope.launch(coroutineContext) {
                     it.call(event)
                 }
             }
-            eventType = if (eventType == GenericEvent::class || !callParents) null else eventType.superclasses.first()
+            if (eventType == GenericEvent::class || !callParents) {
+                callEvent(eventType.superclasses.first())
+            }
         }
+
+        callEvent(eventType)
     }
 
     private data class InstanceFunction(val instance: Any, private val function: KFunction<*>) {
