@@ -36,15 +36,15 @@ dependencies {
     implementation("io.github.microutils", "kotlin-logging", "1.7.7")
     implementation("org.slf4j", "slf4j-api", "1.7.30")
     implementation("ch.qos.logback", "logback-classic", "1.2.3")
-    implementation("io.sentry", "sentry", "1.7.27")
-    implementation("io.sentry", "sentry-logback", "1.7.27")
+//    implementation("io.sentry", "sentry", "1.7.27")
+//    implementation("io.sentry", "sentry-logback", "1.7.27")
 
     implementation("org.jetbrains.exposed", "exposed-core", "0.20.1")
     implementation("org.jetbrains.exposed", "exposed-dao", "0.20.1")
     implementation("org.jetbrains.exposed", "exposed-jdbc", "0.20.1")
     implementation("org.postgresql", "postgresql", "42.2.9")
 
-    implementation("net.dv8tion", "JDA", "4.1.1_105") {
+    implementation("net.dv8tion", "JDA", "4.0.0_43") {
         exclude(module = "opus-java")
     }
 
