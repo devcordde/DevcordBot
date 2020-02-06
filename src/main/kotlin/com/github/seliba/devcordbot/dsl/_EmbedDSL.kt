@@ -188,7 +188,7 @@ class EmbedConvention {
      * Represents a DSL convention for embed authors.
      * @property name the name of the author
      * @property url the url the author links to
-     * @property iconUrl the url to the authors icon/avatar
+     * @property iconUrl the url to the authors' icon/avatar
      */
     class AuthorConvention(var name: String? = null, var url: String? = null, var iconUrl: String? = null)
 

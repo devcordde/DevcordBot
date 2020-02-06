@@ -64,7 +64,7 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>):
     /**
      * Represents an animated game.
      * @property content The games content
-     * @property type The type of the activity this game should be displayed as
+     * @property type The activity type this game should be displayed as
      */
     data class AnimatedGame(val content: String, val type: Activity.ActivityType = Activity.ActivityType.DEFAULT) {
         /**
