@@ -16,19 +16,16 @@
 
 package com.github.seliba.devcordbot.command
 
-import com.github.seliba.devcordbot.command.perrmission.Permissions
-import net.dv8tion.jda.api.entities.Member
+import com.github.seliba.devcordbot.command.context.Context
+import kotlin.coroutines.CoroutineContext
 
 /**
- * Handler for command permissions.
+ * Interface for handling errors during command execution
  */
-interface PermissionHandler {
+interface ErrorHandler {
 
     /**
-     * Checks whether the [executor] covers the [permissions] or not.
+     * Handles the [exception] in [context].
      */
-    fun isCovered(
-        permissions: Permissions,
-        executor: Member
-    ): Boolean
+    fun handleException(exception: Throwable, context: Context, thread: Thread, coroutineContext: CoroutineContext)
 }

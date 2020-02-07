@@ -19,6 +19,7 @@
 package com.github.seliba.devcordbot.dsl
 
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.requests.restaction.MessageAction
@@ -201,8 +202,15 @@ class EmbedConvention {
 }
 
 /**
- * Sends an embed defined by an [EmbedConvention] into the channel.
+ * Sends embed defined by an [EmbedConvention] into the channel.
  * @see embed
  */
 fun MessageChannel.sendMessage(embedConvention: EmbedConvention): MessageAction =
     sendMessage(embedConvention.toEmbedBuilder().build())
+
+/**
+ * Edits message to embed defined by an [EmbedConvention] into the channel.
+ * @see embed
+ */
+fun Message.editMessage(embedConvention: EmbedConvention): MessageAction =
+    editMessage(embedConvention.toEmbedBuilder().build())

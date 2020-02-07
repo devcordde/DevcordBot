@@ -16,6 +16,20 @@
 
 package com.github.seliba.devcordbot.util
 
-fun String.isNumeric() = all(Char::isDigit)
+import com.github.seliba.devcordbot.command.AbstractCommand
 
-fun String.isNotNumeric() = !isNumeric()
+/**
+ * Checks whether a string is numeric or not.
+ */
+fun String.isNumeric(): Boolean = all(Char::isDigit)
+
+/**
+ * Checks whether a string is not numeric or not
+ * @see isNumeric
+ */
+fun String.isNotNumeric(): Boolean = !isNumeric()
+
+/**
+ * Checks whether a command has subcommands or not.
+ */
+fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()

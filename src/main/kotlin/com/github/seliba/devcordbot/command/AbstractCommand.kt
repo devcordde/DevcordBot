@@ -48,4 +48,11 @@ abstract class AbstractCommand : CommandRegistry {
      * @param context the [Context] in which the command is invoked
      */
     abstract fun execute(context: Context)
+
+    override fun registerCommands(vararg commands: AbstractCommand) {
+        if (commands.any { it !is AbstractSubCommand }) {
+            error("SubCommand require extending AbstractSubCommand")
+        }
+        super.registerCommands(*commands)
+    }
 }

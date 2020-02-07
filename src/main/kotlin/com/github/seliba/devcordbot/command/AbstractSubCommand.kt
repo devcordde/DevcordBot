@@ -22,4 +22,7 @@ package com.github.seliba.devcordbot.command
  * @see AbstractCommand
  */
 @Suppress("MemberVisibilityCanBePrivate")
-abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
+abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
+    override val category: CommandCategory
+        get() = parent.category
+}

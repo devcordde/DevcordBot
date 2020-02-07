@@ -53,13 +53,7 @@ class Arguments(private val list: List<String>, val delimiter: String = " ") :
     /**
      * Return the argument at the specified [index] or `null` if there is no argument at that position.
      */
-    fun optionalArgument(index: Int): String? {
-        return if (index > lastIndex) {
-            null
-        } else {
-            this[index]
-        }
-    }
+    fun optionalArgument(index: Int): String? = getOrNull(index)
 
     /**
      * Return the argument at the specified [index] as an [Int] or `null` if there is no argument at that position, or it is not an [Int].
@@ -110,7 +104,7 @@ class Arguments(private val list: List<String>, val delimiter: String = " ") :
      */
     fun requiredArgument(index: Int, context: Context): String? =
         requiredArgument(index, context, this::optionalArgument) {
-            TODO("Create help embed")
+            Embeds.command(context.command)
         }
 
     /**

@@ -24,7 +24,6 @@ import com.github.seliba.devcordbot.dsl.sendMessage
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.requests.restaction.MessageAction
 
 /**
@@ -33,57 +32,52 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction
  * @property args the [Arguments] of the command
  * @property commandClient the [CommandClient] which executed this command
  * @property bot instance of the [DevCordBot]
- * @param event the event that triggered the command
+ * @property message the message that triggered the command
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Context(
     val bot: DevCordBot,
     val command: AbstractCommand,
-    val args: List<String>,
-    private val event: GuildMessageReceivedEvent,
+    val args: Arguments,
+    val message: Message,
     val commandClient: CommandClient
 ) {
     /**
      * The [JDA] instance.
      */
     val jda: JDA
-        get() = event.jda
+        get() = message.jda
+
 
     /**
-     * The message that triggered the command.
-     */
-    val message: Message
-        get() = event.message
-
-    /**
-     * The id of [event]
+     * The id of [message]
      */
     val messageId: Long
         get() = message.idLong
 
     /**
-     * The [TextChannel] of [event]
+     * The [TextChannel] of [message]
      */
     val channel: TextChannel
-        get() = event.channel
+        get() = message.textChannel
 
     /**
-     * The author of the [event].
+     * The author of the [message].
      */
     val author: User
-        get() = event.author
+        get() = message.author
 
     /**
      * The member of the [author].
      */
     val member: Member
-        get() = event.member!! //CommandClient ignores webhook messages, so this cannot be null
+        get() = message.member!! //CommandClient ignores webhook messages, so this cannot be null
 
     /**
      * The guild of the [channel].
      */
     val guild: Guild
-        get() = event.guild
+        get() = message.guild
 
     /**
      * The [self member][Member] of the bot.

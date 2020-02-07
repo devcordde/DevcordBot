@@ -14,21 +14,20 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command
-
-import com.github.seliba.devcordbot.command.perrmission.Permissions
-import net.dv8tion.jda.api.entities.Member
+package com.github.seliba.devcordbot.util
 
 /**
- * Handler for command permissions.
+ * Miscellaneous constants used in the bot.
  */
-interface PermissionHandler {
+object Constants {
 
     /**
-     * Checks whether the [executor] covers the [permissions] or not.
+     * The prefix used for commands.
      */
-    fun isCovered(
-        permissions: Permissions,
-        executor: Member
-    ): Boolean
+    const val prefix: String = "sudo"
+
+    /**
+     * URL that is used for pasting text.
+     */
+    const val hastebinUrl: String = "https://hasteb.in"
 }

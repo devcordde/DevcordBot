@@ -16,8 +16,27 @@
 
 package com.github.seliba.devcordbot.command
 
+import kotlin.coroutines.CoroutineContext
+
 /**
  * Parser and manager for [AbstractCommand](commands).
  */
-interface CommandClient {
+interface CommandClient : CommandRegistry {
+
+    /**
+     * The [CoroutineContext] used to execute commands.
+     */
+    val executor: CoroutineContext
+
+    /**
+     * The [PermissionHandler] used for handling command permissions.
+     * @see PermissionHandler
+     */
+    val permissionHandler: PermissionHandler
+
+    /**
+     * Handles errors during command execution
+     * @see ErrorHandler
+     */
+    val errorHandler: ErrorHandler
 }
