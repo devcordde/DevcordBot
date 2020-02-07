@@ -46,6 +46,11 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
         }
     }
 
+    /**
+     * Stops the animation.
+     */
+    fun stop(): Unit = channel.cancel()
+
     private fun animate() {
         jda.presence.activity = games.random().animate(jda)
     }

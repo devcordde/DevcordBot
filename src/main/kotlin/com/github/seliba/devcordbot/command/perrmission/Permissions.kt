@@ -16,8 +16,20 @@
 
 package com.github.seliba.devcordbot.command.perrmission
 
+/**
+ * Enum for command permissions.
+ */
 enum class Permissions {
+    /**
+     * Anyone can execute the command.
+     */
     ANY,
+    /**
+     * Only moderators can execute the command.
+     */
     MODERATOR,
+    /**
+     * Only administrators can execute the command.
+     */
     ADMIN
 }

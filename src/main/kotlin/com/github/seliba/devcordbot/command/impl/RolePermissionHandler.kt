@@ -14,21 +14,26 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command
+package com.github.seliba.devcordbot.command.impl
 
+import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.perrmission.Permissions
 import net.dv8tion.jda.api.entities.Member
 
 /**
- * Handler for command permissions.
+ * Implementation of [PermissionHandler] that checks the users roles,
  */
-interface PermissionHandler {
+class RolePermissionHandler : PermissionHandler {
+    private val moderatorPattern = "(?i)moderator|administrator".toRegex()
 
-    /**
-     * Checks whether the [executor] covers the [permissions] or not.
-     */
-    fun isCovered(
+    override fun isCovered(
         permissions: Permissions,
         executor: Member
-    ): Boolean
+    ): Boolean {
+        return when (permissions) {
+            Permissions.ANY -> true
+            Permissions.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
+            Permissions.ADMIN -> executor.roles.any { it.name.equals("administrator", ignoreCase = true) }
+        }
+    }
 }
