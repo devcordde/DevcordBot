@@ -38,7 +38,7 @@ object EntityResolver {
      * @return the resolved [Role] or `null` if none was found
      */
     fun resolveRole(guild: Guild, input: String, ignoreCase: Boolean = false): Role? =
-        resolveEntity(input, MentionType.ROLE, guild::getRoleById, guild::getRolesByName)
+        resolveEntity(input, MentionType.ROLE, guild::getRoleById, guild::getRolesByName, ignoreCase)
 
     /**
      * Resolves a [TextChannel] by its mention, id, or name.
@@ -49,7 +49,7 @@ object EntityResolver {
      * @return the resolved [TextChannel] or `null` if none was found
      */
     fun resolveTextChannel(guild: Guild, input: String, ignoreCase: Boolean = false): TextChannel? =
-        resolveEntity(input, MentionType.CHANNEL, guild::getTextChannelById, guild::getTextChannelsByName)
+        resolveEntity(input, MentionType.CHANNEL, guild::getTextChannelById, guild::getTextChannelsByName, ignoreCase)
 
     /**
      * Resolves a [User] by its mention, id, or name.
@@ -60,7 +60,7 @@ object EntityResolver {
      * @return the resolved [User] or `null` if none was found
      */
     fun resolveUser(jda: JDA, input: String, ignoreCase: Boolean = false): User? =
-        resolveEntity(input, MentionType.USER, jda::getUserById, jda::getUsersByName)
+        resolveEntity(input, MentionType.USER, jda::getUserById, jda::getUsersByName, ignoreCase)
 
     /**
      * Resolves a [Member] by its mention, id, or name.
@@ -71,7 +71,7 @@ object EntityResolver {
      * @return the resolved [Member] or `null` if none was found
      */
     fun resolveMember(guild: Guild, input: String, ignoreCase: Boolean = false): Member? =
-        resolveEntity(input, MentionType.USER, guild::getMemberById, guild::getMembersByName)
+        resolveEntity(input, MentionType.USER, guild::getMemberById, guild::getMembersByName, ignoreCase)
 
     private fun <T : IMentionable> resolveEntity(
         input: String,
