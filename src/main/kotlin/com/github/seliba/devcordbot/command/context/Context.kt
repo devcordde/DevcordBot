@@ -18,7 +18,7 @@ package com.github.seliba.devcordbot.command.context
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandClient
-import com.github.seliba.devcordbot.constants.Embeds
+import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.EmbedConvention
 import com.github.seliba.devcordbot.dsl.sendMessage
 import net.dv8tion.jda.api.EmbedBuilder
@@ -32,10 +32,12 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction
  * @property command the executed command
  * @property args the [Arguments] of the command
  * @property commandClient the [CommandClient] which executed this command
+ * @property bot instance of the [DevCordBot]
  * @param event the event that triggered the command
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Context(
+    val bot: DevCordBot,
     val command: AbstractCommand,
     val args: List<String>,
     private val event: GuildMessageReceivedEvent,
