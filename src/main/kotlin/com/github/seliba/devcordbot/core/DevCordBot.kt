@@ -36,7 +36,6 @@ import org.jetbrains.exposed.sql.SchemaUtils
 /**
  * General class to manage the Discord bot.
  */
-@ObsoleteCoroutinesApi
 class DevCordBot(token: String, games: List<GameAnimator.AnimatedGame>, env: Dotenv) {
 
     private val logger = KotlinLogging.logger { }
@@ -81,7 +80,6 @@ class DevCordBot(token: String, games: List<GameAnimator.AnimatedGame>, env: Dot
         SchemaUtils.createMissingTablesAndColumns(Users)
     }
 
-    @ObsoleteCoroutinesApi
     private fun shutdown() {
         gameAnimator.close()
         dataSource.close()
