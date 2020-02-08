@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.listeners
 
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.sendMessage
+import com.github.seliba.devcordbot.util.Constants
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 
@@ -42,7 +43,7 @@ class SelfMentionListener {
                     inline = true
                 )
                 addField("User", event.jda.users.size.toString(), inline = true)
-                addField("Prefix", "`!`", inline = true)
+                addField("Prefix", "`${Constants.prefix}`", inline = true)
             }).queue()
         }
     }
