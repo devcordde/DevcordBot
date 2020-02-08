@@ -23,7 +23,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 
 /**
- * Listens for the bot beeing mentioned
+ * Listens for the bot being mentioned.
  */
 class SelfMentionListener {
 
