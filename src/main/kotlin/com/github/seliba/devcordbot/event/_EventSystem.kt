@@ -120,9 +120,9 @@ class AnnotatedEventManger : IEventManager {
      * @see IEventManager.handle
      */
     override fun handle(event: GenericEvent) {
-        val eventType: KClass<*>? = event::class
-        @Suppress("ReplaceNotNullAssertionWithElvisReturn") val callParents =
-            eventType!!.findAnnotation<EventDescriber>()?.callParents ?: true
+        val eventType = event::class
+        val callParents =
+            eventType.findAnnotation<EventDescriber>()?.callParents ?: true
 
         tailrec fun callEvent(eventClass: KClass<*>) {
             val functions = this.functions[eventClass.starProjectedType] ?: return
