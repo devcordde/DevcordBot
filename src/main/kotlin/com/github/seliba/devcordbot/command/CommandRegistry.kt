@@ -36,6 +36,7 @@ interface CommandRegistry {
 
     /**
      * Unregisters the [command].
+     * @return whether a command got removed or not
      */
     fun unregisterCommand(command: AbstractCommand): Boolean {
         var removed = false

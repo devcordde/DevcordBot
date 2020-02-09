@@ -54,6 +54,7 @@ class CommandClientImpl(
             DefaultThreadFactory("CommandExecution")
         ).asCoroutineDispatcher()
 ) : CommandClient {
+
     private val logger = KotlinLogging.logger { }
     private val delimiter = "\\s+".toRegex()
     private val prefix = prefix.toPattern()
@@ -97,7 +98,7 @@ class CommandClientImpl(
         val (command, arguments) = resolveCommand(rawArgs) ?: return // No command found
 
         message.textChannel.sendTyping().queue()
-        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case
+        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
         if (!permissionHandler.isCovered(
                 command.permissions,
                 message.member!!

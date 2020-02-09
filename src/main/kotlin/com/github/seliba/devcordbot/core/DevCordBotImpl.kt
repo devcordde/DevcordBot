@@ -19,12 +19,12 @@ package com.github.seliba.devcordbot.core
 import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.commands.general.HelpCommand
+import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.database.Users
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
 import com.github.seliba.devcordbot.event.EventSubscriber
 import com.github.seliba.devcordbot.listeners.DatabaseUpdater
 import com.github.seliba.devcordbot.listeners.SelfMentionListener
-import com.github.seliba.devcordbot.util.Constants
 import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.Dotenv
 import mu.KotlinLogging

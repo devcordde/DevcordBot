@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.util
+package com.github.seliba.devcordbot.constants
 
 /**
  * Miscellaneous constants used in the bot.

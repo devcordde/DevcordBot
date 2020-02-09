@@ -20,7 +20,6 @@ import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.dsl.EmbedConvention
 import com.github.seliba.devcordbot.dsl.EmbedCreator
-import com.github.seliba.devcordbot.util.Constants
 
 /**
  * Some presets for frequently used embeds.
