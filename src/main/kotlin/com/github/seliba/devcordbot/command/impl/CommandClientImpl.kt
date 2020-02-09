@@ -47,17 +47,20 @@ import kotlin.coroutines.CoroutineContext
  * @param bot the current bot instance
  * @param prefix the prefix used for commands
  */
-class CommandClientImpl(private val bot: DevCordBot, private val prefix: String) : CommandClient {
-
-    private val logger = KotlinLogging.logger { }
-
-    override val executor: CoroutineContext =
+class CommandClientImpl(
+    private val bot: DevCordBot, prefix: Regex, override val executor: CoroutineContext =
         Executors.newFixedThreadPool(
             5,
             DefaultThreadFactory("CommandExecution")
         ).asCoroutineDispatcher()
+) : CommandClient {
+    private val logger = KotlinLogging.logger { }
+    private val delimiter = "\\s+".toRegex()
+    private val prefix = prefix.toPattern()
+
     override val permissionHandler: PermissionHandler = RolePermissionHandler()
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
+
     override val errorHandler: ErrorHandler = HastebinErrorHandler()
 
     /**
@@ -84,15 +87,16 @@ class CommandClientImpl(private val bot: DevCordBot, private val prefix: String)
     private fun parseCommand(message: Message) {
         val rawInput = message.contentRaw
         val prefix = resolvePrefix(message.guild, rawInput) ?: return
-        val input = message.contentRaw.substring(prefix.length)
 
-        val rawArgs = input.trim().split("\\s+".toRegex())
+        val nonPrefixedInput = rawInput.substring(prefix.length)
+
+        val rawArgs = nonPrefixedInput.trim().split(delimiter)
 
         if (rawArgs.isEmpty()) return // No command provided
 
         val (command, arguments) = resolveCommand(rawArgs) ?: return // No command found
 
-        message.channel.sendTyping().queue()
+        message.textChannel.sendTyping().queue()
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case
         if (!permissionHandler.isCovered(
                 command.permissions,
@@ -106,7 +110,7 @@ class CommandClientImpl(private val bot: DevCordBot, private val prefix: String)
     }
 
     private fun processCommand(command: AbstractCommand, context: Context) {
-        logger.debug { "Command $command was executed by ${context.member}" }
+        logger.info { "Command $command was executed by ${context.member}" }
         val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
             errorHandler.handleException(throwable, context, Thread.currentThread(), coroutineContext)
         }
@@ -132,7 +136,7 @@ class CommandClientImpl(private val bot: DevCordBot, private val prefix: String)
                 return findCommand(newArgs, foundCommand.commandAssociations, foundCommand)
             }
             // Return command if now sub-commands were found
-            return foundCommand to args
+            return foundCommand to newArgs
         }
 
         val (command, args) = findCommand(rawArgs, commandAssociations) ?: return null
@@ -141,9 +145,10 @@ class CommandClientImpl(private val bot: DevCordBot, private val prefix: String)
 
     private fun resolvePrefix(guild: Guild, content: String): String? {
         val mention = guild.selfMember.asMention
+        val matcher = prefix.matcher(content)
         return when {
             content.startsWith(mention) -> mention
-            content.startsWith(prefix) -> prefix
+            matcher.matches() -> matcher.group(1)
             else -> null
         }
     }

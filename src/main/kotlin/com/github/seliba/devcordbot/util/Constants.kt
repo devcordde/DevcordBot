@@ -24,10 +24,15 @@ object Constants {
     /**
      * The prefix used for commands.
      */
-    const val prefix: String = "sudo"
+    val prefix: Regex = "((?i)sudo(?-i)|!)(.*)".toRegex()
+
+    /**
+     * Prefix used for help messages.
+     */
+    const val firstPrefix: String = "sudo"
 
     /**
      * URL that is used for pasting text.
      */
-    const val hastebinUrl: String = "https://hasteb.in"
+    const val hastebinUrl: String = "https://haste.schlaubi.me"
 }
