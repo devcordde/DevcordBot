@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.command.context
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandClient
+import com.github.seliba.devcordbot.command.perrmission.Permissions
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.EmbedConvention
 import com.github.seliba.devcordbot.dsl.sendMessage
@@ -114,5 +115,17 @@ data class Context(
      * @return a [MessageAction] that sends the message
      */
     fun respond(embed: EmbedConvention): MessageAction = channel.sendMessage(embed)
+
+    /**
+     * Checks whether the [member] has [Permissions.ADMIN] or not.
+     */
+    fun hasAdmin(): Boolean = hasPermission(Permissions.ADMIN)
+
+    /**
+     * Checks whether the [member] has [Permissions.MODERATOR] or not.
+     */
+    fun hasModerator(): Boolean = hasPermission(Permissions.MODERATOR)
+
+    private fun hasPermission(permissions: Permissions) = commandClient.permissionHandler.isCovered(permissions, member)
 
 }
