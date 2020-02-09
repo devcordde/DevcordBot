@@ -70,7 +70,6 @@ class CommandTest {
         val client = CommandClientImpl(bot, Constants.prefix, Dispatchers.Unconfined)
         client.registerCommands(command)
         client.onMessage(event)
-        Thread.sleep(5000L)
         verify(command).execute(argThat {
             arguments == args.toList() &&
                     client === this.commandClient &&
