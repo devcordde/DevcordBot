@@ -49,15 +49,14 @@ data class Context(
     val jda: JDA
         get() = message.jda
 
-
     /**
-     * The id of [message]
+     * The id of [message].
      */
     val messageId: Long
         get() = message.idLong
 
     /**
-     * The [TextChannel] of [message]
+     * The [TextChannel] of [message].
      */
     val channel: TextChannel
         get() = message.textChannel

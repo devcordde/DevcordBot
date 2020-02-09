@@ -18,10 +18,10 @@ package com.github.seliba.devcordbot.command.impl
 
 import com.github.seliba.devcordbot.command.ErrorHandler
 import com.github.seliba.devcordbot.command.context.Context
+import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.constants.Emotes
 import com.github.seliba.devcordbot.dsl.editMessage
-import com.github.seliba.devcordbot.util.Constants
 import mu.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.*

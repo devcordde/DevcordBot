@@ -16,9 +16,9 @@
 
 package com.github.seliba.devcordbot.listeners
 
+import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.sendMessage
-import com.github.seliba.devcordbot.util.Constants
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 

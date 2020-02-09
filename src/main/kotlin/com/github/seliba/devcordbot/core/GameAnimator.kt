@@ -59,7 +59,7 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
      * Closes the resources used by the [GameAnimator].
      */
     override fun close() {
-        channel.cancel()
+        stop()
         pool.close()
     }
 
