@@ -1,8 +1,10 @@
 import com.github.seliba.devcordbot.command.AbstractCommand
+import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.command.perrmission.Permissions
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.util.Constants
+import com.nhaarman.mockitokotlin2.KStubbing
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -11,6 +13,7 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.requests.RestAction
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CompletableFuture
 import java.util.function.BooleanSupplier
@@ -35,48 +38,133 @@ import java.util.function.Consumer
 class CommandTest {
 
     @Test
-    fun test() {
-        val arguments = listOf("1", "2", "3")
-        val jda = mock<JDA>()
-        val channel = mock<TextChannel> {
-            on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
-        }
+    fun `check prefixed normal command`() {
         val author = mock<User> {
             on { isBot }.thenReturn(false)
             on { isFake }.thenReturn(false)
         }
-        val selfMember = mock<Member> {
-            on { asMention }.thenReturn("@mention")
-        }
-        val guild = mock<Guild> {
-            on { this.selfMember }.thenReturn(selfMember)
-        }
-        val message = mock<Message> {
-            on { textChannel }.thenReturn(channel)
-            on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
-            on { isWebhookMessage }.thenReturn(false)
-            on { member }.thenReturn(selfMember)
+
+        val message = mockMessage {
             on { this.author }.thenReturn(author)
-            on { this.guild }.thenReturn(guild)
+            on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
         }
-        val command = mock<AbstractCommand> {
-            on { permissions }.thenReturn(Permissions.ANY)
+
+        val command = mockCommand {
             on { aliases }.thenReturn(listOf("test"))
         }
-        val bot = mock<DevCordBot> {
-            on { isInitialized }.thenReturn(true)
+
+        ensureCommandCall(message, command, arguments)
+    }
+
+    @Test
+    fun `check mentioned normal command`() {
+        val author = mock<User> {
+            on { isBot }.thenReturn(false)
+            on { isFake }.thenReturn(false)
         }
+
+        val message = mockMessage {
+            on { this.author }.thenReturn(author)
+            on { contentRaw }.thenReturn("@mention test ${arguments.joinToString(" ")}")
+        }
+
+        val command = mockCommand {
+            on { aliases }.thenReturn(listOf("test"))
+        }
+
+        ensureCommandCall(message, command, arguments)
+    }
+
+    @Test
+    fun `check prefixed sub command`() {
+        val author = mock<User> {
+            on { isBot }.thenReturn(false)
+            on { isFake }.thenReturn(false)
+        }
+
+        val message = mockMessage {
+            on { this.author }.thenReturn(author)
+            on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
+        }
+
+        val subCommand = mock<AbstractSubCommand> {
+            on { permissions }.thenReturn(Permissions.ANY)
+        }
+
+        val command = mockCommand {
+            on { aliases }.thenReturn(listOf("test"))
+            on { commandAssociations }.thenReturn(mutableMapOf("sub" to subCommand))
+        }
+
+        ensureCommandCall(message, command, arguments.subList(1, arguments.size), subCommand)
+    }
+
+    private fun ensureCommandCall(
+        message: Message,
+        command: AbstractCommand,
+        arguments: List<String>,
+        subCommand: AbstractSubCommand? = null
+    ) {
         val event = GuildMessageReceivedEvent(jda, 200, message)
-        val client = CommandClientImpl(bot, Constants.prefix, Dispatchers.Unconfined)
         client.registerCommands(command)
         client.onMessage(event)
-        verify(command).execute(argThat {
+        val actualCommand = subCommand ?: command
+        verify(actualCommand).execute(argThat {
             arguments == args.toList() &&
                     client === this.commandClient &&
                     message === this.message &&
                     bot === this.bot &&
                     author === this.author
         })
+    }
+
+    private fun mockMessage(
+        stubbing: KStubbing<Message>.() -> Unit
+    ) =
+        mock<Message> {
+            on { textChannel }.thenReturn(channel)
+            on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
+            on { isWebhookMessage }.thenReturn(false)
+            on { member }.thenReturn(selfMember)
+            on { this.guild }.thenReturn(guild)
+            stubbing(this)
+        }
+
+    private fun mockCommand(
+        stubbing: KStubbing<AbstractCommand>.() -> Unit
+    ) = mock<AbstractCommand> {
+        on { permissions }.thenReturn(Permissions.ANY)
+        stubbing(this)
+    }
+
+    companion object {
+        private lateinit var bot: DevCordBot
+        private val arguments = listOf("sub", "2", "3")
+        private lateinit var jda: JDA
+        private lateinit var channel: TextChannel
+        private lateinit var selfMember: Member
+        private lateinit var guild: Guild
+        private lateinit var client: CommandClientImpl
+
+        @BeforeAll
+        @JvmStatic
+        @Suppress("unused")
+        fun `setup mock objects`() {
+            bot = mock {
+                on { isInitialized }.thenReturn(true)
+            }
+            client = CommandClientImpl(bot, Constants.prefix, Dispatchers.Unconfined)
+            jda = mock()
+            channel = mock {
+                on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
+            }
+            selfMember = mock {
+                on { asMention }.thenReturn("@mention")
+            }
+            guild = mock {
+                on { this.selfMember }.thenReturn(selfMember)
+            }
+        }
     }
 }
 
