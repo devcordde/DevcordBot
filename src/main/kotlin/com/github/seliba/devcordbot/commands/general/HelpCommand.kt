@@ -34,7 +34,7 @@ class HelpCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override fun execute(context: Context) {
-        val commandName = context.args.optionalArgument(1)
+        val commandName = context.args.optionalArgument(0)
         if (commandName == null) {
             sendCommandList(context)
         } else {
@@ -43,7 +43,7 @@ class HelpCommand : AbstractCommand() {
     }
 
     private fun sendCommandHelpMessage(context: Context, commandName: String) {
-        val command = context.commandClient.commandAssociations[commandName]
+        val command = context.commandClient.commandAssociations[commandName.toLowerCase()]
             ?: return context.respond(
                 Embeds.error(
                     "Befehl nicht gefunden!",

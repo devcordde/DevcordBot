@@ -65,7 +65,7 @@ object Embeds {
         }.apply(builder)
 
     /**
-     * Creates a warn embed with the given [title] and [description] and applies the [builder] to it.
+     * Creates a warning embed with the given [title] and [description] and applies the [builder] to it.
      * @see EmbedCreator
      * @see EmbedConvention
      */
@@ -100,13 +100,11 @@ object Embeds {
     }
 
     private fun formatUsage(command: AbstractCommand): String {
-        val builder = StringBuilder(Constants.prefix)
-        if (command is AbstractSubCommand) {
-            builder.append(command.parent.name).append(' ')
-        }
-
+        val builder = StringBuilder(Constants.firstPrefix)
         builder.append(command.name).append(' ').append(command.usage)
         if (command is AbstractSubCommand) {
+            builder.insert(Constants.firstPrefix.length, command.parent.name)
+                .insert(Constants.firstPrefix.length + command.parent.name.length, ' ')
             builder.append(" - ").append(command.description)
         }
         return builder.toString()

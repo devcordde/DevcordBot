@@ -35,7 +35,7 @@ typealias ArgumentConverter<T> = (String) -> T
  * @see List
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-class Arguments(private val list: List<String>, val delimiter: String = " ") :
+data class Arguments(private val list: List<String>, val delimiter: String = " ") :
     List<String> by list {
 
     /**
