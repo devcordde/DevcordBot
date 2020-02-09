@@ -39,13 +39,7 @@ class CommandTest {
 
     @Test
     fun `check prefixed normal command`() {
-        val author = mock<User> {
-            on { isBot }.thenReturn(false)
-            on { isFake }.thenReturn(false)
-        }
-
         val message = mockMessage {
-            on { this.author }.thenReturn(author)
             on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
         }
 
@@ -58,13 +52,7 @@ class CommandTest {
 
     @Test
     fun `check mentioned normal command`() {
-        val author = mock<User> {
-            on { isBot }.thenReturn(false)
-            on { isFake }.thenReturn(false)
-        }
-
         val message = mockMessage {
-            on { this.author }.thenReturn(author)
             on { contentRaw }.thenReturn("@mention test ${arguments.joinToString(" ")}")
         }
 
@@ -77,13 +65,7 @@ class CommandTest {
 
     @Test
     fun `check prefixed sub command`() {
-        val author = mock<User> {
-            on { isBot }.thenReturn(false)
-            on { isFake }.thenReturn(false)
-        }
-
         val message = mockMessage {
-            on { this.author }.thenReturn(author)
             on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
         }
 
@@ -122,6 +104,7 @@ class CommandTest {
         stubbing: KStubbing<Message>.() -> Unit
     ) =
         mock<Message> {
+            on { this.author }.thenReturn(author)
             on { textChannel }.thenReturn(channel)
             on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
             on { isWebhookMessage }.thenReturn(false)
@@ -145,6 +128,7 @@ class CommandTest {
         private lateinit var selfMember: Member
         private lateinit var guild: Guild
         private lateinit var client: CommandClientImpl
+        private lateinit var author: User
 
         @BeforeAll
         @JvmStatic
@@ -163,6 +147,10 @@ class CommandTest {
             }
             guild = mock {
                 on { this.selfMember }.thenReturn(selfMember)
+            }
+            author = mock {
+                on { isBot }.thenReturn(false)
+                on { isFake }.thenReturn(false)
             }
         }
     }
