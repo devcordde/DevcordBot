@@ -14,31 +14,15 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
-
-import com.github.seliba.devcordbot.command.CommandClient
-import net.dv8tion.jda.api.JDA
+package com.github.seliba.devcordbot.command
 
 /**
- * Main class of the bot
+ * Category of an [AbstractCommand].
+ * @property displayName the name that is displayed in help messages
  */
-interface DevCordBot {
+enum class CommandCategory(val displayName: String) {
     /**
-     * The [CommandClient] used for command parsing.
+     * General commands.
      */
-    val commandClient: CommandClient
-
-    /**
-     * The [JDA] instance.
-     */
-    val jda: JDA
-    /**
-     * The [GameAnimator] instance.
-     */
-    val gameAnimator: GameAnimator
-
-    /**
-     * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
-     */
-    val isInitialized: Boolean
+    GENERAL("Allgemein")
 }

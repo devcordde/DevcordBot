@@ -14,31 +14,21 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
+package com.github.seliba.devcordbot.command
 
-import com.github.seliba.devcordbot.command.CommandClient
-import net.dv8tion.jda.api.JDA
+import com.github.seliba.devcordbot.command.perrmission.Permissions
+import net.dv8tion.jda.api.entities.Member
 
 /**
- * Main class of the bot
+ * Handler for command permissions.
  */
-interface DevCordBot {
-    /**
-     * The [CommandClient] used for command parsing.
-     */
-    val commandClient: CommandClient
+interface PermissionHandler {
 
     /**
-     * The [JDA] instance.
+     * Checks whether the [executor] covers the [permissions] or not.
      */
-    val jda: JDA
-    /**
-     * The [GameAnimator] instance.
-     */
-    val gameAnimator: GameAnimator
-
-    /**
-     * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
-     */
-    val isInitialized: Boolean
+    fun isCovered(
+        permissions: Permissions,
+        executor: Member
+    ): Boolean
 }

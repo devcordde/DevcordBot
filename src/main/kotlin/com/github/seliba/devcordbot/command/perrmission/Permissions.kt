@@ -14,31 +14,22 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
-
-import com.github.seliba.devcordbot.command.CommandClient
-import net.dv8tion.jda.api.JDA
+package com.github.seliba.devcordbot.command.perrmission
 
 /**
- * Main class of the bot
+ * Enum for command permissions.
  */
-interface DevCordBot {
+enum class Permissions {
     /**
-     * The [CommandClient] used for command parsing.
+     * Anyone can execute the command.
      */
-    val commandClient: CommandClient
-
+    ANY,
     /**
-     * The [JDA] instance.
+     * Only moderators can execute the command.
      */
-    val jda: JDA
+    MODERATOR,
     /**
-     * The [GameAnimator] instance.
+     * Only administrators can execute the command.
      */
-    val gameAnimator: GameAnimator
-
-    /**
-     * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
-     */
-    val isInitialized: Boolean
+    ADMIN
 }
