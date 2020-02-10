@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.hooks.IEventManager
 import net.dv8tion.jda.api.hooks.SubscribeEvent
+import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
@@ -35,7 +36,7 @@ import kotlin.reflect.full.*
 typealias EventSubscriber = SubscribeEvent
 
 /**
- * Tells the [AnnotatedEventManger] more information about an event.
+ * Tells the [AnnotatedEventManager] more information about an event.
  * @param callParents whether the event classes' parents should be called or not
  */
 @Retention(AnnotationRetention.RUNTIME)
@@ -45,8 +46,13 @@ annotation class EventDescriber(val callParents: Boolean)
 /**
  * Enhanced Kotlin reimplementation of [net.dv8tion.jda.api.hooks.AnnotatedEventManager] adding ability to use [EventSubscriber].
  */
-class AnnotatedEventManger : IEventManager {
-    private val coroutineContext = DefaultThreadFactory.newSingleThreadExecutor("EventExecutor").asCoroutineDispatcher()
+class AnnotatedEventManager(
+    private val coroutineContext: CoroutineContext = DefaultThreadFactory.newSingleThreadExecutor(
+        "EventExecutor"
+    ).asCoroutineDispatcher()
+) :
+    IEventManager {
+
     private val listeners = mutableListOf<Any>()
     private val functions = mutableMapOf<KType, MutableSet<InstanceFunction>>()
 
@@ -120,9 +126,9 @@ class AnnotatedEventManger : IEventManager {
      * @see IEventManager.handle
      */
     override fun handle(event: GenericEvent) {
-        val eventType: KClass<*>? = event::class
-        @Suppress("ReplaceNotNullAssertionWithElvisReturn") val callParents =
-            eventType!!.findAnnotation<EventDescriber>()?.callParents ?: true
+        val eventType = event::class
+        val callParents =
+            eventType.findAnnotation<EventDescriber>()?.callParents ?: true
 
         tailrec fun callEvent(eventClass: KClass<*>) {
             val functions = this.functions[eventClass.starProjectedType] ?: return

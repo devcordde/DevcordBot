@@ -16,6 +16,8 @@
 
 package com.github.seliba.devcordbot.constants
 
+import com.github.seliba.devcordbot.command.AbstractCommand
+import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.dsl.EmbedConvention
 import com.github.seliba.devcordbot.dsl.EmbedCreator
 
@@ -62,7 +64,7 @@ object Embeds {
         }.apply(builder)
 
     /**
-     * Creates a warn embed with the given [title] and [description] and applies the [builder] to it.
+     * Creates a warning embed with the given [title] and [description] and applies the [builder] to it.
      * @see EmbedCreator
      * @see EmbedConvention
      */
@@ -84,6 +86,28 @@ object Embeds {
             this.description = description
             color = Colors.DARK_BUT_NOT_BLACK
         }.apply(builder)
+
+    /**
+     * Creates a help embed for [command].
+     */
+    fun command(command: AbstractCommand): EmbedConvention {
+        return info("${command.displayName} - Hilfe", command.description) {
+            addField("Aliases", command.aliases.joinToString(prefix = "`", separator = "`, `", postfix = "`"))
+            addField("Usage", formatUsage(command))
+            addField("Permission", command.permissions.name)
+        }
+    }
+
+    private fun formatUsage(command: AbstractCommand): String {
+        val builder = StringBuilder(Constants.firstPrefix)
+        builder.append(command.name).append(' ').append(command.usage)
+        if (command is AbstractSubCommand) {
+            builder.insert(Constants.firstPrefix.length, command.parent.name)
+                .insert(Constants.firstPrefix.length + command.parent.name.length, ' ')
+            builder.append(" - ").append(command.description)
+        }
+        return builder.toString()
+    }
 
     private fun EmbedConvention.title(emote: String, title: String) = title("$emote $title")
 }
