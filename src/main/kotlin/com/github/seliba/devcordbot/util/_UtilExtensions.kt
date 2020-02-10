@@ -14,31 +14,22 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
+package com.github.seliba.devcordbot.util
 
-import com.github.seliba.devcordbot.command.CommandClient
-import net.dv8tion.jda.api.JDA
+import com.github.seliba.devcordbot.command.AbstractCommand
 
 /**
- * Main class of the bot
+ * Checks whether a string is numeric or not.
  */
-interface DevCordBot {
-    /**
-     * The [CommandClient] used for command parsing.
-     */
-    val commandClient: CommandClient
+fun String.isNumeric(): Boolean = all(Char::isDigit)
 
-    /**
-     * The [JDA] instance.
-     */
-    val jda: JDA
-    /**
-     * The [GameAnimator] instance.
-     */
-    val gameAnimator: GameAnimator
+/**
+ * Checks whether a string is not numeric or not
+ * @see isNumeric
+ */
+fun String.isNotNumeric(): Boolean = !isNumeric()
 
-    /**
-     * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
-     */
-    val isInitialized: Boolean
-}
+/**
+ * Checks whether a command has subcommands or not.
+ */
+fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()

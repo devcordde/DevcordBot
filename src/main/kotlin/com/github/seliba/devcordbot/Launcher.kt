@@ -16,7 +16,7 @@
 
 package com.github.seliba.devcordbot
 
-import com.github.seliba.devcordbot.core.DevCordBot
+import com.github.seliba.devcordbot.core.DevCordBotImpl
 import com.github.seliba.devcordbot.core.GameAnimator
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -52,5 +52,5 @@ fun main() {
     }
 
     logger.info { "Launching DevCordBot..." }
-    DevCordBot(token, games, env)
+    DevCordBotImpl(token, games, env)
 }

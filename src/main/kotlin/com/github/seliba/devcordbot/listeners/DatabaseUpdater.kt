@@ -20,6 +20,7 @@ import com.github.seliba.devcordbot.database.DevCordUser
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
+import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Updates the Database based on Discord events.
@@ -39,9 +40,11 @@ class DatabaseUpdater {
     fun onMemberLeave(event: GuildMemberLeaveEvent): Unit = deleteUser(event.member.idLong)
 
     private fun createUserInDatabase(id: Long) {
-        DevCordUser.new(id) {}
+        transaction {
+            DevCordUser.new(id) {}
+        }
     }
 
-    private fun deleteUser(id: Long) = DevCordUser.findById(id)?.delete() ?: Unit
+    private fun deleteUser(id: Long) = transaction { DevCordUser.findById(id)?.delete() ?: Unit }
 
 }
