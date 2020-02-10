@@ -14,31 +14,15 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
-
-import com.github.seliba.devcordbot.command.CommandClient
-import net.dv8tion.jda.api.JDA
+package com.github.seliba.devcordbot.command
 
 /**
- * Main class of the bot
+ * Skeleton of a sub command.
+ * @property parent the parent of the command
+ * @see AbstractCommand
  */
-interface DevCordBot {
-    /**
-     * The [CommandClient] used for command parsing.
-     */
-    val commandClient: CommandClient
-
-    /**
-     * The [JDA] instance.
-     */
-    val jda: JDA
-    /**
-     * The [GameAnimator] instance.
-     */
-    val gameAnimator: GameAnimator
-
-    /**
-     * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
-     */
-    val isInitialized: Boolean
+@Suppress("MemberVisibilityCanBePrivate")
+abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
+    override val category: CommandCategory
+        get() = parent.category
 }

@@ -18,7 +18,6 @@ package com.github.seliba.devcordbot.core
 
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.launch
@@ -30,16 +29,15 @@ import java.util.concurrent.TimeUnit
 /**
  * Animates the bot's activity status.
  */
-class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>): Closeable {
+@Suppress("EXPERIMENTAL_API_USAGE")
+class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) : Closeable {
 
-    @ObsoleteCoroutinesApi
     private val channel = ticker(TimeUnit.SECONDS.toMillis(30), 0)
     private val pool = DefaultThreadFactory.newSingleThreadExecutor("GameAnimator").asCoroutineDispatcher()
 
     /**
      * Starts the game animation.
      */
-    @ObsoleteCoroutinesApi
     fun start() {
         GlobalScope.launch(pool) {
             for (unit in channel) {
@@ -48,6 +46,11 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>):
         }
     }
 
+    /**
+     * Stops the animation.
+     */
+    fun stop(): Unit = channel.cancel()
+
     private fun animate() {
         jda.presence.activity = games.random().animate(jda)
     }
@@ -55,16 +58,15 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>):
     /**
      * Closes the resources used by the [GameAnimator].
      */
-    @ObsoleteCoroutinesApi
     override fun close() {
-        channel.cancel()
+        stop()
         pool.close()
     }
 
     /**
      * Represents an animated game.
      * @property content The games content
-     * @property type The type of the activity this game should be displayed as
+     * @property type The activity type this game should be displayed as
      */
     data class AnimatedGame(val content: String, val type: Activity.ActivityType = Activity.ActivityType.DEFAULT) {
         /**

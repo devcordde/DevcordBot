@@ -14,31 +14,25 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
-
-import com.github.seliba.devcordbot.command.CommandClient
-import net.dv8tion.jda.api.JDA
+package com.github.seliba.devcordbot.constants
 
 /**
- * Main class of the bot
+ * Miscellaneous constants used in the bot.
  */
-interface DevCordBot {
-    /**
-     * The [CommandClient] used for command parsing.
-     */
-    val commandClient: CommandClient
+object Constants {
 
     /**
-     * The [JDA] instance.
+     * The prefix used for commands.
      */
-    val jda: JDA
-    /**
-     * The [GameAnimator] instance.
-     */
-    val gameAnimator: GameAnimator
+    val prefix: Regex = "((?i)sudo(?-i)|!)(.*)".toRegex()
 
     /**
-     * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
+     * Prefix used for help messages.
      */
-    val isInitialized: Boolean
+    const val firstPrefix: String = "sudo"
+
+    /**
+     * URL that is used for pasting text.
+     */
+    const val hastebinUrl: String = "https://haste.schlaubi.me"
 }
