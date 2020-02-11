@@ -21,7 +21,10 @@ import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.commands.general.HelpCommand
 import com.github.seliba.devcordbot.commands.general.LmgtfyCommand
 import com.github.seliba.devcordbot.commands.general.MockCommand
+import com.github.seliba.devcordbot.commands.general.TagCommand
 import com.github.seliba.devcordbot.constants.Constants
+import com.github.seliba.devcordbot.database.TagAliases
+import com.github.seliba.devcordbot.database.Tags
 import com.github.seliba.devcordbot.database.Users
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
 import com.github.seliba.devcordbot.event.EventSubscriber
@@ -101,7 +104,7 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
         }
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(Users)
+            SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases)
         }
     }
 
@@ -114,6 +117,7 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
         commandClient.registerCommands(
             HelpCommand(),
             MockCommand(),
+            TagCommand(),
             LmgtfyCommand()
         )
     }

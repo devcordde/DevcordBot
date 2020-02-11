@@ -32,23 +32,24 @@ typealias ArgumentConverter<T> = (String) -> T
  * Representation of a commands' arguments.
  * @param list the list of arguments
  * @property delimiter the delimiter, which was used to split the arguments
+ * @property raw plain arguments string
  * @see List
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-data class Arguments(private val list: List<String>, val delimiter: String = " ") :
+data class Arguments(private val list: List<String>, val delimiter: String = " ", val raw: String) :
     List<String> by list {
 
     /**
      * Joins the arguments back to their original String.
      */
-    fun join(): String = joinToString(delimiter)
+    fun join(): String = raw
 
     /**
      * Split's the arguments by the specified [delimiter].
      * @see join
      * @return a new instance of [Arguments] containing the new split arguments
      */
-    fun split(delimiter: String): Arguments = Arguments(join().split(delimiter), delimiter)
+    fun split(delimiter: String): Arguments = Arguments(raw.split(delimiter), delimiter, raw)
 
     /**
      * Return the argument at the specified [index] or `null` if there is no argument at that position.
