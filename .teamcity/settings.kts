@@ -50,7 +50,10 @@ project {
 object Build : BuildType({
     name = "Build"
 
-    artifactRules = "build/**/.jar"
+    artifactRules = """
+        build/libs/devcordbot-*.jar
+        build/libs/devcordbot-*.jar
+    """.trimIndent()
 
     vcs {
         root(DslContext.settingsRoot)
