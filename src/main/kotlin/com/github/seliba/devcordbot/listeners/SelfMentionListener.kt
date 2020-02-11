@@ -37,7 +37,7 @@ class SelfMentionListener {
         if (event.message.contentRaw == event.guild.selfMember.asMention()) {
             event.channel.sendMessage(Embeds.info("DevCordBot") {
                 addField("Programmiersprache", "[Kotlin](https://kotlinlang.org)", inline = true)
-                addField("Entwickler", "das_#9677 & Schlaubi#0001 kobold#1524", inline = true)
+                addField("Entwickler", "das_#9677 & Schlaubi#0001 & kobold#1524", inline = true)
                 addField(
                     "Source",
                     "[github.com/Seliba/Devcordbot](https://github.com/Seliba/Devcordbot)",
