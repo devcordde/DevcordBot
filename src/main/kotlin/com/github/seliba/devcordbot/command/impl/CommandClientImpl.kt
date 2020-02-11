@@ -22,12 +22,13 @@ import com.github.seliba.devcordbot.command.ErrorHandler
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.context.Arguments
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.perrmission.Permissions
+import com.github.seliba.devcordbot.command.perrmission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.event.EventSubscriber
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
+import com.github.seliba.devcordbot.util.asMention
 import com.github.seliba.devcordbot.util.hasSubCommands
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
@@ -89,21 +90,17 @@ class CommandClientImpl(
         val rawInput = message.contentRaw
         val prefix = resolvePrefix(message.guild, rawInput) ?: return
 
-        val nonPrefixedInput = rawInput.substring(prefix.length)
+        val nonPrefixedInput = rawInput.substring(prefix.length).trim()
 
-        val rawArgs = nonPrefixedInput.trim().split(delimiter)
-
-        if (rawArgs.isEmpty()) return // No command provided
-
-        val (command, arguments) = resolveCommand(rawArgs) ?: return // No command found
+        val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
         message.textChannel.sendTyping().queue()
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
         if (!permissionHandler.isCovered(
-                command.permissions,
+                command.permission,
                 message.member!!
             )
-        ) return handleNoPermission(command.permissions, message.textChannel)
+        ) return handleNoPermission(command.permission, message.textChannel)
 
         val context = Context(bot, command, arguments, message, this)
 
@@ -111,41 +108,44 @@ class CommandClientImpl(
     }
 
     private fun processCommand(command: AbstractCommand, context: Context) {
-        logger.info { "Command $command was executed by ${context.member}" }
         val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
             errorHandler.handleException(throwable, context, Thread.currentThread(), coroutineContext)
         }
         GlobalScope.launch(executor + exceptionHandler) {
+            logger.info { "Command $command was executed by ${context.member}" }
             command.execute(context)
         }
     }
 
-    private fun resolveCommand(rawArgs: List<String>): CommandContainer? {
+    private fun resolveCommand(input: String): CommandContainer? {
         tailrec fun findCommand(
-            args: List<String>,
+            arguments: Arguments,
             associations: Map<String, AbstractCommand>,
             command: AbstractCommand? = null
-        ): Pair<AbstractCommand, List<String>>? {
+        ): CommandContainer? {
             // Get invoke
-            val invoke = args.first().toLowerCase()
+            val invoke = arguments.first()
             // Search command associated with invoke or return previously found command
-            val foundCommand = associations[invoke] ?: return command?.to(args)
+            val foundCommand = associations[invoke] ?: return command?.let { CommandContainer(it, arguments) }
             // Cut off invoke
-            val newArgs = if (args.size > 1) args.subList(1, args.size) else emptyList()
+            val newArgsList = if (arguments.size > 1)
+                arguments.subList(1, arguments.size)
+            else
+                emptyList()
+            val newArgs = Arguments(newArgsList, raw = arguments.raw.substring(invoke.length).trim())
             // Look for sub commands
             if (foundCommand.hasSubCommands() and newArgs.isNotEmpty()) {
                 return findCommand(newArgs, foundCommand.commandAssociations, foundCommand)
             }
             // Return command if now sub-commands were found
-            return foundCommand to newArgs
+            return CommandContainer(foundCommand, newArgs)
         }
 
-        val (command, args) = findCommand(rawArgs, commandAssociations) ?: return null
-        return CommandContainer(command, Arguments(args))
+        return findCommand(Arguments(input.trim().split(delimiter), raw = input), commandAssociations)
     }
 
     private fun resolvePrefix(guild: Guild, content: String): String? {
-        val mention = guild.selfMember.asMention
+        val mention = guild.selfMember.asMention()
         val matcher = prefix.matcher(content)
         return when {
             content.startsWith(mention) -> mention
@@ -154,11 +154,11 @@ class CommandClientImpl(
         }
     }
 
-    private fun handleNoPermission(permissions: Permissions, channel: TextChannel) {
+    private fun handleNoPermission(permission: Permission, channel: TextChannel) {
         channel.sendMessage(
             Embeds.error(
                 "Keine Berechtigung!",
-                "Du benötigst mindestens die $permissions Berechtigung um diesen Befehl zu benutzen"
+                "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"
             )
         ).queue()
     }

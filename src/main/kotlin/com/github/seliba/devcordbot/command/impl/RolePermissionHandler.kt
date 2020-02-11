@@ -17,7 +17,7 @@
 package com.github.seliba.devcordbot.command.impl
 
 import com.github.seliba.devcordbot.command.PermissionHandler
-import com.github.seliba.devcordbot.command.perrmission.Permissions
+import com.github.seliba.devcordbot.command.perrmission.Permission
 import net.dv8tion.jda.api.entities.Member
 
 /**
@@ -27,13 +27,13 @@ class RolePermissionHandler : PermissionHandler {
     private val moderatorPattern = "(?i)moderator|administrator".toRegex()
 
     override fun isCovered(
-        permissions: Permissions,
+        permission: Permission,
         executor: Member
     ): Boolean {
-        return when (permissions) {
-            Permissions.ANY -> true
-            Permissions.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
-            Permissions.ADMIN -> executor.roles.any { it.name.equals("administrator", ignoreCase = true) }
+        return when (permission) {
+            Permission.ANY -> true
+            Permission.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
+            Permission.ADMIN -> executor.roles.any { it.name.equals("administrator", ignoreCase = true) }
         }
     }
 }

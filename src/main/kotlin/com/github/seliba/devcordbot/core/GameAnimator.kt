@@ -33,13 +33,13 @@ import java.util.concurrent.TimeUnit
 class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) : Closeable {
 
     private val channel = ticker(TimeUnit.SECONDS.toMillis(30), 0)
-    private val pool = DefaultThreadFactory.newSingleThreadExecutor("GameAnimator").asCoroutineDispatcher()
+    private val executor = DefaultThreadFactory.newSingleThreadExecutor("GameAnimator").asCoroutineDispatcher()
 
     /**
      * Starts the game animation.
      */
     fun start() {
-        GlobalScope.launch(pool) {
+        GlobalScope.launch(executor) {
             for (unit in channel) {
                 animate()
             }
@@ -60,7 +60,7 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
      */
     override fun close() {
         stop()
-        pool.close()
+        executor.close()
     }
 
     /**

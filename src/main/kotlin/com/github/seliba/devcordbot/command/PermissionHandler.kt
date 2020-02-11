@@ -16,7 +16,7 @@
 
 package com.github.seliba.devcordbot.command
 
-import com.github.seliba.devcordbot.command.perrmission.Permissions
+import com.github.seliba.devcordbot.command.perrmission.Permission
 import net.dv8tion.jda.api.entities.Member
 
 /**
@@ -25,10 +25,10 @@ import net.dv8tion.jda.api.entities.Member
 interface PermissionHandler {
 
     /**
-     * Checks whether the [executor] covers the [permissions] or not.
+     * Checks whether the [executor] covers the [permission] or not.
      */
     fun isCovered(
-        permissions: Permissions,
+        permission: Permission,
         executor: Member
     ): Boolean
 }
