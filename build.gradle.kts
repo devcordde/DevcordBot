@@ -42,6 +42,7 @@ dependencies {
     implementation("org.jetbrains.exposed", "exposed-core", "0.20.1")
     implementation("org.jetbrains.exposed", "exposed-dao", "0.20.1")
     implementation("org.jetbrains.exposed", "exposed-jdbc", "0.20.1")
+    implementation("org.jetbrains.exposed", "exposed-java-time", "0.20.1")
     implementation("org.postgresql", "postgresql", "42.2.9")
     implementation("com.zaxxer", "HikariCP", "3.4.2")
 
