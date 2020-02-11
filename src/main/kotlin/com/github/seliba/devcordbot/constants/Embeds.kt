@@ -106,8 +106,8 @@ object Embeds {
         val builder = StringBuilder(Constants.firstPrefix)
         builder.append(command.name).append(' ').append(command.usage.replace("\n", "\\n"))
         if (command is AbstractSubCommand) {
-            builder.insert(Constants.firstPrefix.length, command.parent.name)
-                .insert(Constants.firstPrefix.length + command.parent.name.length, ' ')
+            val prefix = " ${command.parent.name} "
+            builder.insert(Constants.firstPrefix.length, prefix)
             builder.append(" - ").append(command.description)
         }
         return builder.toString()
