@@ -16,8 +16,6 @@
 
 package com.github.seliba.devcordbot.constants
 
-import org.intellij.lang.annotations.Language
-
 /**
  * Miscellaneous constants used in the bot.
  */
