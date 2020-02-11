@@ -218,7 +218,7 @@ class TagCommand : AbstractCommand() {
 
     private fun parseTag(context: Context): Pair<String, String>? {
         val args = context.args.split("\n")
-        val name = args.first()
+        val name = args.first().trim()
         val content = args.subList(1, args.size).joinToString("\n")
         if (name.isBlank() or content.isBlank()) {
             context.sendHelp().queue()
