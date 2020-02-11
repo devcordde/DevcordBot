@@ -44,7 +44,7 @@ class SelfMentionListener {
                     inline = true
                 )
                 addField("User", event.jda.users.size.toString(), inline = true)
-                addField("Prefix", "`${Constants.prefix}`", inline = true)
+                addField("Prefix", "`${Constants.firstPrefix}`", inline = true)
             }).queue()
         }
     }
