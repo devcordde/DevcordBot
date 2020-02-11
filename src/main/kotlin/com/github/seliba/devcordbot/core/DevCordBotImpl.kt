@@ -19,6 +19,7 @@ package com.github.seliba.devcordbot.core
 import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.commands.general.HelpCommand
+import com.github.seliba.devcordbot.commands.general.LmgtfyCommand
 import com.github.seliba.devcordbot.commands.general.MockCommand
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.database.Users
@@ -112,7 +113,8 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
     private fun registerCommands() {
         commandClient.registerCommands(
             HelpCommand(),
-            MockCommand()
+            MockCommand(),
+            LmgtfyCommand()
         )
     }
 }
