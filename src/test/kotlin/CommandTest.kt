@@ -20,6 +20,7 @@ import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.command.perrmission.Permission
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.core.DevCordBot
+import com.github.seliba.devcordbot.util.asMention
 import com.nhaarman.mockitokotlin2.KStubbing
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock
@@ -68,8 +69,9 @@ class CommandTest {
 
     @Test
     fun `check mentioned normal command`() {
+        val mention = selfMember.asMention()
         val message = mockMessage {
-            on { contentRaw }.thenReturn("@mention test ${arguments.joinToString(" ")}")
+            on { contentRaw }.thenReturn("$mention test ${arguments.joinToString(" ")}")
         }
 
         val command = mockCommand {
@@ -159,7 +161,7 @@ class CommandTest {
                 on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
             }
             selfMember = mock {
-                on { asMention }.thenReturn("@mention")
+                on { idLong }.thenReturn(123456789)
             }
             guild = mock {
                 on { this.selfMember }.thenReturn(selfMember)
