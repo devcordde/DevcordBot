@@ -30,7 +30,7 @@ class LmgtfyCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("lmgtfy", "google")
     override val displayName: String = "lmgtfy"
     override val description: String = "Gibt einen lmgtfy-Link aus."
-    override val usage: String = "[command] <text>"
+    override val usage: String = "<text>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
