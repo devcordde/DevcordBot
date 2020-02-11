@@ -19,7 +19,7 @@ package com.github.seliba.devcordbot.command.perrmission
 /**
  * Enum for command permissions.
  */
-enum class Permissions {
+enum class Permission {
     /**
      * Anyone can execute the command.
      */

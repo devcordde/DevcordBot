@@ -16,6 +16,8 @@
 
 package com.github.seliba.devcordbot.command
 
+import com.github.seliba.devcordbot.command.perrmission.Permission
+
 /**
  * Skeleton of a sub command.
  * @property parent the parent of the command
@@ -25,4 +27,6 @@ package com.github.seliba.devcordbot.command
 abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
     override val category: CommandCategory
         get() = parent.category
+    override val permission: Permission
+        get() = parent.permission
 }

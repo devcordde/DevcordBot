@@ -19,6 +19,7 @@ package com.github.seliba.devcordbot.listeners
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.sendMessage
+import com.github.seliba.devcordbot.util.asMention
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 
@@ -33,7 +34,7 @@ class SelfMentionListener {
     @SubscribeEvent
     @Suppress("unused")
     fun onMessageReceive(event: GuildMessageReceivedEvent) {
-        if (event.jda.selfUser in event.message.mentionedUsers) {
+        if (event.message.contentRaw == event.guild.selfMember.asMention()) {
             event.channel.sendMessage(Embeds.info("DevCordBot") {
                 addField("Programmiersprache", "[Kotlin](https://kotlinlang.org)", inline = true)
                 addField("Entwickler", "das_#9677 & Schlaubi#0001", inline = true)

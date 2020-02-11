@@ -17,7 +17,7 @@
 package com.github.seliba.devcordbot.command
 
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.perrmission.Permissions
+import com.github.seliba.devcordbot.command.perrmission.Permission
 
 /**
  * Skeleton of a command.
@@ -26,7 +26,7 @@ import com.github.seliba.devcordbot.command.perrmission.Permissions
  * @property displayName name that is used on help messages
  * @property description the description of the command
  * @property usage the full usage of the command
- * @property permissions the command permissions
+ * @property permission the command permissions
  * @property commandAssociations all alias-command associations of sub-commands
  * @property category the [CommandCategory] of the command
  */
@@ -40,7 +40,7 @@ abstract class AbstractCommand : CommandRegistry {
     abstract val displayName: String
     abstract val description: String
     abstract val usage: String
-    abstract val permissions: Permissions
+    abstract val permission: Permission
     abstract val category: CommandCategory
 
     /**
