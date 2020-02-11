@@ -20,6 +20,7 @@ import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.commands.general.HelpCommand
 import com.github.seliba.devcordbot.commands.general.TagCommand
+import com.github.seliba.devcordbot.commands.general.MockCommand
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.database.TagAliases
 import com.github.seliba.devcordbot.database.Tags
@@ -113,7 +114,7 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
 
     private fun registerCommands() {
         commandClient.registerCommands(
-            HelpCommand(),
+            MockCommand()
             TagCommand()
         )
     }
