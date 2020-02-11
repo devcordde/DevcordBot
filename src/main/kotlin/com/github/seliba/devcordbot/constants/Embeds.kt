@@ -94,13 +94,17 @@ object Embeds {
         return info("${command.displayName} - Hilfe", command.description) {
             addField("Aliases", command.aliases.joinToString(prefix = "`", separator = "`, `", postfix = "`"))
             addField("Usage", formatUsage(command))
-            addField("Permission", command.permissions.name)
+            addField("Permission", command.permission.name)
+            val subCommands = command.registeredCommands.map(::formatUsage)
+            if (subCommands.isNotEmpty()) {
+                addField("Sub commands", subCommands.joinToString("\n"))
+            }
         }
     }
 
     private fun formatUsage(command: AbstractCommand): String {
         val builder = StringBuilder(Constants.firstPrefix)
-        builder.append(command.name).append(' ').append(command.usage)
+        builder.append(command.name).append(' ').append(command.usage.replace("\n", "\\n"))
         if (command is AbstractSubCommand) {
             builder.insert(Constants.firstPrefix.length, command.parent.name)
                 .insert(Constants.firstPrefix.length + command.parent.name.length, ' ')

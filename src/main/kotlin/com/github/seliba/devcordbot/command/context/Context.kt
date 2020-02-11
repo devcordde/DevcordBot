@@ -18,7 +18,8 @@ package com.github.seliba.devcordbot.command.context
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandClient
-import com.github.seliba.devcordbot.command.perrmission.Permissions
+import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.EmbedConvention
 import com.github.seliba.devcordbot.dsl.sendMessage
@@ -116,15 +117,21 @@ data class Context(
     fun respond(embed: EmbedConvention): MessageAction = channel.sendMessage(embed)
 
     /**
-     * Checks whether the [member] has [Permissions.ADMIN] or not.
+     * Sends a help embed for [command].
+     * @see Embeds.command
      */
-    fun hasAdmin(): Boolean = hasPermission(Permissions.ADMIN)
+    fun sendHelp() = respond(Embeds.command(command))
 
     /**
-     * Checks whether the [member] has [Permissions.MODERATOR] or not.
+     * Checks whether the [member] has [Permission.ADMIN] or not.
      */
-    fun hasModerator(): Boolean = hasPermission(Permissions.MODERATOR)
+    fun hasAdmin(): Boolean = hasPermission(Permission.ADMIN)
 
-    private fun hasPermission(permissions: Permissions) = commandClient.permissionHandler.isCovered(permissions, member)
+    /**
+     * Checks whether the [member] has [Permission.MODERATOR] or not.
+     */
+    fun hasModerator(): Boolean = hasPermission(Permission.MODERATOR)
+
+    private fun hasPermission(permission: Permission) = commandClient.permissionHandler.isCovered(permission, member)
 
 }

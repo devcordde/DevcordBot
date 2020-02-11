@@ -17,6 +17,7 @@
 package com.github.seliba.devcordbot.util
 
 import com.github.seliba.devcordbot.command.AbstractCommand
+import net.dv8tion.jda.api.entities.Member
 
 /**
  * Checks whether a string is numeric or not.
@@ -33,3 +34,8 @@ fun String.isNotNumeric(): Boolean = !isNumeric()
  * Checks whether a command has subcommands or not.
  */
 fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()
+
+/**
+ * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
+ */
+fun Member.asMention(): String = "<@!$id>"

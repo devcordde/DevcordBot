@@ -16,6 +16,8 @@
 
 package com.github.seliba.devcordbot.constants
 
+import org.intellij.lang.annotations.Language
+
 /**
  * Miscellaneous constants used in the bot.
  */
@@ -24,7 +26,7 @@ object Constants {
     /**
      * The prefix used for commands.
      */
-    val prefix: Regex = "((?i)sudo(?-i)|!)(.*)".toRegex()
+    val prefix: Regex = "((?i)sudo|s(?-i)|!)(?s)(.*)".toRegex()
 
     /**
      * Prefix used for help messages.
@@ -35,4 +37,5 @@ object Constants {
      * URL that is used for pasting text.
      */
     const val hastebinUrl: String = "https://haste.schlaubi.me"
+
 }

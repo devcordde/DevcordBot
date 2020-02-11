@@ -19,7 +19,7 @@ package com.github.seliba.devcordbot.commands.general
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.perrmission.Permissions
+import com.github.seliba.devcordbot.command.perrmission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 
 /**
@@ -30,7 +30,7 @@ class HelpCommand : AbstractCommand() {
     override val displayName: String = "help"
     override val description: String = "Zeigt eine Liste aller Befehle"
     override val usage: String = "[command]"
-    override val permissions: Permissions = Permissions.ANY
+    override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override fun execute(context: Context) {
@@ -63,7 +63,7 @@ class HelpCommand : AbstractCommand() {
             ) {
                 val commands = context.commandClient.registeredCommands.filter {
                     context.commandClient.permissionHandler.isCovered(
-                        it.permissions,
+                        it.permission,
                         context.member
                     )
                 }
