@@ -64,9 +64,6 @@ object Build : BuildType({
 
     triggers {
         vcs {
-            perCheckinTriggering = true
-            groupCheckinsByCommitter = true
-            enableQueueOptimization = false
         }
     }
 
