@@ -17,6 +17,7 @@
 .idea/**/contentModel.xml
 
 # Sensitive or high-churn files
+.idea/**/dataSources.xml
 .idea/**/dataSources/
 .idea/**/dataSources.ids
 .idea/**/dataSources.local.xml
@@ -30,14 +31,11 @@
 .idea/**/libraries
 
 # Gradle and Maven with auto-import
-# When using Gradle or Maven with auto-import, you should exclude module files,
-# since they will be recreated, and may cause churn.  Uncomment if using
-# auto-import.
-# .idea/modules.xml
-# .idea/*.iml
-# .idea/modules
-# *.iml
-# *.ipr
+ .idea/modules.xml
+ .idea/*.iml
+ .idea/modules
+ *.iml
+ *.ipr
 
 # CMake
 cmake-build-*/
@@ -74,11 +72,8 @@ fabric.properties
 
 ### Intellij+iml Patch ###
 # Reason: https://github.com/joeblau/gitignore.io/issues/186#issuecomment-249601023
-
-*.iml
 modules.xml
 .idea/misc.xml
-*.ipr
 
 ### Kotlin ###
 # Compiled class file
@@ -123,5 +118,8 @@ gradle-app.setting
 
 ### Gradle Patch ###
 **/build/
+
+# Ignore .env file to protect the discord bot token
+.env
 
 # End of https://www.gitignore.io/api/gradle,kotlin,intellij+iml
