@@ -30,7 +30,7 @@ class MockCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("mock", "m")
     override val displayName: String = "mock"
     override val description: String = "Mockt den eingegebenen Text."
-    override val usage: String = "[command] <text>"
+    override val usage: String = "<text>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
