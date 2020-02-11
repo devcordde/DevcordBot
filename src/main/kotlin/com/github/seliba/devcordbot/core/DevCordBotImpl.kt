@@ -114,7 +114,8 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
 
     private fun registerCommands() {
         commandClient.registerCommands(
-            MockCommand()
+            HelpCommand(),
+            MockCommand(),
             TagCommand()
         )
     }
