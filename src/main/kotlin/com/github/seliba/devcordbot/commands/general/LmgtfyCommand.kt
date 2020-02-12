@@ -49,7 +49,7 @@ class LmgtfyCommand : AbstractCommand() {
      * Create a lmgtfy link.
      */
     private fun createLink(arguments: Arguments) =
-        "https://lmgtfy.com/?q=${arguments.joinToString("+") {
+        arguments.joinToString("+", prefix = "https://lmgtfy.com/?q=", postfix = "&iie=1") {
             URLEncoder.encode(it, "utf-8")
-        }}&iie=1"
+        }
 }
