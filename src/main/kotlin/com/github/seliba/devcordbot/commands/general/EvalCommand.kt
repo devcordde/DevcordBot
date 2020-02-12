@@ -20,6 +20,7 @@ import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.util.jdoodle.JDoodle
 
 /**
  * Eval command.
@@ -33,7 +34,7 @@ class EvalCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override fun execute(context: Context) {
-        TODO("not yet implemented")
+        JDoodle.execute(context)
     }
 
 }
