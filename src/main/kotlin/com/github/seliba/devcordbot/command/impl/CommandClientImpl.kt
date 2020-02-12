@@ -42,6 +42,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
@@ -72,7 +73,7 @@ class CommandClientImpl(
      */
     @EventSubscriber
     fun onMessageEdit(event: GuildMessageUpdateEvent) {
-        if (Duration.between(event.message.timeCreated, Instant.now()).toSeconds() > 30) return
+        if (Duration.between(event.message.timeCreated, Instant.now()) > Duration.of(30, ChronoUnit.SECONDS)) return
         dispatchCommand(event.message)
     }
 
