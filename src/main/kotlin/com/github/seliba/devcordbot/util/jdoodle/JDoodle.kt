@@ -16,13 +16,12 @@
 
 package com.github.seliba.devcordbot.util.jdoodle
 
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.lang.IllegalArgumentException
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
-import java.net.URL
+import com.github.seliba.devcordbot.command.context.Context
+import com.github.seliba.devcordbot.constants.Embeds
+import io.github.cdimascio.dotenv.Dotenv
+import io.github.rybalkinsd.kohttp.dsl.httpPost
+import io.github.rybalkinsd.kohttp.ext.url
+import okhttp3.Response
 
 
 /**
@@ -31,79 +30,72 @@ import java.net.URL
 object JDoodle {
     private var clientId = ""
     private var clientSecret = ""
-    private val url = URL("https://api.jdoodle.com/v1/execute")
     private const val error = "Ein Fehler ist Aufgetreten"
 
     /**
      * Init the values for execution.
      */
-    fun init(clientId: String, clientSecret: String) {
-        JDoodle.clientId = clientId
-        JDoodle.clientSecret = clientSecret
+    fun init(env: Dotenv) {
+        clientId = env["JDOODLE_CLIENTID"].orEmpty()
+        clientSecret = env["JDOODLE_CLIENTSECRET"].orEmpty()
     }
 
     /**
-     * Executes the given Script in the given Language
+     * Execute a script from command context.
+     *
+     * @param context a command context.
      */
-    fun execute(lang: String, script: String): String {
+    fun execute(context: Context) {
+        context.respond("Command not yet implemented.").queue()
+
+        val lang = "goasd"
+
         val language: Language
 
         try {
             language = Language.valueOf(lang.toUpperCase())
         } catch (e: IllegalArgumentException) {
-            return "Sprache $lang nicht verfügbar."
-        }
-        try {
-            val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-            connection.doOutput = true
-            connection.requestMethod = "POST"
-            connection.setRequestProperty("Content-Type", "application/json")
-            val input =
-                "{\"clientId\": \"$clientId\",\"clientSecret\":\"$clientSecret\",\"script\":\"${script.replace(
-                    "\n",
-                    "\\n"
-                ).replace(
-                    " ",
-                    ""
-                )}\",\"language\":\"${language.langString}\",\"versionIndex\":\"${language.codeInt}\"} "
-            println(input)
+            context.respond(
+                Embeds.error(
+                    "Sprache nicht gefunden.",
+                    "Verfügbare Sprachen: ${Language.values().joinToString(", ") { it.name.toLowerCase() }}"
+                )
+            ).queue()
 
-            connection.outputStream.write(input.toByteArray())
-            connection.outputStream.flush()
-
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                return "Fehlerhafte Anfrage:\nFehlercode:${connection.responseCode}\nFehlermeldung: ${inputStreamToString(
-                    connection.errorStream
-                )}}"
-            }
-
-            val output =
-                inputStreamToString(connection.inputStream)
-
-            connection.disconnect()
-            return output
-        } catch (e: MalformedURLException) {
-            return error
-        } catch (e: IOException) {
-            return error
+            return
         }
 
-
+        println(language.toString())
     }
 
     /**
-     * Transform an input stream to a string.
+     * Executes the given script in the given language
+     *
+     * @param language the script's language
+     * @param script the script
      */
-    private fun inputStreamToString(inputStream: InputStream): String {
-        val reader = BufferedReader(inputStream.reader())
-        val content = StringBuilder()
-        reader.use {
-            var line = it.readLine()
-            while (line != null) {
-                content.append(line)
-                line = it.readLine()
+    fun execute(language: Language, script: String): Response? {
+        println(script)
+        return httpPost {
+            url("https://api.jdoodle.com/v1/execute")
+
+            body {
+                json {
+                    "clientId" to clientId
+                    "clientSecret" to clientSecret
+                    "script" to jsonSafeScript(script)
+                    "language" to language.langString
+                    "versionIndex" to language.codeInt
+                }
             }
-            return content.toString()
         }
     }
+
+    /**
+     * Removes newlines and " from a given script.
+     *
+     * @param script the input script.
+     * @return a json safe string
+     */
+    private fun jsonSafeScript(script: String): String = script.replace("\n", "\\n").replace("\"", "\\\"")
 }
