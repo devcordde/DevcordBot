@@ -22,6 +22,7 @@ import com.github.seliba.devcordbot.command.context.Arguments
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.perrmission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
+import java.net.URLEncoder
 
 /**
  * Lmgtfy command.
@@ -47,5 +48,8 @@ class LmgtfyCommand : AbstractCommand() {
     /**
      * Create a lmgtfy link.
      */
-    private fun createLink(text: Arguments) = "https://lmgtfy.com/?q=${text.joinToString("+")}&iie=1"
+    private fun createLink(arguments: Arguments) =
+        "https://lmgtfy.com/?q=${arguments.joinToString("+") {
+            URLEncoder.encode(it, "utf-8")
+        }}&iie=1"
 }
