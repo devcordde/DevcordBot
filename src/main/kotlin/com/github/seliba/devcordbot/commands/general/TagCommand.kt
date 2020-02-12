@@ -27,6 +27,7 @@ import com.github.seliba.devcordbot.database.Tag
 import com.github.seliba.devcordbot.database.TagAlias
 import com.github.seliba.devcordbot.database.Tags
 import com.github.seliba.devcordbot.dsl.embed
+import com.github.seliba.devcordbot.menu.Paginator
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -49,6 +50,9 @@ class TagCommand : AbstractCommand() {
         registerCommands(EditCommand())
         registerCommands(InfoCommand())
         registerCommands(DeleteCommand())
+        registerCommands(ListCommand())
+        registerCommands(FromCommand())
+        registerCommands(SearchCommand())
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
 
@@ -196,6 +200,55 @@ class TagCommand : AbstractCommand() {
             ).queue()
         }
 
+    }
+
+    private inner class ListCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("list", "all")
+        override val displayName: String = "List"
+        override val description: String = "Gibt eine Liste aller Tags aus"
+        override val usage: String = ""
+
+        override fun execute(context: Context) {
+            val tags = transaction { Tag.all().map(Tag::name) }
+            if (tags.isEmpty()) {
+                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags.")).queue()
+            }
+            Paginator(tags, context.author, context.channel, "Tags")
+        }
+    }
+
+    private inner class FromCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("from", "by")
+        override val displayName: String = "from"
+        override val description: String = "Gibt eine Liste aller Tags eines bestimmten Benutzers aus"
+        override val usage: String = "<@user>"
+
+        override fun execute(context: Context) {
+            val user = context.args.user(0, context = context) ?: context.author
+            val tags = transaction { Tag.find { Tags.author eq user.idLong }.map(Tag::name) }
+            if (tags.isEmpty()) {
+                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
+                    .queue()
+            }
+            Paginator(tags, context.author, context.channel, "Tags von ${user.name}")
+        }
+    }
+
+    private inner class SearchCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("search", "find")
+        override val displayName: String = "search"
+        override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
+        override val usage: String = "<name>"
+
+        override fun execute(context: Context) {
+            val name = context.args.join()
+            val tags = transaction { Tag.find { Tags.name like name }.limit(25).map(Tag::name) }
+            if (tags.isEmpty()) {
+                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Namen."))
+                    .queue()
+            }
+            Paginator(tags, context.author, context.channel, "Suche für $name")
+        }
     }
 
     private fun Tag.Companion.findByName(name: String) = Tag.findById(name) ?: TagAlias.findById(name)?.tag
