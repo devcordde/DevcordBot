@@ -27,6 +27,7 @@ import com.github.seliba.devcordbot.event.AnnotatedEventManager
 import com.github.seliba.devcordbot.event.EventSubscriber
 import com.github.seliba.devcordbot.listeners.DatabaseUpdater
 import com.github.seliba.devcordbot.listeners.SelfMentionListener
+import com.github.seliba.devcordbot.util.jdoodle.JDoodle
 import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.Dotenv
 import mu.KotlinLogging
@@ -67,9 +68,10 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
-        logger.info { "Establishing connection to the database …" }
         registerCommands()
+        logger.info { "Establishing connection to the database …" }
         connectToDatabase(env)
+        JDoodle.init(env)
     }
 
     /**
