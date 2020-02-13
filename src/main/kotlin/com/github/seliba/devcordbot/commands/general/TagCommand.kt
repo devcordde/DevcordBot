@@ -174,15 +174,20 @@ class TagCommand : AbstractCommand() {
                     addField("Erstellt von", creator, inline = true)
                     addField("Benutzungen", tag.usages.toString(), inline = true)
                     addField("Rang", rank.toString(), inline = true)
-                    addField(
-                        "Aliase",
-                        TagAlias.find { TagAliases.tag eq tag.name }.joinToString(
-                            prefix = "`",
-                            separator = "`, `",
-                            postfix = "`"
-                        ),
-                        inline = true
-                    )
+                    transaction {
+                        val aliases = TagAlias.find { TagAliases.tag eq tag.name }
+                        if (!aliases.empty()) {
+                            addField(
+                                "Aliase",
+                                aliases.joinToString(
+                                    prefix = "`",
+                                    separator = "`, `",
+                                    postfix = "`"
+                                ) { it.name },
+                                inline = true
+                            )
+                        }
+                    }
                 }
             ).queue()
         }
