@@ -50,6 +50,8 @@ project {
 object Build : BuildType({
     name = "Build"
 
+    artifactRules = "build/libs/devcordbot-*.jar"
+
     vcs {
         root(DslContext.settingsRoot)
     }
@@ -64,9 +66,6 @@ object Build : BuildType({
 
     triggers {
         vcs {
-            perCheckinTriggering = true
-            groupCheckinsByCommitter = true
-            enableQueueOptimization = false
         }
     }
 
