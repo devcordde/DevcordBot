@@ -17,6 +17,7 @@
 package com.github.seliba.devcordbot.commands.general
 
 import com.github.seliba.devcordbot.command.AbstractCommand
+import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.perrmission.Permission
@@ -34,6 +35,10 @@ class MockCommand : AbstractCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
+    init {
+        registerCommands(MockLastCommand())
+    }
+
     override fun execute(context: Context) {
         val arguments = context.args
 
@@ -42,6 +47,36 @@ class MockCommand : AbstractCommand() {
         }
 
         context.respond(mock(arguments.join())).queue()
+    }
+
+    private inner class MockLastCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("^", "^^")
+        override val displayName: String = "^"
+        override val description: String = "Mockt die Nachricht über dem Command."
+        override val usage: String = ""
+
+        override fun execute(context: Context) {
+            if (!context.args.isEmpty()) {
+                return context.respond(Embeds.command(this)).queue()
+            }
+
+            val paginator = context.channel.iterableHistory.limit(2).cache(false)
+
+            paginator.flatMap {
+                if (it.size < 2) {
+
+                    return@flatMap context.respond(
+                        Embeds.error(
+                            "Keine Nachricht gefunden",
+                            "Es konnte keine Nachricht in dem aktuellen Channel gefunden werden."
+                        )
+                    )
+                }
+
+                return@flatMap context.respond(mock(it[1].contentRaw))
+            }.queue()
+        }
+
     }
 
     /**
@@ -53,5 +88,4 @@ class MockCommand : AbstractCommand() {
      * Tweaks a given char.
      */
     private fun tweak(c: Char): Char = if (Random.nextBoolean()) c.toLowerCase() else c.toUpperCase()
-
 }
