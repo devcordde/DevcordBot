@@ -29,6 +29,7 @@ import com.github.seliba.devcordbot.menu.Paginator
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -195,6 +196,7 @@ class TagCommand : AbstractCommand() {
             if (checkPermission(tag, context)) return
 
             transaction {
+                TagAliases.deleteWhere { TagAliases.tag.eq(tag.name) }
                 tag.delete()
             }
 
