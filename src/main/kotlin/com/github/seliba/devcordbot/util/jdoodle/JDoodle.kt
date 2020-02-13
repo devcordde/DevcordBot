@@ -22,6 +22,7 @@ import io.github.cdimascio.dotenv.Dotenv
 import io.github.rybalkinsd.kohttp.dsl.httpPost
 import io.github.rybalkinsd.kohttp.ext.asString
 import io.github.rybalkinsd.kohttp.ext.url
+import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.Response
 
 
@@ -46,16 +47,7 @@ object JDoodle {
      * @param context a command context.
      */
     fun execute(context: Context) {
-        var text = context.args.raw
-
-        if (!text.startsWith("```") && !text.endsWith("```")) {
-            context.respond(
-                Embeds.error("Konnte nicht evaluiert werden.", "Die Nachricht muss in einem Codeblock liegen")
-            )
-            return
-        }
-
-        text = text.subSequence(3, text.length - 3).toString()
+        val text: String = evaluateMessage(context) ?: return
 
         val split = text.split("\n")
 
@@ -70,27 +62,30 @@ object JDoodle {
             return
         }
 
+        val languageString = split[0]
         val language: Language
 
         try {
-            language = Language.valueOf(split[0].toUpperCase())
+            language = Language.valueOf(languageString.toUpperCase())
         } catch (e: IllegalArgumentException) {
-            context.respond(
-                Embeds.error(
-                    "Sprache nicht gefunden.",
-                    "Verfügbare Sprachen: ${Language.values().joinToString(", ") { it.name.toLowerCase() }}"
-                )
-            ).queue()
-
+            listLanguages(context, "Sprache nicht gefunden. Verfügbare Sprachen:")
             return
         }
 
+        val script = split.subList(1, split.size).joinToString("\n")
+
         val response =
-            execute(language, split.subList(1, split.size).joinToString("\n"))?.asString() ?: return internalError(
+            execute(language, script)?.asString() ?: return internalError(
                 context
             )
+        val output = DataObject.fromJson(response)["output"].toString()
 
-        context.respond(Embeds.success("Skript ausgeführt", response)).queue()
+        context.respond(
+            Embeds.success(
+                "Skript ausgeführt",
+                "Sprache: ${language.humanReadable}\nSkript:```$script```Output:\n```$output```"
+            )
+        ).queue()
     }
 
     /**
@@ -103,6 +98,34 @@ object JDoodle {
                 "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
             )
         ).queue()
+    }
+
+    /**
+     * List available languages
+     */
+    fun listLanguages(context: Context, title: String) {
+        context.respond(
+            Embeds.error(
+                title,
+                "Verfügbare Sprachen: ${Language.values().joinToString(", ") { it.name.toLowerCase() }}"
+            )
+        ).queue()
+    }
+
+    private fun evaluateMessage(context: Context): String? {
+        val text = context.args.raw
+
+        if (!text.startsWith("```") && !text.endsWith("```")) {
+            context.respond(
+                Embeds.error(
+                    "Konnte nicht evaluiert werden.",
+                    "Die Nachricht muss in einem Codeblock liegen"
+                )
+            )
+            return null
+        }
+
+        return text.subSequence(3, text.length - 3).toString()
     }
 
     /**
@@ -120,8 +143,8 @@ object JDoodle {
                     "clientId" to clientId
                     "clientSecret" to clientSecret
                     "script" to jsonSafeScript(script)
-                    "language" to language.langString
-                    "versionIndex" to language.codeInt
+                    "language" to language.lang
+                    "versionIndex" to language.code
                 }
             }
         }
