@@ -26,6 +26,7 @@ import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.dsl.embed
 import com.github.seliba.devcordbot.menu.Paginator
+import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -52,6 +53,7 @@ class TagCommand : AbstractCommand() {
         registerCommands(ListCommand())
         registerCommands(FromCommand())
         registerCommands(SearchCommand())
+        registerCommands(RawCommand())
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
 
@@ -255,6 +257,20 @@ class TagCommand : AbstractCommand() {
                     .queue()
             }
             Paginator(tags, context.author, context.channel, "Suche für $name")
+        }
+    }
+
+    private inner class RawCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("raw")
+        override val displayName: String = "Raw"
+        override val description: String = "Zeigt dir einen Tag ohne markdown an"
+        override val usage: String = "<tagname>"
+
+        override fun execute(context: Context) {
+            val tagName = context.args.join()
+            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
+            val content = MarkdownSanitizer.sanitize(tag.content, MarkdownSanitizer.SanitizationStrategy.ESCAPE)
+            context.respond(content).queue()
         }
     }
 
