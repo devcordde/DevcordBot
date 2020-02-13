@@ -105,6 +105,11 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
         Database.connect(dataSource)
         transaction {
             SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases)
+            //language=PostgreSQL
+            exec("SELECT * FROM pg_extension WHERE extname = 'pg_trgm'") { rs ->
+                //language=text
+                require(rs.next()) { "pg_tgrm extension must be available. See https://dba.stackexchange.com/a/165301" }
+            }
         }
     }
 
