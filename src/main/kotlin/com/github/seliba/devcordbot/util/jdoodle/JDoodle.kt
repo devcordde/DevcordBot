@@ -67,7 +67,7 @@ object JDoodle {
         try {
             language = Language.valueOf(languageString.toUpperCase())
         } catch (e: IllegalArgumentException) {
-            listLanguages(context, "Sprache nicht gefunden. Verfügbare Sprachen:")
+            listLanguages(context, "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen:")
             return
         }
 
