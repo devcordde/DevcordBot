@@ -37,6 +37,7 @@ import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
+import net.dv8tion.jda.api.events.ReconnectedEvent
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -93,6 +94,16 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
         logger.warn { "Bot got disconnected (code: ${event.closeCode}) disabling Discord specific internals" }
         initializationStatus = false
         gameAnimator.stop()
+    }
+
+    /**
+     * Fired when the bot reconnects.
+     */
+    @EventSubscriber
+    fun whenReconnect(event: ReconnectedEvent) {
+        logger.info { "Bot reconnected reinitializing internals …" }
+        initializationStatus = true
+        gameAnimator.start()
     }
 
     private fun connectToDatabase(env: Dotenv) {
