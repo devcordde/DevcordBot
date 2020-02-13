@@ -53,14 +53,12 @@ object JDoodle {
         val split = text.split("\n")
 
         if (split.size < 2) {
-            context.respond(
+            return context.respond(
                 Embeds.error(
                     "Kein Skript angegeben.",
                     "Benutze ein Skript"
                 )
             ).queue()
-
-            return
         }
 
         val languageString = split.first()
