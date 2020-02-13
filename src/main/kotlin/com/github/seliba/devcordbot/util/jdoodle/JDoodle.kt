@@ -20,6 +20,7 @@ import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.constants.Embeds
 import io.github.cdimascio.dotenv.Dotenv
 import io.github.rybalkinsd.kohttp.dsl.httpPost
+import io.github.rybalkinsd.kohttp.ext.asString
 import io.github.rybalkinsd.kohttp.ext.url
 import okhttp3.Response
 
@@ -30,7 +31,6 @@ import okhttp3.Response
 object JDoodle {
     private var clientId = ""
     private var clientSecret = ""
-    private const val error = "Ein Fehler ist Aufgetreten"
 
     /**
      * Init the values for execution.
@@ -46,14 +46,34 @@ object JDoodle {
      * @param context a command context.
      */
     fun execute(context: Context) {
-        context.respond("Command not yet implemented.").queue()
+        var text = context.args.raw
 
-        val lang = "goasd"
+        if (!text.startsWith("```") && !text.endsWith("```")) {
+            context.respond(
+                Embeds.error("Konnte nicht evaluiert werden.", "Die Nachricht muss in einem Codeblock liegen")
+            )
+            return
+        }
+
+        text = text.subSequence(3, text.length - 3).toString()
+
+        val split = text.split("\n")
+
+        if (split.size < 2) {
+            context.respond(
+                Embeds.error(
+                    "Kein Skript angegeben.",
+                    "Benutze ein Skript"
+                )
+            ).queue()
+
+            return
+        }
 
         val language: Language
 
         try {
-            language = Language.valueOf(lang.toUpperCase())
+            language = Language.valueOf(split[0].toUpperCase())
         } catch (e: IllegalArgumentException) {
             context.respond(
                 Embeds.error(
@@ -65,7 +85,24 @@ object JDoodle {
             return
         }
 
-        println(language.toString())
+        val response =
+            execute(language, split.subList(1, split.size).joinToString("\n"))?.asString() ?: return internalError(
+                context
+            )
+
+        context.respond(Embeds.success("Skript ausgeführt", response)).queue()
+    }
+
+    /**
+     * Outputs an internal error
+     */
+    private fun internalError(context: Context) {
+        context.respond(
+            Embeds.error(
+                "Ein interner Fehler ist aufgetreten",
+                "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
+            )
+        ).queue()
     }
 
     /**
@@ -75,7 +112,6 @@ object JDoodle {
      * @param script the script
      */
     fun execute(language: Language, script: String): Response? {
-        println(script)
         return httpPost {
             url("https://api.jdoodle.com/v1/execute")
 
