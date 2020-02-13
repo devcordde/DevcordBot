@@ -23,10 +23,10 @@ import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.perrmission.Permission
 import com.github.seliba.devcordbot.constants.Colors
 import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.database.Tag
-import com.github.seliba.devcordbot.database.TagAlias
-import com.github.seliba.devcordbot.database.Tags
+import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.dsl.embed
+import com.github.seliba.devcordbot.menu.Paginator
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -49,6 +49,9 @@ class TagCommand : AbstractCommand() {
         registerCommands(EditCommand())
         registerCommands(InfoCommand())
         registerCommands(DeleteCommand())
+        registerCommands(ListCommand())
+        registerCommands(FromCommand())
+        registerCommands(SearchCommand())
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
 
@@ -168,6 +171,11 @@ class TagCommand : AbstractCommand() {
                     addField("Erstellt von", creator, inline = true)
                     addField("Benutzungen", tag.usages.toString(), inline = true)
                     addField("Rang", rank.toString(), inline = true)
+                    addField(
+                        "Aliase",
+                        aliases.joinToString(prefix = "`", separator = "`, `", postfix = "`"),
+                        inline = true
+                    )
                 }
             ).queue()
         }
@@ -196,6 +204,58 @@ class TagCommand : AbstractCommand() {
             ).queue()
         }
 
+    }
+
+    private inner class ListCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("list", "all")
+        override val displayName: String = "List"
+        override val description: String = "Gibt eine Liste aller Tags aus"
+        override val usage: String = ""
+
+        override fun execute(context: Context) {
+            val tags = transaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
+            if (tags.isEmpty()) {
+                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags.")).queue()
+            }
+            Paginator(tags, context.author, context.channel, "Tags")
+        }
+    }
+
+    private inner class FromCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("from", "by")
+        override val displayName: String = "from"
+        override val description: String = "Gibt eine Liste aller Tags eines bestimmten Benutzers aus"
+        override val usage: String = "<@user>"
+
+        override fun execute(context: Context) {
+            val user = context.args.user(0, context = context) ?: context.author
+            val tags = transaction { Tag.find { Tags.author eq user.idLong }.map(Tag::name) }
+            if (tags.isEmpty()) {
+                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
+                    .queue()
+            }
+            Paginator(tags, context.author, context.channel, "Tags von ${user.name}")
+        }
+    }
+
+    private inner class SearchCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("search", "find")
+        override val displayName: String = "search"
+        override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
+        override val usage: String = "<name>"
+
+        override fun execute(context: Context) {
+            val name = context.args.join()
+            val tags = transaction {
+                Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).limit(25)
+                    .map(Tag::name)
+            }
+            if (tags.isEmpty()) {
+                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Namen."))
+                    .queue()
+            }
+            Paginator(tags, context.author, context.channel, "Suche für $name")
+        }
     }
 
     private fun Tag.Companion.findByName(name: String) = Tag.findById(name) ?: TagAlias.findById(name)?.tag
@@ -244,13 +304,18 @@ class TagCommand : AbstractCommand() {
     }
 
     private fun checkNotTagExists(name: String, context: Context): Tag? {
-        return Tag.findByName(name) ?: return context.respond(
-            Embeds.error(
-                "Tag nicht gefunden!",
-                "Es wurde kein Tag mit dem Namen $name gefunden"
-            )
-        ).queue().run { null }
-
+        val foundTag = Tag.findByName(name)
+        return if (foundTag != null) foundTag else {
+            val similarTag =
+                Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).firstOrNull()
+            val similarTagHint = if (similarTag != null) " Meintest du vielleicht `${similarTag.name}`?" else null
+            return context.respond(
+                Embeds.error(
+                    "Tag nicht gefunden!",
+                    "Es wurde kein Tag mit dem Namen $name gefunden.$similarTagHint"
+                )
+            ).queue().run { null }
+        }
     }
 
     private fun

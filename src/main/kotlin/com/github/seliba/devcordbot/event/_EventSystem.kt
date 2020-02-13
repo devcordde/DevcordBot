@@ -17,9 +17,11 @@
 package com.github.seliba.devcordbot.event
 
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import mu.KotlinLogging
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.hooks.IEventManager
 import net.dv8tion.jda.api.hooks.SubscribeEvent
@@ -47,14 +49,18 @@ annotation class EventDescriber(val callParents: Boolean)
  * Enhanced Kotlin reimplementation of [net.dv8tion.jda.api.hooks.AnnotatedEventManager] adding ability to use [EventSubscriber].
  */
 class AnnotatedEventManager(
-    private val coroutineContext: CoroutineContext = DefaultThreadFactory.newSingleThreadExecutor(
+    coroutineContext: CoroutineContext = DefaultThreadFactory.newSingleThreadExecutor(
         "EventExecutor"
     ).asCoroutineDispatcher()
 ) :
     IEventManager {
 
+    private val logger = KotlinLogging.logger { }
     private val listeners = mutableListOf<Any>()
     private val functions = mutableMapOf<KType, MutableSet<InstanceFunction>>()
+    private val coroutine = coroutineContext + CoroutineExceptionHandler { _, throwable ->
+        logger.error(throwable) { "Exception caught in Event Listener" }
+    }
 
     /**
      * @see IEventManager.getRegisteredListeners
@@ -133,7 +139,7 @@ class AnnotatedEventManager(
         tailrec fun callEvent(eventClass: KClass<*>) {
             val functions = this.functions[eventClass.starProjectedType] ?: return
             functions.forEach {
-                GlobalScope.launch(coroutineContext) {
+                GlobalScope.launch(coroutine) {
                     it.call(event)
                 }
             }
