@@ -263,7 +263,7 @@ class TagCommand : AbstractCommand() {
     private inner class RawCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("raw")
         override val displayName: String = "Raw"
-        override val description: String = "Zeigt dir einen Tag ohne markdown an"
+        override val description: String = "Zeigt dir einen Tag ohne Markdown an"
         override val usage: String = "<tagname>"
 
         override fun execute(context: Context) {
