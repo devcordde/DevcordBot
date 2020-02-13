@@ -106,6 +106,9 @@ class TagCommand : AbstractCommand() {
             val args = context.args
             val aliasName = args.requiredArgument(0, context) ?: return
             val tagName = args.subList(1, args.size).joinToString(" ")
+            if (tagName.isBlank()) {
+                return context.sendHelp().queue()
+            }
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
             if (transaction { checkTagExists(aliasName, context) }) return
             val (newAliasName, newTagName) = transaction {
@@ -201,6 +204,9 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Löscht einen Tag"
         override val usage: String = "<tag>"
         override fun execute(context: Context) {
+            if (context.args.isEmpty()) {
+                return context.sendHelp().queue()
+            }
             val tag = transaction { checkNotTagExists(context.args.join(), context) } ?: return
             if (checkPermission(tag, context)) return
 
@@ -281,6 +287,9 @@ class TagCommand : AbstractCommand() {
         override val usage: String = "<tagname>"
 
         override fun execute(context: Context) {
+            if (context.args.isEmpty()) {
+                return context.sendHelp().queue()
+            }
             val tagName = context.args.join()
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
             val content = MarkdownSanitizer.sanitize(tag.content, MarkdownSanitizer.SanitizationStrategy.ESCAPE)
@@ -308,10 +317,16 @@ class TagCommand : AbstractCommand() {
 
     private fun parseTag(context: Context): Pair<String, String>? {
         val args = context.args.split("\n")
-        val (name, content) = if (args.size == 1) {
-            context.args.first() to context.args.subList(1, context.args.size).joinToString(" ")
-        } else {
-            args.first().trim() to args.subList(1, args.size).joinToString("\n")
+        val (name, content) = when {
+            context.args.isEmpty() -> {
+                "" to ""
+            }
+            args.size == 1 -> {
+                context.args.first() to context.args.subList(1, context.args.size).joinToString(" ")
+            }
+            else -> {
+                args.first().trim() to args.subList(1, args.size).joinToString("\n")
+            }
         }
         if (name.isBlank() or content.isBlank()) {
             context.sendHelp().queue()
