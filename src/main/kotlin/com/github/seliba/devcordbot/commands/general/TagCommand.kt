@@ -201,7 +201,7 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Löscht einen Tag"
         override val usage: String = "<tag>"
         override fun execute(context: Context) {
-            val tag = transaction { checkNotTagExists(name, context) } ?: return
+            val tag = transaction { checkNotTagExists(context.args.join(), context) } ?: return
             if (checkPermission(tag, context)) return
 
             transaction {
@@ -338,7 +338,7 @@ class TagCommand : AbstractCommand() {
         return if (foundTag != null) foundTag else {
             val similarTag =
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).firstOrNull()
-            val similarTagHint = if (similarTag != null) " Meintest du vielleicht `${similarTag.name}`?" else null
+            val similarTagHint = if (similarTag != null) " Meintest du vielleicht `${similarTag.name}`?" else ""
             return context.respond(
                 Embeds.error(
                     "Tag nicht gefunden!",
