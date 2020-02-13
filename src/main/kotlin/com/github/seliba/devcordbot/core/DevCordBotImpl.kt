@@ -40,6 +40,7 @@ import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
+import net.dv8tion.jda.api.events.ResumedEvent
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -98,10 +99,18 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
     }
 
     /**
+     * Fired when the bot can resume its previous connections when reconnecting.
+     */
+    @EventSubscriber
+    fun whenResumed(event: ResumedEvent) = reinitialize()
+
+    /**
      * Fired when the bot reconnects.
      */
     @EventSubscriber
-    fun whenReconnect(event: ReconnectedEvent) {
+    fun whenReconnect(event: ReconnectedEvent) = reinitialize()
+
+    private fun reinitialize() {
         logger.info { "Bot reconnected reinitializing internals …" }
         initializationStatus = true
         gameAnimator.start()
