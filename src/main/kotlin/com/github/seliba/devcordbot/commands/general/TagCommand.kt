@@ -212,7 +212,7 @@ class TagCommand : AbstractCommand() {
             context.respond(
                 Embeds.success(
                     "Tag erfolgreich gelöscht!",
-                    "Du hast den Tag mit dem Namen ${tag.name} erfolgreich gelöscht."
+                    "Du hast den Tag mit dem Namen `${tag.name}` erfolgreich gelöscht."
                 )
             ).queue()
         }
