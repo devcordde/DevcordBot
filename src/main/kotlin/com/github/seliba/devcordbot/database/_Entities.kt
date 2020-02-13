@@ -18,7 +18,6 @@
 
 package com.github.seliba.devcordbot.database
 
-import com.github.seliba.devcordbot.database.Tags.createdAt
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.LongEntity
