@@ -17,6 +17,7 @@
 package com.github.seliba.devcordbot.commands.general
 
 import com.github.seliba.devcordbot.command.AbstractCommand
+import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.perrmission.Permission
@@ -33,9 +34,24 @@ class EvalCommand : AbstractCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
+    init {
+        registerCommands(ListCommand())
+    }
+
     override fun execute(context: Context) {
         JDoodle.execute(context)
     }
 
+    private inner class ListCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("list", "ls")
+        override val displayName: String = "list"
+        override val description: String = "Listet die verfügbaren Sprachen auf."
+        override val usage: String = ""
+
+        override fun execute(context: Context) {
+            JDoodle.listLanguages(context, "Verfügbare Sprachen:")
+        }
+
+    }
 }
 
