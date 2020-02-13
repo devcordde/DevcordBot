@@ -92,7 +92,6 @@ class Paginator(
         val end = min(items.size, destinationPage * itemsPerPage)
         val rows = items.subList(start, end)
         return message.editMessage(renderEmbed(rows)).queue()
-
     }
 
     private fun renderEmbed(rows: List<CharSequence>) = embed {

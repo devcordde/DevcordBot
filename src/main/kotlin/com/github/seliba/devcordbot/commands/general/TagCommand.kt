@@ -93,7 +93,6 @@ class TagCommand : AbstractCommand() {
                 )
             ).queue()
         }
-
     }
 
     private inner class AliasCommand : AbstractSubCommand(this) {
@@ -146,7 +145,6 @@ class TagCommand : AbstractCommand() {
                 )
             ).queue()
         }
-
     }
 
     private inner class InfoCommand : AbstractSubCommand(this) {
@@ -194,7 +192,6 @@ class TagCommand : AbstractCommand() {
                 }
             ).queue()
         }
-
     }
 
     private inner class DeleteCommand : AbstractSubCommand(this) {
@@ -222,7 +219,6 @@ class TagCommand : AbstractCommand() {
                 )
             ).queue()
         }
-
     }
 
     private inner class ListCommand : AbstractSubCommand(this) {
@@ -322,7 +318,8 @@ class TagCommand : AbstractCommand() {
                 "" to ""
             }
             args.size == 1 -> {
-                context.args.first() to context.args.subList(1, context.args.size).joinToString(" ")
+                val name = context.args.first()
+                name to context.args.join().substring(name.length)
             }
             else -> {
                 args.first().trim() to args.subList(1, args.size).joinToString("\n")
