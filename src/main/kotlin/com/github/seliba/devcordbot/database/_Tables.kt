@@ -22,6 +22,7 @@ import com.github.seliba.devcordbot.database.TagAliases.name
 import com.github.seliba.devcordbot.database.TagAliases.tag
 import com.github.seliba.devcordbot.database.Tags.author
 import com.github.seliba.devcordbot.database.Tags.content
+import com.github.seliba.devcordbot.database.Tags.createdAt
 import com.github.seliba.devcordbot.database.Tags.name
 import com.github.seliba.devcordbot.database.Tags.usages
 import com.github.seliba.devcordbot.database.Users.experience
@@ -62,7 +63,7 @@ object Tags : IdTable<String>() {
      */
     override val id: Column<EntityID<String>>
         get() = name
-    val name: Column<EntityID<String>> = varchar("name", Tag.NAME_MAX_LENGTH).entityId()
+    val name: Column<EntityID<String>> = text("name").entityId()
     val usages: Column<Int> = integer("usages").default(0)
     val author: Column<Long> = long("author")
     val content: Column<String> = varchar("content", Message.MAX_CONTENT_LENGTH)
