@@ -241,7 +241,7 @@ class TagCommand : AbstractCommand() {
         override val usage: String = "<@user>"
 
         override fun execute(context: Context) {
-            val user = context.args.user(0, context = context) ?: context.author
+            val user = context.args.optionalUser(0, jda = context.jda) ?: context.author
             val tags = transaction { Tag.find { Tags.author eq user.idLong }.map(Tag::name) }
             if (tags.isEmpty()) {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
@@ -255,9 +255,12 @@ class TagCommand : AbstractCommand() {
         override val aliases: List<String> = listOf("search", "find")
         override val displayName: String = "search"
         override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
-        override val usage: String = "<name>"
+        override val usage: String = "<query>"
 
         override fun execute(context: Context) {
+            if (context.args.isEmpty()) {
+                return context.sendHelp().queue()
+            }
             val name = context.args.join()
             val tags = transaction {
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).limit(25)
