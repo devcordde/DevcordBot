@@ -104,7 +104,7 @@ object Embeds {
 
     private fun formatUsage(command: AbstractCommand): String {
         val builder = StringBuilder(Constants.firstPrefix)
-        builder.append(command.name).append(' ').append(command.usage.replace("\n", "\\n"))
+        builder.append(' ').append(command.name).append(' ').append(command.usage.replace("\n", "\\n"))
         if (command is AbstractSubCommand) {
             val prefix = " ${command.parent.name} "
             builder.insert(Constants.firstPrefix.length, prefix)
