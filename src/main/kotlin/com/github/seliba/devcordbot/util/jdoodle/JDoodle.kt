@@ -18,7 +18,7 @@ package com.github.seliba.devcordbot.util.jdoodle
 
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.constants.Embeds
-import io.github.cdimascio.dotenv.Dotenv
+import io.github.cdimascio.dotenv.dotenv
 import io.github.rybalkinsd.kohttp.dsl.httpPost
 import io.github.rybalkinsd.kohttp.ext.asString
 import io.github.rybalkinsd.kohttp.ext.url
@@ -36,7 +36,8 @@ object JDoodle {
     /**
      * Init the values for execution.
      */
-    fun init(env: Dotenv) {
+    init {
+        val env = dotenv()
         clientId = env["JDOODLE_CLIENTID"].orEmpty()
         clientSecret = env["JDOODLE_CLIENTSECRET"].orEmpty()
     }
@@ -62,7 +63,7 @@ object JDoodle {
             return
         }
 
-        val languageString = split[0]
+        val languageString = split.first()
         val language: Language
 
         try {
@@ -119,13 +120,13 @@ object JDoodle {
             context.respond(
                 Embeds.error(
                     "Konnte nicht evaluiert werden.",
-                    "Die Nachricht muss in einem Codeblock liegen"
+                    "Die Nachricht muss in einem Multiline-Codeblock liegen"
                 )
             )
             return null
         }
 
-        return text.subSequence(3, text.length - 3).toString()
+        return text.substring(3, text.length - 3)
     }
 
     /**
