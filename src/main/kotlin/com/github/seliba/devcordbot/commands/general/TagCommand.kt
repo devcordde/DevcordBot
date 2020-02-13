@@ -176,7 +176,11 @@ class TagCommand : AbstractCommand() {
                     addField("Rang", rank.toString(), inline = true)
                     addField(
                         "Aliase",
-                        aliases.joinToString(prefix = "`", separator = "`, `", postfix = "`"),
+                        TagAlias.find { TagAliases.tag eq tag.name }.joinToString(
+                            prefix = "`",
+                            separator = "`, `",
+                            postfix = "`"
+                        ),
                         inline = true
                     )
                 }
