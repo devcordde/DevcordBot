@@ -45,9 +45,18 @@ class EvalCommand : AbstractCommand() {
 
     override fun execute(context: Context) {
         context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).flatMap {
-            val text: String = evaluateMessage(context) ?: return@flatMap null
+            val text = context.args.raw
 
-            val split = text.split("\n")
+            if (!text.startsWith("```") && !text.endsWith("```")) {
+                return@flatMap it.editMessage(
+                    Embeds.error(
+                        "Konnte nicht evaluiert werden.",
+                        "Die Nachricht muss in einem Multiline-Codeblock liegen"
+                    )
+                )
+            }
+
+            val split = text.substring(3, text.length - 3).split("\n")
 
             if (split.size < 2) {
                 return@flatMap it.editMessage(
@@ -105,22 +114,6 @@ class EvalCommand : AbstractCommand() {
             )).queue()
         }
 
-    }
-
-    private fun evaluateMessage(context: Context): String? {
-        val text = context.args.raw
-
-        if (!text.startsWith("```") && !text.endsWith("```")) {
-            context.respond(
-                Embeds.error(
-                    "Konnte nicht evaluiert werden.",
-                    "Die Nachricht muss in einem Multiline-Codeblock liegen"
-                )
-            )
-            return null
-        }
-
-        return text.substring(3, text.length - 3)
     }
 }
 
