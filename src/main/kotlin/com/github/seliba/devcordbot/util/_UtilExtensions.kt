@@ -28,6 +28,7 @@ fun String.isNumeric(): Boolean = all(Char::isDigit)
  * Checks whether a string is not numeric or not
  * @see isNumeric
  */
+@Suppress("unused")
 fun String.isNotNumeric(): Boolean = !isNumeric()
 
 /**

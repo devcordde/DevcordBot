@@ -25,6 +25,7 @@ import com.github.seliba.devcordbot.dsl.editMessage
 import mu.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.*
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -67,9 +68,9 @@ class HastebinErrorHandler : ErrorHandler {
     }
 
     private fun postErrorToHastebin(text: String, client: OkHttpClient): CompletableFuture<String> {
-        val body = RequestBody.create(null, text)
+        val body = text.toRequestBody()
         val request = Request.Builder()
-            .url("${Constants.hastebinUrl}/documents")
+            .url(Constants.hastebinUrl.newBuilder().addPathSegment("documents").build())
             .post(body)
             .build()
         val future = CompletableFuture<String>()
@@ -81,9 +82,11 @@ class HastebinErrorHandler : ErrorHandler {
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     future.complete(
-                        "${Constants.hastebinUrl}/${DataObject.fromJson(response.body()!!.string()).getString(
-                            "key"
-                        )}.md"
+                        Constants.hastebinUrl.newBuilder().addPathSegment(
+                            DataObject.fromJson(response.body!!.string()).getString(
+                                "key"
+                            )
+                        ).toString()
                     )
                 }
             }
