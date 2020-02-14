@@ -16,6 +16,9 @@
 
 package com.github.seliba.devcordbot.constants
 
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
+
 /**
  * Miscellaneous constants used in the bot.
  */
@@ -34,6 +37,6 @@ object Constants {
     /**
      * URL that is used for pasting text.
      */
-    const val hastebinUrl: String = "https://haste.schlaubi.me"
+    val hastebinUrl: HttpUrl = "https://haste.schlaubi.me".toHttpUrl()
 
 }

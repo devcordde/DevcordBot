@@ -120,7 +120,7 @@ data class Context(
      * Sends a help embed for [command].
      * @see Embeds.command
      */
-    fun sendHelp() = respond(Embeds.command(command))
+    fun sendHelp(): MessageAction = respond(Embeds.command(command))
 
     /**
      * Checks whether the [member] has [Permission.ADMIN] or not.
