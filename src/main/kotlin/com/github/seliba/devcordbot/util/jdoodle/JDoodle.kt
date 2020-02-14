@@ -16,13 +16,9 @@
 
 package com.github.seliba.devcordbot.util.jdoodle
 
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.constants.Embeds
 import io.github.cdimascio.dotenv.dotenv
 import io.github.rybalkinsd.kohttp.dsl.httpPost
-import io.github.rybalkinsd.kohttp.ext.asString
 import io.github.rybalkinsd.kohttp.ext.url
-import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.Response
 
 
@@ -40,91 +36,6 @@ object JDoodle {
         val env = dotenv()
         clientId = env["JDOODLE_CLIENTID"].orEmpty()
         clientSecret = env["JDOODLE_CLIENTSECRET"].orEmpty()
-    }
-
-    /**
-     * Execute a script from command context.
-     *
-     * @param context a command context.
-     */
-    fun execute(context: Context) {
-        val text: String = evaluateMessage(context) ?: return
-
-        val split = text.split("\n")
-
-        if (split.size < 2) {
-            return context.respond(
-                Embeds.error(
-                    "Kein Skript angegeben.",
-                    "Benutze ein Skript"
-                )
-            ).queue()
-        }
-
-        val languageString = split.first()
-        val language: Language
-
-        try {
-            language = Language.valueOf(languageString.toUpperCase())
-        } catch (e: IllegalArgumentException) {
-            listLanguages(context, "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen:")
-            return
-        }
-
-        val script = split.subList(1, split.size).joinToString("\n")
-
-        val response =
-            execute(language, script)?.asString() ?: return internalError(
-                context
-            )
-        val output = DataObject.fromJson(response)["output"].toString()
-
-        context.respond(
-            Embeds.success(
-                "Skript ausgeführt",
-                "Sprache: ${language.humanReadable}\nSkript:```$script```Output:\n```$output```"
-            )
-        ).queue()
-    }
-
-    /**
-     * Outputs an internal error
-     */
-    private fun internalError(context: Context) {
-        context.respond(
-            Embeds.error(
-                "Ein interner Fehler ist aufgetreten",
-                "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
-            )
-        ).queue()
-    }
-
-    /**
-     * List available languages
-     */
-    fun listLanguages(context: Context, title: String) {
-        context.respond(
-            Embeds.error(
-                title,
-                "Verfügbare Sprachen: ${Language.values().joinToString(", ") { it.name.toLowerCase() }}"
-            )
-        ).queue()
-    }
-
-    private fun evaluateMessage(context: Context): String? {
-        val text = context.args.raw
-
-        if (!text.startsWith("```") && !text.endsWith("```")) {
-            context.respond(
-                Embeds.error(
-                    "Konnte nicht evaluiert werden.",
-                    "Die Nachricht muss in einem Multiline-Codeblock liegen"
-                )
-            )
-            return null
-        }
-
-        return text.substring(3, text.length - 3)
     }
 
     /**
