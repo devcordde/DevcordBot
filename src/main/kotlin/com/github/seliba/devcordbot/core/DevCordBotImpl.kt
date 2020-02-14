@@ -41,6 +41,7 @@ import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
 import net.dv8tion.jda.api.events.ResumedEvent
+import okhttp3.OkHttpClient
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -55,13 +56,15 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
     private var initializationStatus = false
 
     override val commandClient: CommandClient = CommandClientImpl(this, Constants.prefix)
+    override val httpClient: OkHttpClient = OkHttpClient()
+
     override val jda: JDA = JDABuilder(token)
         .setEventManager(AnnotatedEventManager())
         .setActivity(Activity.playing("Starting ..."))
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
+        .setHttpClient(httpClient)
         .addEventListeners(this@DevCordBotImpl, SelfMentionListener(), DatabaseUpdater(), commandClient)
         .build()
-
     override val gameAnimator = GameAnimator(jda, games)
 
     /**
@@ -111,7 +114,10 @@ internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGa
     fun whenReconnect(event: ReconnectedEvent) = reinitialize()
 
     private fun reinitialize() {
-        logger.info { "Bot reconnected reinitializing internals …" }
+        logger.info {
+            //language=TEXT
+            "Bot reconnected reinitializing internals …"
+        }
         initializationStatus = true
         gameAnimator.start()
     }
