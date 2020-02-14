@@ -16,15 +16,12 @@
 
 package com.github.seliba.devcordbot.util.jdoodle
 
-import io.github.cdimascio.dotenv.dotenv
 import io.github.rybalkinsd.kohttp.ext.asString
 
 /**
  * Execute a random JDoodle
  */
 fun main() {
-    JDoodle.init(dotenv())
-
     execAndLog(
         Language.PY, "x=10;\ny=25;\nz=x+y;\nprint (\"sum of x+y =\", z);".trimIndent()
     )
