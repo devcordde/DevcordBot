@@ -36,8 +36,8 @@ dependencies {
     implementation("io.github.microutils", "kotlin-logging", "1.7.8")
     implementation("org.slf4j", "slf4j-api", "2.0.0alpha1")
     implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
-//    implementation("io.sentry", "sentry", "1.7.27")
-//    implementation("io.sentry", "sentry-logback", "1.7.27")
+    implementation("io.sentry", "sentry", "1.7.30")
+    implementation("io.sentry", "sentry-logback", "1.7.30")
 
     implementation("org.jetbrains.exposed", "exposed-core", "0.21.1")
     implementation("org.jetbrains.exposed", "exposed-dao", "0.21.1")
