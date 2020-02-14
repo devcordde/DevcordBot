@@ -54,6 +54,5 @@ fun main() {
     }
 
     logger.info { "Launching DevCordBot..." }
-    Sentry.capture(Error("Cool test bro"))
     DevCordBotImpl(token, games, env)
 }
