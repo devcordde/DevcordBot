@@ -22,6 +22,8 @@ import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.perrmission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.requests.restaction.MessageAction
 import kotlin.random.Random
 
 /**
@@ -62,10 +64,10 @@ class MockCommand : AbstractCommand() {
 
             val paginator = context.channel.iterableHistory.limit(2).cache(false)
 
-            paginator.flatMap {
+            paginator.flatMap(fun(it: MutableList<Message>): MessageAction? {
                 if (it.size < 2) {
 
-                    return@flatMap context.respond(
+                    return context.respond(
                         Embeds.error(
                             "Keine Nachricht gefunden",
                             "Es konnte keine Nachricht in dem aktuellen Channel gefunden werden."
@@ -73,8 +75,11 @@ class MockCommand : AbstractCommand() {
                     )
                 }
 
-                return@flatMap context.respond(mock(it[1].contentRaw))
-            }.queue()
+                val message = it[1].contentRaw
+                if (message.isEmpty()) return null
+
+                return context.respond(mock(it[1].contentRaw))
+            }).queue()
         }
 
     }
