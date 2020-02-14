@@ -66,7 +66,7 @@ class EvalCommand : AbstractCommand() {
                 return@flatMap it.editMessage(
                     Embeds.error(
                         "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
-                        Language.values().joinToString(", ") { it.name.toLowerCase() }
+                        Language.values().joinToString(", ") { name.toLowerCase() }
                     )
                 )
             }
