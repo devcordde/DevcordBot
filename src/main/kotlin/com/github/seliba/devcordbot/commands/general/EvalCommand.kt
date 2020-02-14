@@ -21,7 +21,11 @@ import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.util.jdoodle.JDoodle
+import com.github.seliba.devcordbot.util.jdoodle.Language
+import io.github.rybalkinsd.kohttp.ext.asString
+import net.dv8tion.jda.api.utils.data.DataObject
 
 /**
  * Eval command.
@@ -39,7 +43,43 @@ class EvalCommand : AbstractCommand() {
     }
 
     override fun execute(context: Context) {
-        JDoodle.execute(context)
+        val text: String = evaluateMessage(context) ?: return
+
+        val split = text.split("\n")
+
+        if (split.size < 2) {
+            return context.respond(
+                Embeds.error(
+                    "Kein Skript angegeben.",
+                    "Benutze ein Skript"
+                )
+            ).queue()
+        }
+
+        val languageString = split.first()
+        val language: Language
+
+        try {
+            language = Language.valueOf(languageString.toUpperCase())
+        } catch (e: IllegalArgumentException) {
+            listLanguages(context, "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen:")
+            return
+        }
+
+        val script = split.subList(1, split.size).joinToString("\n")
+
+        val response =
+            JDoodle.execute(language, script)?.asString() ?: return internalError(
+                context
+            )
+        val output = DataObject.fromJson(response)["output"].toString()
+
+        context.respond(
+            Embeds.success(
+                "Skript ausgeführt",
+                "Sprache: ${language.humanReadable}\nSkript:```$script```Output:\n```$output```"
+            )
+        ).queue()
     }
 
     private inner class ListCommand : AbstractSubCommand(this) {
@@ -49,9 +89,49 @@ class EvalCommand : AbstractCommand() {
         override val usage: String = ""
 
         override fun execute(context: Context) {
-            JDoodle.listLanguages(context, "Verfügbare Sprachen:")
+            listLanguages(context, "Verfügbare Sprachen:")
         }
 
+    }
+
+    /**
+     * Outputs an internal error
+     */
+    private fun internalError(context: Context) {
+        context.respond(
+            Embeds.error(
+                "Ein interner Fehler ist aufgetreten",
+                "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
+            )
+        ).queue()
+    }
+
+    /**
+     * List available languages
+     */
+    private fun listLanguages(context: Context, title: String) {
+        context.respond(
+            Embeds.error(
+                title,
+                "Verfügbare Sprachen: ${Language.values().joinToString(", ") { it.name.toLowerCase() }}"
+            )
+        ).queue()
+    }
+
+    private fun evaluateMessage(context: Context): String? {
+        val text = context.args.raw
+
+        if (!text.startsWith("```") && !text.endsWith("```")) {
+            context.respond(
+                Embeds.error(
+                    "Konnte nicht evaluiert werden.",
+                    "Die Nachricht muss in einem Multiline-Codeblock liegen"
+                )
+            )
+            return null
+        }
+
+        return text.substring(3, text.length - 3)
     }
 }
 
