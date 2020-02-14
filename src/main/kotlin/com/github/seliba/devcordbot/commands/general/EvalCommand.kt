@@ -22,6 +22,7 @@ import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.perrmission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
+import com.github.seliba.devcordbot.dsl.editMessage
 import com.github.seliba.devcordbot.util.jdoodle.JDoodle
 import com.github.seliba.devcordbot.util.jdoodle.Language
 import io.github.rybalkinsd.kohttp.ext.asString
@@ -43,43 +44,52 @@ class EvalCommand : AbstractCommand() {
     }
 
     override fun execute(context: Context) {
-        val text: String = evaluateMessage(context) ?: return
+        context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).flatMap {
+            val text: String = evaluateMessage(context) ?: return@flatMap null
 
-        val split = text.split("\n")
+            val split = text.split("\n")
 
-        if (split.size < 2) {
-            return context.respond(
-                Embeds.error(
-                    "Kein Skript angegeben.",
-                    "Benutze ein Skript"
+            if (split.size < 2) {
+                return@flatMap it.editMessage(
+                    Embeds.error(
+                        "Kein Skript angegeben.",
+                        "Benutze ein Skript"
+                    )
                 )
-            ).queue()
-        }
+            }
 
-        val languageString = split.first()
-        val language: Language
+            val languageString = split.first()
 
-        try {
-            language = Language.valueOf(languageString.toUpperCase())
-        } catch (e: IllegalArgumentException) {
-            listLanguages(context, "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen:")
-            return
-        }
+            val language = try {
+                Language.valueOf(languageString.toUpperCase())
+            } catch (e: IllegalArgumentException) {
+                return@flatMap it.editMessage(
+                    Embeds.error(
+                        "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
+                        Language.values().joinToString(", ") { it.name.toLowerCase() }
+                    )
+                )
+            }
 
-        val script = split.subList(1, split.size).joinToString("\n")
+            val script = split.subList(1, split.size).joinToString("\n")
 
-        val response =
-            JDoodle.execute(language, script)?.asString() ?: return internalError(
-                context
+            val response = JDoodle.execute(language, script)?.asString()
+                ?: return@flatMap it.editMessage(
+                    Embeds.error(
+                        "Ein interner Fehler ist aufgetreten",
+                        "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
+                    )
+                )
+
+            val output = DataObject.fromJson(response)["output"].toString()
+
+            it.editMessage(
+                Embeds.success(
+                    "Skript ausgeführt",
+                    "Sprache: ${language.humanReadable}\nSkript:```$script```Output:\n```$output```"
+                )
             )
-        val output = DataObject.fromJson(response)["output"].toString()
-
-        context.respond(
-            Embeds.success(
-                "Skript ausgeführt",
-                "Sprache: ${language.humanReadable}\nSkript:```$script```Output:\n```$output```"
-            )
-        ).queue()
+        }.queue()
     }
 
     private inner class ListCommand : AbstractSubCommand(this) {
@@ -89,33 +99,12 @@ class EvalCommand : AbstractCommand() {
         override val usage: String = ""
 
         override fun execute(context: Context) {
-            listLanguages(context, "Verfügbare Sprachen:")
+            return context.respond(Embeds.info(
+                "Verfügbare Sprachen",
+                Language.values().joinToString(", ") { it.name.toLowerCase() }
+            )).queue()
         }
 
-    }
-
-    /**
-     * Outputs an internal error
-     */
-    private fun internalError(context: Context) {
-        context.respond(
-            Embeds.error(
-                "Ein interner Fehler ist aufgetreten",
-                "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
-            )
-        ).queue()
-    }
-
-    /**
-     * List available languages
-     */
-    private fun listLanguages(context: Context, title: String) {
-        context.respond(
-            Embeds.error(
-                title,
-                "Verfügbare Sprachen: ${Language.values().joinToString(", ") { it.name.toLowerCase() }}"
-            )
-        ).queue()
     }
 
     private fun evaluateMessage(context: Context): String? {
