@@ -50,8 +50,6 @@ dependencies {
         exclude(module = "opus-java")
     }
 
-    implementation(group = "io.github.rybalkinsd", name = "kohttp", version = "0.11.1")
-
     implementation("io.github.cdimascio", "java-dotenv", "5.1.3")
     implementation("com.squareup.okhttp3", "okhttp", "4.3.1")
 

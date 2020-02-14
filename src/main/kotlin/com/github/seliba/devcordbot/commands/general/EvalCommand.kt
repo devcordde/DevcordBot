@@ -25,7 +25,6 @@ import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.editMessage
 import com.github.seliba.devcordbot.util.jdoodle.JDoodle
 import com.github.seliba.devcordbot.util.jdoodle.Language
-import io.github.rybalkinsd.kohttp.ext.asString
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.requests.restaction.MessageAction
 import net.dv8tion.jda.api.utils.data.DataObject
@@ -84,7 +83,7 @@ class EvalCommand : AbstractCommand() {
 
             val script = split.subList(1, split.size).joinToString("\n")
 
-            val response = JDoodle.execute(language, script)?.asString()
+            val response = JDoodle.execute(context.jda.httpClient, language, script)
                 ?: return it.editMessage(
                     Embeds.error(
                         "Ein interner Fehler ist aufgetreten",

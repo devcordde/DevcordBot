@@ -17,17 +17,20 @@
 package com.github.seliba.devcordbot.util.jdoodle
 
 import io.github.cdimascio.dotenv.dotenv
-import io.github.rybalkinsd.kohttp.dsl.httpPost
-import io.github.rybalkinsd.kohttp.ext.url
-import okhttp3.Response
+import net.dv8tion.jda.api.utils.data.DataObject
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 
 /**
  * JDoodle Api wrapper
  */
 object JDoodle {
-    private var clientId = ""
-    private var clientSecret = ""
+    private val clientId: String
+    private val clientSecret: String
+    private val builder: Request.Builder
 
     /**
      * Init the values for execution.
@@ -36,6 +39,9 @@ object JDoodle {
         val env = dotenv()
         clientId = env["JDOODLE_CLIENTID"].orEmpty()
         clientSecret = env["JDOODLE_CLIENTSECRET"].orEmpty()
+        builder = Request.Builder()
+            .url("https://api.jdoodle.com/v1/execute".toHttpUrl())
+            .addHeader("Content-Type", "application/json")
     }
 
     /**
@@ -44,27 +50,23 @@ object JDoodle {
      * @param language the script's language
      * @param script the script
      */
-    fun execute(language: Language, script: String): Response? {
-        return httpPost {
-            url("https://api.jdoodle.com/v1/execute")
+    fun execute(client: OkHttpClient, language: Language, script: String): String? {
+        val dataObject = DataObject.empty()
+        dataObject.put("clientId", clientId)
+        dataObject.put("clientSecret", clientSecret)
+        dataObject.put("script", script)
+        dataObject.put("language", language.lang)
+        dataObject.put("versionIndex", language.code)
+        val bodyString = dataObject.toString()
 
-            body {
-                json {
-                    "clientId" to clientId
-                    "clientSecret" to clientSecret
-                    "script" to jsonSafeScript(script)
-                    "language" to language.lang
-                    "versionIndex" to language.code
-                }
-            }
+        val request = builder.post(bodyString.toRequestBody()).build()
+
+        val response = client.newCall(request).execute()
+
+        if (response.code != 200) {
+            return null
         }
-    }
 
-    /**
-     * Removes newlines and " from a given script.
-     *
-     * @param script the input script.
-     * @return a json safe string
-     */
-    private fun jsonSafeScript(script: String): String = script.replace("\n", "\\n").replace("\"", "\\\"")
+        return response.body?.string()
+    }
 }
