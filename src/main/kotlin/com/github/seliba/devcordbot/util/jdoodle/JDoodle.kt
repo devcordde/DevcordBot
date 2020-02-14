@@ -18,7 +18,7 @@ package com.github.seliba.devcordbot.util.jdoodle
 
 import io.github.cdimascio.dotenv.dotenv
 import net.dv8tion.jda.api.utils.data.DataObject
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -30,7 +30,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 object JDoodle {
     private val clientId: String
     private val clientSecret: String
-    private val builder: Request.Builder
 
     /**
      * Init the values for execution.
@@ -39,9 +38,6 @@ object JDoodle {
         val env = dotenv()
         clientId = env["JDOODLE_CLIENTID"].orEmpty()
         clientSecret = env["JDOODLE_CLIENTSECRET"].orEmpty()
-        builder = Request.Builder()
-            .url("https://api.jdoodle.com/v1/execute".toHttpUrl())
-            .addHeader("Content-Type", "application/json")
     }
 
     /**
@@ -59,7 +55,9 @@ object JDoodle {
         dataObject.put("versionIndex", language.code)
         val bodyString = dataObject.toString()
 
-        val request = builder.post(bodyString.toRequestBody()).build()
+        val request = Request.Builder()
+            .url("https://api.jdoodle.com/v1/execute")
+            .post(bodyString.toRequestBody("application/json".toMediaTypeOrNull())).build()
 
         val response = client.newCall(request).execute()
 

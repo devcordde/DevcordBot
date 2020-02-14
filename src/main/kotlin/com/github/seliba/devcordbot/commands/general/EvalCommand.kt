@@ -76,7 +76,7 @@ class EvalCommand : AbstractCommand() {
                 return it.editMessage(
                     Embeds.error(
                         "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
-                        Language.values().joinToString(", ") { name.toLowerCase() }
+                        languageList()
                     )
                 )
             }
@@ -102,6 +102,12 @@ class EvalCommand : AbstractCommand() {
         }).queue()
     }
 
+    private fun languageList() = Language.values().joinToString(
+        prefix = "`",
+        separator = "`, `",
+        postfix = "`"
+    ) { it.name.toLowerCase() }
+
     private inner class ListCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("list", "ls")
         override val displayName: String = "list"
@@ -109,12 +115,13 @@ class EvalCommand : AbstractCommand() {
         override val usage: String = ""
 
         override fun execute(context: Context) {
-            return context.respond(Embeds.info(
-                "Verfügbare Sprachen",
-                Language.values().joinToString(", ") { it.name.toLowerCase() }
-            )).queue()
+            return context.respond(
+                Embeds.info(
+                    "Verfügbare Sprachen",
+                    languageList()
+                )
+            ).queue()
         }
-
     }
 }
 
