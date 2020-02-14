@@ -33,26 +33,27 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.3")
 
-    implementation("io.github.microutils", "kotlin-logging", "1.7.7")
-    implementation("org.slf4j", "slf4j-api", "1.7.30")
-    implementation("ch.qos.logback", "logback-classic", "1.2.3")
-//    implementation("io.sentry", "sentry", "1.7.27")
-//    implementation("io.sentry", "sentry-logback", "1.7.27")
+    implementation("io.github.microutils", "kotlin-logging", "1.7.8")
+    implementation("org.slf4j", "slf4j-api", "2.0.0alpha1")
+    implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
+    implementation("io.sentry", "sentry", "1.7.30")
+    implementation("io.sentry", "sentry-logback", "1.7.30")
 
-    implementation("org.jetbrains.exposed", "exposed-core", "0.20.1")
-    implementation("org.jetbrains.exposed", "exposed-dao", "0.20.1")
-    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.20.1")
-    implementation("org.jetbrains.exposed", "exposed-java-time", "0.20.1")
-    implementation("org.postgresql", "postgresql", "42.2.9")
+    implementation("org.jetbrains.exposed", "exposed-core", "0.21.1")
+    implementation("org.jetbrains.exposed", "exposed-dao", "0.21.1")
+    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.21.1")
+    implementation("org.jetbrains.exposed", "exposed-java-time", "0.21.1")
+    implementation("org.postgresql", "postgresql", "42.2.10")
     implementation("com.zaxxer", "HikariCP", "3.4.2")
 
-    implementation("net.dv8tion", "JDA", "4.1.1_105") {
+    implementation("net.dv8tion", "JDA", "4.1.1_108") {
         exclude(module = "opus-java")
     }
 
     implementation(group = "io.github.rybalkinsd", name = "kohttp", version = "0.11.1")
 
     implementation("io.github.cdimascio", "java-dotenv", "5.1.3")
+    implementation("com.squareup.okhttp3", "okhttp", "4.3.1")
 
     testImplementation("org.mockito", "mockito-core", "3.2.4")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
