@@ -26,6 +26,8 @@ import com.github.seliba.devcordbot.dsl.editMessage
 import com.github.seliba.devcordbot.util.jdoodle.JDoodle
 import com.github.seliba.devcordbot.util.jdoodle.Language
 import io.github.rybalkinsd.kohttp.ext.asString
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.requests.restaction.MessageAction
 import net.dv8tion.jda.api.utils.data.DataObject
 
 /**
@@ -44,11 +46,11 @@ class EvalCommand : AbstractCommand() {
     }
 
     override fun execute(context: Context) {
-        context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).flatMap {
+        context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).flatMap(fun(it: Message): MessageAction {
             val text = context.args.raw
 
             if (!text.startsWith("```") && !text.endsWith("```")) {
-                return@flatMap it.editMessage(
+                return it.editMessage(
                     Embeds.error(
                         "Konnte nicht evaluiert werden.",
                         "Die Nachricht muss in einem Multiline-Codeblock liegen"
@@ -59,7 +61,7 @@ class EvalCommand : AbstractCommand() {
             val split = text.substring(3, text.length - 3).split("\n")
 
             if (split.size < 2) {
-                return@flatMap it.editMessage(
+                return it.editMessage(
                     Embeds.error(
                         "Kein Skript angegeben.",
                         "Benutze ein Skript"
@@ -72,7 +74,7 @@ class EvalCommand : AbstractCommand() {
             val language = try {
                 Language.valueOf(languageString.toUpperCase())
             } catch (e: IllegalArgumentException) {
-                return@flatMap it.editMessage(
+                return it.editMessage(
                     Embeds.error(
                         "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
                         Language.values().joinToString(", ") { name.toLowerCase() }
@@ -83,7 +85,7 @@ class EvalCommand : AbstractCommand() {
             val script = split.subList(1, split.size).joinToString("\n")
 
             val response = JDoodle.execute(language, script)?.asString()
-                ?: return@flatMap it.editMessage(
+                ?: return it.editMessage(
                     Embeds.error(
                         "Ein interner Fehler ist aufgetreten",
                         "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
@@ -92,13 +94,13 @@ class EvalCommand : AbstractCommand() {
 
             val output = DataObject.fromJson(response)["output"].toString()
 
-            it.editMessage(
+            return it.editMessage(
                 Embeds.success(
                     "Skript ausgeführt",
                     "Sprache: ${language.humanReadable}\nSkript:```$script```Output:\n```$output```"
                 )
             )
-        }.queue()
+        }).queue()
     }
 
     private inner class ListCommand : AbstractSubCommand(this) {
