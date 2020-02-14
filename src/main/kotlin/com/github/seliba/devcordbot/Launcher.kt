@@ -19,6 +19,7 @@ package com.github.seliba.devcordbot
 import com.github.seliba.devcordbot.core.DevCordBotImpl
 import com.github.seliba.devcordbot.core.GameAnimator
 import io.github.cdimascio.dotenv.dotenv
+import io.sentry.Sentry
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Activity
 import kotlin.system.exitProcess
@@ -31,6 +32,9 @@ private val logger = KotlinLogging.logger {}
  */
 fun main() {
     val env = dotenv()
+    env["SENTRY_DSN"]?.let {
+        Sentry.init("$it?stacktrace.app.packages=com.github.seliba.devcordbot")
+    }
     val token = env["DISCORD_TOKEN"]
     var games = env["GAMES"]?.split(";")?.map {
         if (it.startsWith("!")) {
@@ -50,5 +54,6 @@ fun main() {
     }
 
     logger.info { "Launching DevCordBot..." }
+    Sentry.capture(Error("Cool test bro"))
     DevCordBotImpl(token, games, env)
 }
