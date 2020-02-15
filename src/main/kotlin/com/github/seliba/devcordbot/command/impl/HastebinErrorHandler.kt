@@ -25,6 +25,7 @@ import com.github.seliba.devcordbot.dsl.editMessage
 import mu.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.io.PrintWriter
@@ -68,7 +69,7 @@ class HastebinErrorHandler : ErrorHandler {
     }
 
     private fun postErrorToHastebin(text: String, client: OkHttpClient): CompletableFuture<String> {
-        val body = text.toRequestBody()
+        val body = text.toRequestBody("application/json".toMediaTypeOrNull())
         val request = Request.Builder()
             .url(Constants.hastebinUrl.newBuilder().addPathSegment("documents").build())
             .post(body)

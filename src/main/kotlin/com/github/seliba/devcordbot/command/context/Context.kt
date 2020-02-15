@@ -18,7 +18,7 @@ package com.github.seliba.devcordbot.command.context
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandClient
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.EmbedConvention

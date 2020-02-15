@@ -22,7 +22,7 @@ import com.github.seliba.devcordbot.command.ErrorHandler
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.context.Arguments
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.sendMessage

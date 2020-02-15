@@ -20,7 +20,7 @@ import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.requests.restaction.MessageAction

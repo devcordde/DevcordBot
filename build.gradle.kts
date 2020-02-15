@@ -52,6 +52,8 @@ dependencies {
 
     implementation("io.github.cdimascio", "java-dotenv", "5.1.3")
     implementation("com.squareup.okhttp3", "okhttp", "4.3.1")
+    implementation("org.jsoup", "jsoup", "1.12.2")
+
 
     testImplementation("org.mockito", "mockito-core", "3.2.4")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
