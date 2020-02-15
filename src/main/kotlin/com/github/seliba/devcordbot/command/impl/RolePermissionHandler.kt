@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.entities.Member
  */
 class RolePermissionHandler : PermissionHandler {
     private val moderatorPattern = "(?i)moderator|admin(istrator)?".toRegex()
+    private val adminPattern = "(?i)admin(istrator)?".toRegex()
 
     override fun isCovered(
         permission: Permission,
@@ -33,7 +34,7 @@ class RolePermissionHandler : PermissionHandler {
         return when (permission) {
             Permission.ANY -> true
             Permission.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
-            Permission.ADMIN -> executor.roles.any { it.name.equals("administrator", ignoreCase = true) }
+            Permission.ADMIN -> executor.roles.any { it.name.matches(adminPattern) }
         }
     }
 }
