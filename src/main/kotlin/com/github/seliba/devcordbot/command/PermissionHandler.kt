@@ -16,7 +16,7 @@
 
 package com.github.seliba.devcordbot.command
 
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import net.dv8tion.jda.api.entities.Member
 
 /**

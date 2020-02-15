@@ -17,14 +17,14 @@
 package com.github.seliba.devcordbot.command.impl
 
 import com.github.seliba.devcordbot.command.PermissionHandler
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import net.dv8tion.jda.api.entities.Member
 
 /**
  * Implementation of [PermissionHandler] that checks the users roles,
  */
 class RolePermissionHandler : PermissionHandler {
-    private val moderatorPattern = "(?i)moderator|administrator".toRegex()
+    private val moderatorPattern = "(?i)moderator|admin(istrator)?".toRegex()
 
     override fun isCovered(
         permission: Permission,
