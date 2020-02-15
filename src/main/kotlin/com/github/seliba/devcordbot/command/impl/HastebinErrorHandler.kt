@@ -103,14 +103,14 @@ class HastebinErrorHandler : ErrorHandler {
     ): String {
         val information = StringBuilder()
         val channel = context.channel
-        information.append("TextChannel: ").append("#").append(channel.name)
-            .append("(").append(channel.id).appendln(")")
+        information.append("TextChannel: ").append('#').append(channel.name)
+            .append('(').append(channel.id).appendln(")")
         val guild = context.guild
-        information.append("Guild: ").append(guild.name).append("(").append(guild.id)
-            .appendln(")")
+        information.append("Guild: ").append(guild.name).append('(').append(guild.id)
+            .appendln(')')
         val executor = context.author
-        information.append("Executor: ").append("@").append(executor.name).append("#")
-            .append(executor.discriminator).append("(").append(executor.id).appendln(")")
+        information.append("Executor: ").append('@').append(executor.name).append('#')
+            .append(executor.discriminator).append('(').append(executor.id).appendln(')')
         val selfMember = guild.selfMember
         information.append("Permissions: ").appendln(selfMember.permissions)
         information.append("Channel permissions: ").appendln(selfMember.getPermissions(channel))
