@@ -152,8 +152,8 @@ class CommandClientImpl(
         val mention = guild.selfMember.asMention()
         val prefix = prefix.find(content)
         return when {
-            prefix != null -> prefix.range.last + 1
             content.startsWith(mention) -> mention.length
+            prefix != null -> prefix.range.last + 1
             else -> null
         }
     }
