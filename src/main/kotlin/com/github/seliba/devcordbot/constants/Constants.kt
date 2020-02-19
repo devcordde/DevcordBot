@@ -27,7 +27,7 @@ object Constants {
     /**
      * The prefix used for commands.
      */
-    val prefix: Regex = "((?i)s(u(do)?)?(?-i)|!)".toRegex()
+    val prefix: Regex = "^((?i)s(u(do)?)?(?-i)|!)".toRegex()
 
     /**
      * Prefix used for help messages.
