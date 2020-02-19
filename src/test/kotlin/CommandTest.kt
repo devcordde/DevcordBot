@@ -161,7 +161,7 @@ class CommandTest {
                 on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
             }
             selfMember = mock {
-                on { idLong }.thenReturn(123456789)
+                on { id }.thenReturn("123456789")
             }
             guild = mock {
                 on { this.selfMember }.thenReturn(selfMember)
