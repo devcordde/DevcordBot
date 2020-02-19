@@ -21,7 +21,7 @@ plugins {
 }
 
 group = "com.github.seliba"
-version = "1.0-SNAPSHOT"
+version = "2.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
