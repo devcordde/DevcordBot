@@ -18,7 +18,7 @@ package com.github.seliba.devcordbot.command.context
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandClient
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.EmbedConvention
@@ -120,7 +120,7 @@ data class Context(
      * Sends a help embed for [command].
      * @see Embeds.command
      */
-    fun sendHelp() = respond(Embeds.command(command))
+    fun sendHelp(): MessageAction = respond(Embeds.command(command))
 
     /**
      * Checks whether the [member] has [Permission.ADMIN] or not.

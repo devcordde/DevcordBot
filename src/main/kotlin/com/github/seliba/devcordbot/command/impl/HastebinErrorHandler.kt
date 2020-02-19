@@ -25,6 +25,8 @@ import com.github.seliba.devcordbot.dsl.editMessage
 import mu.KotlinLogging
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -67,9 +69,9 @@ class HastebinErrorHandler : ErrorHandler {
     }
 
     private fun postErrorToHastebin(text: String, client: OkHttpClient): CompletableFuture<String> {
-        val body = RequestBody.create(null, text)
+        val body = text.toRequestBody("application/json".toMediaTypeOrNull())
         val request = Request.Builder()
-            .url("${Constants.hastebinUrl}/documents")
+            .url(Constants.hastebinUrl.newBuilder().addPathSegment("documents").build())
             .post(body)
             .build()
         val future = CompletableFuture<String>()
@@ -81,9 +83,11 @@ class HastebinErrorHandler : ErrorHandler {
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     future.complete(
-                        "${Constants.hastebinUrl}/${DataObject.fromJson(response.body()!!.string()).getString(
-                            "key"
-                        )}.md"
+                        Constants.hastebinUrl.newBuilder().addPathSegment(
+                            DataObject.fromJson(response.body!!.string()).getString(
+                                "key"
+                            )
+                        ).toString()
                     )
                 }
             }
@@ -99,14 +103,14 @@ class HastebinErrorHandler : ErrorHandler {
     ): String {
         val information = StringBuilder()
         val channel = context.channel
-        information.append("TextChannel: ").append("#").append(channel.name)
-            .append("(").append(channel.id).appendln(")")
+        information.append("TextChannel: ").append('#').append(channel.name)
+            .append('(').append(channel.id).appendln(")")
         val guild = context.guild
-        information.append("Guild: ").append(guild.name).append("(").append(guild.id)
-            .appendln(")")
+        information.append("Guild: ").append(guild.name).append('(').append(guild.id)
+            .appendln(')')
         val executor = context.author
-        information.append("Executor: ").append("@").append(executor.name).append("#")
-            .append(executor.discriminator).append("(").append(executor.id).appendln(")")
+        information.append("Executor: ").append('@').append(executor.name).append('#')
+            .append(executor.discriminator).append('(').append(executor.id).appendln(')')
         val selfMember = guild.selfMember
         information.append("Permissions: ").appendln(selfMember.permissions)
         information.append("Channel permissions: ").appendln(selfMember.getPermissions(channel))
