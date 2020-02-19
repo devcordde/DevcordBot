@@ -40,7 +40,7 @@ class SelfMentionListener {
                 addField("Entwickler", "das_#9677 & Schlaubi#0001 & kobold#1524", inline = true)
                 addField(
                     "Source",
-                    "[github.com/Seliba/Devcordbot](https://github.com/Seliba/Devcordbot)",
+                    "[github.com/devcordde/Devcordbot](https://github.com/devcordde/Devcordbot)",
                     inline = true
                 )
                 addField("User", event.jda.users.size.toString(), inline = true)
