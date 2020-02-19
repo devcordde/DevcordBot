@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.core
 
 import com.github.seliba.devcordbot.command.CommandClient
 import net.dv8tion.jda.api.JDA
+import okhttp3.OkHttpClient
 
 /**
  * Main class of the bot
@@ -41,4 +42,9 @@ interface DevCordBot {
      * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
      */
     val isInitialized: Boolean
+
+    /**
+     * Http client used for JDA and the bot.
+     */
+    val httpClient: OkHttpClient
 }

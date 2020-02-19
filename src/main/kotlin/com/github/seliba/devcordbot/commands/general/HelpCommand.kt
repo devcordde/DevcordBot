@@ -19,8 +19,10 @@ package com.github.seliba.devcordbot.commands.general
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
+import com.github.seliba.devcordbot.dsl.editMessage
+import java.time.Duration
 
 /**
  * Help command.
@@ -34,6 +36,10 @@ class HelpCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override fun execute(context: Context) {
+        if (context.args.firstOrNull() == "secret") {
+            return context.respond(Embeds.info("Test")).flatMap { it.editMessage(Embeds.info("test2")) }
+                .delay(Duration.ofSeconds(2)).queue()
+        }
         val commandName = context.args.optionalArgument(0)
         if (commandName == null) {
             sendCommandList(context)
@@ -57,7 +63,7 @@ class HelpCommand : AbstractCommand() {
     private fun sendCommandList(context: Context) {
         context.respond(
             Embeds.info(
-                "Befehls-Hilfe", """Dies ist eine Lister aller Befehle, die du benutzen kannst,
+                "Befehls-Hilfe", """Dies ist eine Liste aller Befehle, die du benutzen kannst,
             | um mehr über einen Befehl zu erfahren kannst du `sudo help [command]` ausführen
         """.trimMargin()
             ) {

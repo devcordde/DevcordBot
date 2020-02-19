@@ -22,7 +22,7 @@ import com.github.seliba.devcordbot.command.ErrorHandler
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.context.Arguments
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.sendMessage
@@ -40,6 +40,9 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
+import java.time.Duration
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
@@ -49,7 +52,7 @@ import kotlin.coroutines.CoroutineContext
  * @param prefix the prefix used for commands
  */
 class CommandClientImpl(
-    private val bot: DevCordBot, prefix: Regex, override val executor: CoroutineContext =
+    private val bot: DevCordBot, private val prefix: Regex, override val executor: CoroutineContext =
         Executors.newFixedThreadPool(
             5,
             DefaultThreadFactory("CommandExecution")
@@ -58,18 +61,23 @@ class CommandClientImpl(
 
     private val logger = KotlinLogging.logger { }
     private val delimiter = "\\s+".toRegex()
-    private val prefix = prefix.toPattern()
 
     override val permissionHandler: PermissionHandler = RolePermissionHandler()
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
-
     override val errorHandler: ErrorHandler = HastebinErrorHandler()
 
     /**
      * Listens for message updates.
      */
     @EventSubscriber
-    fun onMessageEdit(event: GuildMessageUpdateEvent): Unit = dispatchCommand(event.message)
+    fun onMessageEdit(event: GuildMessageUpdateEvent) {
+        if (Duration.between(event.message.timeCreated, OffsetDateTime.now()) > Duration.of(
+                30,
+                ChronoUnit.SECONDS
+            )
+        ) return
+        dispatchCommand(event.message)
+    }
 
     /**
      * Listens for new messages.
@@ -90,7 +98,7 @@ class CommandClientImpl(
         val rawInput = message.contentRaw
         val prefix = resolvePrefix(message.guild, rawInput) ?: return
 
-        val nonPrefixedInput = rawInput.substring(prefix.length).trim()
+        val nonPrefixedInput = rawInput.substring(prefix).trim()
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
@@ -128,11 +136,7 @@ class CommandClientImpl(
             // Search command associated with invoke or return previously found command
             val foundCommand = associations[invoke] ?: return command?.let { CommandContainer(it, arguments) }
             // Cut off invoke
-            val newArgsList = if (arguments.size > 1)
-                arguments.subList(1, arguments.size)
-            else
-                emptyList()
-            val newArgs = Arguments(newArgsList, raw = arguments.raw.substring(invoke.length).trim())
+            val newArgs = Arguments(arguments.drop(1), raw = arguments.raw.substring(invoke.length).trim())
             // Look for sub commands
             if (foundCommand.hasSubCommands() and newArgs.isNotEmpty()) {
                 return findCommand(newArgs, foundCommand.commandAssociations, foundCommand)
@@ -144,12 +148,12 @@ class CommandClientImpl(
         return findCommand(Arguments(input.trim().split(delimiter), raw = input), commandAssociations)
     }
 
-    private fun resolvePrefix(guild: Guild, content: String): String? {
+    private fun resolvePrefix(guild: Guild, content: String): Int? {
         val mention = guild.selfMember.asMention()
-        val matcher = prefix.matcher(content)
+        val prefix = prefix.find(content)
         return when {
-            content.startsWith(mention) -> mention
-            matcher.matches() -> matcher.group(1)
+            content.startsWith(mention) -> mention.length
+            prefix != null -> prefix.range.last + 1
             else -> null
         }
     }

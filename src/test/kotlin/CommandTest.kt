@@ -17,7 +17,7 @@
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
-import com.github.seliba.devcordbot.command.perrmission.Permission
+import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.util.asMention
@@ -161,7 +161,7 @@ class CommandTest {
                 on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
             }
             selfMember = mock {
-                on { idLong }.thenReturn(123456789)
+                on { id }.thenReturn("123456789")
             }
             guild = mock {
                 on { this.selfMember }.thenReturn(selfMember)
