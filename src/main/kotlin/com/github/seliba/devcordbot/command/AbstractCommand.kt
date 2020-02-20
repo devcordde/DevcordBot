@@ -30,9 +30,10 @@ import com.github.seliba.devcordbot.command.permission.Permission
  * @property commandAssociations all alias-command associations of sub-commands
  * @property category the [CommandCategory] of the command
  */
-abstract class AbstractCommand : CommandRegistry {
+abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
 
-    override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
+    @Deprecated("Use subCommandAssociations instead", ReplaceWith("subCommandAssociations"))
+    override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
 
     abstract val aliases: List<String>
     val name: String
@@ -49,10 +50,4 @@ abstract class AbstractCommand : CommandRegistry {
      */
     abstract fun execute(context: Context)
 
-    override fun registerCommands(vararg commands: AbstractCommand) {
-        if (commands.any { it !is AbstractSubCommand }) {
-            error("SubCommand require extending AbstractSubCommand")
-        }
-        super.registerCommands(*commands)
-    }
 }
