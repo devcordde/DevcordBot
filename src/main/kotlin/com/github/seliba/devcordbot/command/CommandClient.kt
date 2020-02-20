@@ -21,7 +21,7 @@ import kotlin.coroutines.CoroutineContext
 /**
  * Parser and manager for [AbstractCommand](commands).
  */
-interface CommandClient : CommandRegistry {
+interface CommandClient : CommandRegistry<AbstractCommand> {
 
     /**
      * The [CoroutineContext] used to execute commands.
