@@ -28,6 +28,7 @@ import com.github.seliba.devcordbot.util.jdoodle.Language
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.exceptions.ParsingException
 import net.dv8tion.jda.api.requests.restaction.MessageAction
+import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import net.dv8tion.jda.api.utils.data.DataObject
 
 /**
@@ -37,7 +38,7 @@ class EvalCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("eval", "exec", "execute", "run")
     override val displayName: String = "eval"
     override val description: String = "Führt den angegebenen Code aus."
-    override val usage: String = "\n\\`\\`\\`<language>\n<code>\n\\`\\`\\`"
+    override val usage: String = MarkdownSanitizer.escape("\n```<language>\n<code>\n```")
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
@@ -47,7 +48,7 @@ class EvalCommand : AbstractCommand() {
 
     private fun example(title: String) = Embeds.error(
         title,
-        "`Beispiel`\n\\`\\`\\`node\nconsole.log(\"test\")\n\\`\\`\\`"
+        "`Beispiel`\n${MarkdownSanitizer.escape("```kotlin\nfun main() = print(\"Hello World\")\n```")}"
     )
 
     private fun internalError() = Embeds.error(
@@ -88,9 +89,8 @@ class EvalCommand : AbstractCommand() {
             val response = JDoodle.execute(context.jda.httpClient, language, script)
                 ?: return it.editMessage(internalError())
 
-            val output: String
-            try {
-                output = DataObject.fromJson(response)["output"].toString()
+            val output = try {
+                DataObject.fromJson(response)["output"].toString()
             } catch (p: ParsingException) {
                 return it.editMessage(internalError())
             }
