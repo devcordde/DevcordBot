@@ -288,7 +288,7 @@ class TagCommand : AbstractCommand() {
             }
             val tagName = context.args.join()
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
-            val content = MarkdownSanitizer.sanitize(tag.content, MarkdownSanitizer.SanitizationStrategy.ESCAPE)
+            val content = MarkdownSanitizer.escape(tag.content)
             context.respond(content).queue()
         }
     }
