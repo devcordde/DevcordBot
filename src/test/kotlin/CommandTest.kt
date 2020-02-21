@@ -77,7 +77,7 @@ class CommandTest {
 
         val command = mockCommand {
             on { aliases }.thenReturn(listOf("test"))
-            on { subCommandAssociations }.thenReturn(mutableMapOf("sub" to subCommand))
+            on { commandAssociations }.thenReturn(mutableMapOf("sub" to subCommand))
         }
 
         ensureCommandCall(message, command, arguments.subList(1, arguments.size), subCommand)
