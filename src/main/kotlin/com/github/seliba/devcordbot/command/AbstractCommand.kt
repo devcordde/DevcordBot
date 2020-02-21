@@ -32,7 +32,6 @@ import com.github.seliba.devcordbot.command.permission.Permission
  */
 abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
 
-    @Deprecated("Use subCommandAssociations instead", ReplaceWith("subCommandAssociations"))
     override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
 
     abstract val aliases: List<String>
