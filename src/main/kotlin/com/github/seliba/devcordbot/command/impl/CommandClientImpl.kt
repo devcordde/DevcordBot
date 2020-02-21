@@ -139,7 +139,7 @@ class CommandClientImpl(
             val newArgs = Arguments(arguments.drop(1), raw = arguments.raw.substring(invoke.length).trim())
             // Look for sub commands
             if (foundCommand.hasSubCommands() and newArgs.isNotEmpty()) {
-                return findCommand(newArgs, foundCommand.commandAssociations, foundCommand)
+                return findCommand(newArgs, foundCommand.subCommandAssociations, foundCommand)
             }
             // Return command if now sub-commands were found
             return CommandContainer(foundCommand, newArgs)
