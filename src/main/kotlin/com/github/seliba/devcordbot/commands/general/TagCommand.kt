@@ -26,6 +26,7 @@ import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.dsl.embed
 import com.github.seliba.devcordbot.menu.Paginator
+import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
@@ -312,6 +313,25 @@ class TagCommand : AbstractCommand() {
     }
 
     private fun parseTag(context: Context): Pair<String, String>? {
+        fun sanitizeMentions(content: String): String {
+            fun sanitizeMention(mentionable: IMentionable): String {
+                return when (mentionable) {
+                    is Member -> mentionable.user.asTag
+                    is Role -> mentionable.name
+                    else -> "Unknown mention"
+                }
+            }
+
+            return (context.message.mentionedMembers + context.message.mentionedRoles)
+                .fold(content, fun(previous: String, snowflake: ISnowflake): String {
+                    val mentionable = snowflake as IMentionable
+                    if (content.contains(mentionable.asMention)) {
+                        return previous.replace(mentionable.asMention, sanitizeMention(mentionable))
+                    }
+                    return previous
+                })
+        }
+
         val args = context.args.split("\n")
         val (name, content) = when {
             context.args.isEmpty() -> {
@@ -319,10 +339,10 @@ class TagCommand : AbstractCommand() {
             }
             args.size == 1 -> {
                 val name = context.args.first()
-                name to context.args.join().substring(name.length)
+                name to sanitizeMentions(context.args.join().substring(name.length))
             }
             else -> {
-                args.first().trim() to args.subList(1, args.size).joinToString("\n")
+                args.first().trim() to sanitizeMentions(args.subList(1, args.size).joinToString("\n"))
             }
         }
         if (name.isBlank() or content.isBlank()) {
