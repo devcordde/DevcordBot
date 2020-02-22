@@ -31,5 +31,9 @@ enum class Permission {
     /**
      * Only administrators can execute the command.
      */
-    ADMIN
+    ADMIN,
+    /**
+     * Commands only executable by bot owners.
+     */
+    BOT_OWNER
 }
