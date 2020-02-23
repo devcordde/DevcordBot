@@ -64,7 +64,7 @@ class CommandClientImpl(
 
     override val permissionHandler: PermissionHandler = RolePermissionHandler()
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
-    override val errorHandler: ErrorHandler = HastebinErrorHandler()
+    override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
 
     /**
      * Listens for message updates.

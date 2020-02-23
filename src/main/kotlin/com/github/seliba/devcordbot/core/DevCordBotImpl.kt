@@ -46,7 +46,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
 /**
  * General class to manage the Discord bot.
  */
-internal class DevCordBotImpl(token: String, games: List<GameAnimator.AnimatedGame>, env: Dotenv) : DevCordBot {
+internal class DevCordBotImpl(
+    token: String,
+    games: List<GameAnimator.AnimatedGame>,
+    env: Dotenv,
+    override val debugMode: Boolean
+) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
     private lateinit var dataSource: HikariDataSource
