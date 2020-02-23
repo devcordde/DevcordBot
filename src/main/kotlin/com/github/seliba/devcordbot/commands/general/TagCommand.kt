@@ -322,11 +322,13 @@ class TagCommand : AbstractCommand() {
                 }
             }
 
-            return (context.message.mentionedMembers + context.message.mentionedRoles)
-                .fold(content, fun(previous: String, snowflake: ISnowflake): String {
-                    val mentionable = snowflake as IMentionable
-                    if (content.contains(mentionable.asMention)) {
-                        return previous.replace(mentionable.asMention, sanitizeMention(mentionable))
+            val mentions: List<IMentionable> = context.message.mentionedMembers + context.message.mentionedRoles
+
+            return mentions
+                .fold(content, fun(previous: String, mentionable: IMentionable): String {
+                    val mention = mentionable.asMention
+                    if (content.contains(mention)) {
+                        return previous.replace(mention, sanitizeMention(mentionable))
                     }
                     return previous
                 })

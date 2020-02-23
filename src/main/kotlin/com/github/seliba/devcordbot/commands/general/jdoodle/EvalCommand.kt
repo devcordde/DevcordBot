@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.seliba.devcordbot.commands.general.jdoodle
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
@@ -23,8 +23,6 @@ import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.editMessage
-import com.github.seliba.devcordbot.util.jdoodle.JDoodle
-import com.github.seliba.devcordbot.util.jdoodle.Language
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.exceptions.ParsingException
 import net.dv8tion.jda.api.requests.restaction.MessageAction

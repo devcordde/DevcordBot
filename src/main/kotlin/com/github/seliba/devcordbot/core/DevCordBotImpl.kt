@@ -19,6 +19,8 @@ package com.github.seliba.devcordbot.core
 import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.commands.general.*
+import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
+import com.github.seliba.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.database.TagAliases
 import com.github.seliba.devcordbot.database.Tags
@@ -152,7 +154,8 @@ internal class DevCordBotImpl(
             MockCommand(),
             TagCommand(),
             LmgtfyCommand(),
-            EvalCommand()
+            EvalCommand(),
+            OwnerEvalCommand()
         )
     }
 }
