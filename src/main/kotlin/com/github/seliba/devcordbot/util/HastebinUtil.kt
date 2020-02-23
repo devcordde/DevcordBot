@@ -46,7 +46,8 @@ object HastebinUtil {
                     Constants.hastebinUrl.newBuilder().addPathSegment(
                         DataObject.fromJson(body.string()).getString(
                             "key"
-                        )).toString()
+                        )
+                    ).toString()
                 }
             }
         }
