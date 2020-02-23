@@ -47,4 +47,9 @@ interface DevCordBot {
      * Http client used for JDA and the bot.
      */
     val httpClient: OkHttpClient
+
+    /**
+     * Whether the bot is in debug mode or not.
+     */
+    val debugMode: Boolean
 }
