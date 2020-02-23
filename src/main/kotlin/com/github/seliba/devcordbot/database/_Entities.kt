@@ -78,4 +78,3 @@ class TagAlias(alias: EntityID<String>) : Entity<String>(alias) {
         get() = id.value
     var tag: Tag by Tag referencedOn TagAliases.tag
 }
-
