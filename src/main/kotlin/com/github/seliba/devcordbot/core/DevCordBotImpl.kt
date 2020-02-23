@@ -57,7 +57,6 @@ internal class DevCordBotImpl(
 
     private val logger = KotlinLogging.logger { }
     private lateinit var dataSource: HikariDataSource
-    private var initializationStatus = false
 
     override val commandClient: CommandClient = CommandClientImpl(this, Constants.prefix)
     override val httpClient: OkHttpClient = OkHttpClient()
@@ -74,8 +73,8 @@ internal class DevCordBotImpl(
     /**
      * Whether the bot received the [ReadyEvent] or not.
      */
-    override val isInitialized: Boolean
-        get() = initializationStatus
+    override var isInitialized: Boolean = false
+        private set
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
@@ -90,7 +89,7 @@ internal class DevCordBotImpl(
     @EventSubscriber
     fun whenReady(event: ReadyEvent) {
         logger.info { "Received Ready event initializing bot internals …" }
-        initializationStatus = true
+        isInitialized = true
         event.jda.presence.setStatus(OnlineStatus.ONLINE)
         gameAnimator.start()
     }
@@ -101,7 +100,7 @@ internal class DevCordBotImpl(
     @EventSubscriber
     fun whenDisconnected(event: DisconnectEvent) {
         logger.warn { "Bot got disconnected (code: ${event.closeCode}) disabling Discord specific internals" }
-        initializationStatus = false
+        isInitialized = false
         gameAnimator.stop()
     }
 
@@ -122,7 +121,7 @@ internal class DevCordBotImpl(
             //language=TEXT
             "Bot reconnected reinitializing internals …"
         }
-        initializationStatus = true
+        isInitialized = true
         gameAnimator.start()
     }
 
