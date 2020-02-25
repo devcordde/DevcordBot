@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot;
+package com.github.seliba.devcordbot.migrator;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -38,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TomlData {
 
-    private static final Logger LOGGER = .getLogger(Rankbot.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(Migrator.class);
     private File file;
     private Map<String, Object> entrys = new HashMap<>();
 
@@ -77,8 +79,7 @@ public class TomlData {
             }
             scanner.close();
         } catch (IOException exception) {
-            LOGGER.error(exception, exception);
-            exception.printStackTrace();
+            LOGGER.error("An error occurred while parsing file", exception);
         }
     }
 
@@ -135,8 +136,7 @@ public class TomlData {
         try {
             Files.write(filePath, lines, Charset.forName("UTF-8"));
         } catch (IOException exception) {
-            System.out.println("Error while saving file " + file.getName() + "!");
-            exception.printStackTrace();
+            LOGGER.atError().setCause(exception).log("Error while saving file {}!", file.getName());
         }
     }
 }
