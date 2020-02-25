@@ -40,7 +40,7 @@ class HastebinErrorHandler : ErrorHandler {
         exception: Throwable,
         context: Context,
         thread: Thread,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext?
     ) {
         logger.error(exception) { "An error occurred whilst command execution" }
         context.respond(
@@ -65,7 +65,7 @@ class HastebinErrorHandler : ErrorHandler {
         e: Throwable,
         context: Context,
         thread: Thread,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext?
     ): String {
         val information = StringBuilder()
         val channel = context.channel

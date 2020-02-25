@@ -36,11 +36,8 @@ typealias ArgumentConverter<T> = (String) -> T
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Arguments(
-    // TODO: make raw private and "undeprecate" it
-    private val list: List<String>, @Deprecated(
-        "Raw will only be used internally",
-        ReplaceWith("join()")
-    ) val raw: String
+    private val list: List<String>,
+    private val raw: String
 ) :
     List<String> by list {
 

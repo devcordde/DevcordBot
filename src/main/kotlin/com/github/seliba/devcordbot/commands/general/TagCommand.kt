@@ -233,7 +233,7 @@ class TagCommand : AbstractCommand() {
             if (tags.isEmpty()) {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags.")).queue()
             }
-            Paginator(tags, context.author, context.channel, "Tags")
+            Paginator(tags, context.author, context, "Tags")
         }
     }
 
@@ -250,7 +250,7 @@ class TagCommand : AbstractCommand() {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
                     .queue()
             }
-            Paginator(tags, context.author, context.channel, "Tags von ${user.name}")
+            Paginator(tags, context.author, context, "Tags von ${user.name}")
         }
     }
 
@@ -273,7 +273,7 @@ class TagCommand : AbstractCommand() {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Namen."))
                     .queue()
             }
-            Paginator(tags, context.author, context.channel, "Suche für $name")
+            Paginator(tags, context.author, context, "Suche für $name")
         }
     }
 

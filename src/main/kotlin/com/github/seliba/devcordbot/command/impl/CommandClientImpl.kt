@@ -136,7 +136,7 @@ class CommandClientImpl(
             // Search command associated with invoke or return previously found command
             val foundCommand = associations[invoke] ?: return command?.let { CommandContainer(it, arguments) }
             // Cut off invoke
-            val newArgs = Arguments(arguments.drop(1), raw = arguments.raw.substring(invoke.length).trim())
+            val newArgs = Arguments(arguments.drop(1), raw = arguments.join().substring(invoke.length).trim())
             // Look for sub commands
             if (foundCommand.hasSubCommands() and newArgs.isNotEmpty()) {
                 return findCommand(newArgs, foundCommand.commandAssociations, foundCommand)
