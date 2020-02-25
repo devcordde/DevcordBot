@@ -40,6 +40,10 @@ class DatabaseUpdater {
     fun onMemberLeave(event: GuildMemberLeaveEvent): Unit = deleteUser(event.member.idLong)
 
     private fun createUserInDatabase(id: Long) {
+        if (DevCordUser.findById(id) == null) {
+            return
+        }
+
         transaction {
             DevCordUser.new(id) {}
         }
