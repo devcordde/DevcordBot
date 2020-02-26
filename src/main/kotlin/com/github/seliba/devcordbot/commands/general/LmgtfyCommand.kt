@@ -28,7 +28,7 @@ import java.net.URLEncoder
  * Lmgtfy command.
  */
 class LmgtfyCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("lmgtfy", "google")
+    override val aliases: List<String> = listOf("lmgtfy", "google", "g")
     override val displayName: String = "lmgtfy"
     override val description: String = "Gibt einen lmgtfy-Link aus."
     override val usage: String = "<text>"
