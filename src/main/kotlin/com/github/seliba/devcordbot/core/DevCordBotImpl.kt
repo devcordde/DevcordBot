@@ -40,6 +40,7 @@ import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
 import net.dv8tion.jda.api.events.ResumedEvent
+import net.dv8tion.jda.api.requests.RestAction
 import okhttp3.OkHttpClient
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -56,6 +57,7 @@ internal class DevCordBotImpl(
 ) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
+    private val restActionLogger = KotlinLogging.logger("RestAction")
     private lateinit var dataSource: HikariDataSource
 
     override val commandClient: CommandClient = CommandClientImpl(this, Constants.prefix)
@@ -78,6 +80,9 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
+        RestAction.setDefaultFailure {
+            restActionLogger.error(it) { "An error occurred while executing restaction" }
+        }
         registerCommands()
         logger.info { "Establishing connection to the database …" }
         connectToDatabase(env)
