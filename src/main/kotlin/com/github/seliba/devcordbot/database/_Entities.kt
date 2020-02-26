@@ -18,11 +18,18 @@
 
 package com.github.seliba.devcordbot.database
 
+import com.github.seliba.devcordbot.database.StarboardEntries.authorId
+import com.github.seliba.devcordbot.database.StarboardEntries.botMessageId
+import com.github.seliba.devcordbot.database.StarboardEntries.channelId
+import com.github.seliba.devcordbot.database.StarboardEntries.messageId
+import com.github.seliba.devcordbot.database.Starrers.authorId
+import com.github.seliba.devcordbot.database.Starrers.entry
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SizedIterable
 import java.time.Instant
 
 /**
@@ -77,4 +84,40 @@ class TagAlias(alias: EntityID<String>) : Entity<String>(alias) {
     val name: String
         get() = id.value
     var tag: Tag by Tag referencedOn TagAliases.tag
+}
+
+/**
+ * Representation of starboard entry.
+ * @property botMessageId the id of the bot's tracking message
+ * @property messageId the id of the starred message
+ * @property channelId the id of the channel the message was sent in
+ * @property authorId the id of the author who sent the message
+ * @property starrers starrers of this entry
+ */
+class StarboardEntry(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<StarboardEntry>(StarboardEntries)
+
+    var botMessageId: Long by StarboardEntries.botMessageId
+    var messageId: Long by StarboardEntries.messageId
+    var channelId: Long by StarboardEntries.channelId
+    var authorId: Long by StarboardEntries.authorId
+    val starrers: SizedIterable<Starrer> by Starrer referrersOn entry
+
+    /**
+     * Counts the amount of starrers
+     */
+    fun countStarrers(): Int = starrers.count()
+}
+
+/**
+ * Representation of the Starrers table.
+ * @property authorId id of the user who starred
+ * @property entry the starred starboardentry
+ * @see StarboardEntry
+ */
+class Starrer(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<Starrer>(Starrers)
+
+    var authorId: Long by Starrers.authorId
+    var entry: StarboardEntry by StarboardEntry referencedOn Starrers.entry
 }
