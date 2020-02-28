@@ -40,6 +40,7 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.Duration
 import kotlin.math.min
 
 /**
@@ -77,6 +78,16 @@ class Starboard(private val starBoardChannelId: Long) {
         if (event.reactionEmote.isEmote || event.reactionEmote.emoji != REACTION_EMOJI) return // Check for correct emote1
         event.channel.retrieveMessageById(event.messageIdLong).queue(fun(potentialEntryMessage: Message) {
             val foundEntry = findEntry(event.messageIdLong) // Search for entryy
+            if (event.user == potentialEntryMessage.author && foundEntry == null && !remove) {
+                event.user?.let {
+                    event.reaction.removeReaction(it).queue()
+                }
+                event.channel.sendMessage("Ist da einer Star-süchtug?")
+                    .delay(Duration.ofSeconds(10))
+                    .flatMap(Message::delete)
+                    .queue()
+                return
+            }
             if (foundEntry?.botMessageId == event.messageIdLong) return // Don't create starboard messages as new entries
             val trackingMessageFinder = if (foundEntry == null) {
                 event.guild.getTextChannelById(starBoardChannelId)
