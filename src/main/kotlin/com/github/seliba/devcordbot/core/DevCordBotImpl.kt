@@ -22,9 +22,7 @@ import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
 import com.github.seliba.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 import com.github.seliba.devcordbot.constants.Constants
-import com.github.seliba.devcordbot.database.TagAliases
-import com.github.seliba.devcordbot.database.Tags
-import com.github.seliba.devcordbot.database.Users
+import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
 import com.github.seliba.devcordbot.event.EventSubscriber
 import com.github.seliba.devcordbot.listeners.DatabaseUpdater
@@ -40,6 +38,7 @@ import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
 import net.dv8tion.jda.api.events.ResumedEvent
+import net.dv8tion.jda.api.requests.RestAction
 import okhttp3.OkHttpClient
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -56,17 +55,26 @@ internal class DevCordBotImpl(
 ) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
+    private val restActionLogger = KotlinLogging.logger("RestAction")
     private lateinit var dataSource: HikariDataSource
 
     override val commandClient: CommandClient = CommandClientImpl(this, Constants.prefix)
     override val httpClient: OkHttpClient = OkHttpClient()
+    override val starboard: Starboard =
+        Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
 
     override val jda: JDA = JDABuilder(token)
         .setEventManager(AnnotatedEventManager())
         .setActivity(Activity.playing("Starting ..."))
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
         .setHttpClient(httpClient)
-        .addEventListeners(this@DevCordBotImpl, SelfMentionListener(), DatabaseUpdater(), commandClient)
+        .addEventListeners(
+            this@DevCordBotImpl,
+            SelfMentionListener(),
+            DatabaseUpdater(),
+            commandClient,
+            starboard
+        )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
 
@@ -78,6 +86,9 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
+        RestAction.setDefaultFailure {
+            restActionLogger.error(it) { "An error occurred while executing restaction" }
+        }
         registerCommands()
         logger.info { "Establishing connection to the database …" }
         connectToDatabase(env)
@@ -133,7 +144,7 @@ internal class DevCordBotImpl(
         }
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases)
+            SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases, StarboardEntries, Starrers)
             //language=PostgreSQL
             exec("SELECT * FROM pg_extension WHERE extname = 'pg_trgm'") { rs ->
                 //language=text
@@ -154,7 +165,8 @@ internal class DevCordBotImpl(
             TagCommand(),
             LmgtfyCommand(),
             EvalCommand(),
-            OwnerEvalCommand()
+            OwnerEvalCommand(),
+            StarboardCommand()
         )
     }
 }
