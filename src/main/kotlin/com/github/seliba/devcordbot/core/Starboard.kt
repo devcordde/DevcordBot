@@ -77,12 +77,13 @@ class Starboard(private val starBoardChannelId: Long) {
     private fun handleRactionUpdate(event: GenericGuildMessageReactionEvent, remove: Boolean) {
         if (event.reactionEmote.isEmote || event.reactionEmote.emoji != REACTION_EMOJI) return // Check for correct emote1
         event.channel.retrieveMessageById(event.messageIdLong).queue(fun(potentialEntryMessage: Message) {
-            val foundEntry = findEntry(event.messageIdLong) // Search for entryy
+            val foundEntry = findEntry(event.messageIdLong) // Search for entry
+            if (foundEntry == null && remove) return // In case "self-starboarding" prevention removed the reaction
             if (event.user == potentialEntryMessage.author && foundEntry == null && !remove) {
                 event.user?.let {
                     event.reaction.removeReaction(it).queue()
                 }
-                event.channel.sendMessage("Ist da einer Star-süchtug?")
+                event.channel.sendMessage("Ist da einer Star-süchtig?")
                     .delay(Duration.ofSeconds(10))
                     .flatMap(Message::delete)
                     .queue()
