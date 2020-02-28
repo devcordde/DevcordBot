@@ -171,7 +171,7 @@ private class EmptyRestAction<T> : RestAction<T> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun queue(success: Consumer<in T>?, failure: Consumer<in Throwable>?) = Unit
+    override fun queue(success: Consumer<in T?>?, failure: Consumer<in Throwable>?) = success?.accept(null) ?: Unit
 
     override fun setCheck(checks: BooleanSupplier?): RestAction<T> = this
 
