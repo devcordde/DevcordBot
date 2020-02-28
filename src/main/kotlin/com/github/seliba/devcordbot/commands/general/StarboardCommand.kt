@@ -26,6 +26,7 @@ import com.github.seliba.devcordbot.core.Starboard
 import com.github.seliba.devcordbot.database.StarboardEntries
 import com.github.seliba.devcordbot.database.StarboardEntry
 import com.github.seliba.devcordbot.menu.Paginator
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.internal.utils.Helpers
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -59,8 +60,8 @@ class StarboardCommand : AbstractCommand() {
 
         override fun execute(context: Context) {
             val id = validateId(context) ?: return
-            context.channel.retrieveMessageById(id).queue({
-                if (checkEntryNotExists(it.idLong, context)) return@queue
+            context.channel.retrieveMessageById(id).queue(fun(it: Message) {
+                if (checkEntryNotExists(it.idLong, context)) return
                 it.addReaction(Starboard.REACTION_EMOJI).queue()
                 context.respond(Embeds.success("Erfolgreich!", "Die Nachricht wurde erfolgreich gestarred.")).queue()
             }, {
