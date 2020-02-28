@@ -52,4 +52,9 @@ interface DevCordBot {
      * Whether the bot is in debug mode or not.
      */
     val debugMode: Boolean
+
+    /**
+     * The starboard instance.
+     */
+    val starboard: Starboard
 }

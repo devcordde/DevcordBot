@@ -49,15 +49,17 @@ class TagCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
 
     init {
-        registerCommands(CreateCommand())
-        registerCommands(AliasCommand())
-        registerCommands(EditCommand())
-        registerCommands(InfoCommand())
-        registerCommands(DeleteCommand())
-        registerCommands(ListCommand())
-        registerCommands(FromCommand())
-        registerCommands(SearchCommand())
-        registerCommands(RawCommand())
+        registerCommands(
+            CreateCommand(),
+            AliasCommand(),
+            EditCommand(),
+            InfoCommand(),
+            DeleteCommand(),
+            ListCommand(),
+            FromCommand(),
+            SearchCommand(),
+            RawCommand()
+        )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
 
