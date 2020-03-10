@@ -30,10 +30,12 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.MessageBulkDeleteEvent
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent
+import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
 import net.dv8tion.jda.api.events.message.guild.react.GenericGuildMessageReactionEvent
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveAllEvent
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.exceptions.ErrorResponseException.ignore
 import net.dv8tion.jda.api.requests.ErrorResponse
 import org.jetbrains.exposed.sql.Transaction
@@ -73,6 +75,32 @@ class Starboard(private val starBoardChannelId: Long) {
      */
     @EventSubscriber
     fun reactionRemove(event: GuildMessageReactionRemoveEvent): Unit = handleRactionUpdate(event, true)
+
+    /**
+     * Listens for starboard message edits.
+     */
+    fun starboardMessageEdited(event: GuildMessageUpdateEvent) {
+        val entry =
+            transaction { StarboardEntry.find { StarboardEntries.messageId eq event.messageIdLong }.firstOrNull() }
+                ?: return
+        val trackingMessageRetriever =
+            event.guild.getTextChannelById(starBoardChannelId)?.retrieveMessageById(entry.botMessageId)
+                ?: return transaction {
+                    entry.delete()
+                }
+        trackingMessageRetriever.queue({
+            transaction {
+                it.editMessage(buildMessage(event.message, entry.starrers.count()))
+            }
+        }, {
+            if (it is ErrorResponseException && it.errorResponse == ErrorResponse.UNKNOWN_MESSAGE) {
+                transaction {
+                    entry.delete()
+                }
+            }
+        })
+
+    }
 
     private fun handleRactionUpdate(event: GenericGuildMessageReactionEvent, remove: Boolean) {
         if (event.reactionEmote.isEmote || event.reactionEmote.emoji != REACTION_EMOJI) return // Check for correct emote1
