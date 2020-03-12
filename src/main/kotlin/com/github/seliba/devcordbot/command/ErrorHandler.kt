@@ -27,5 +27,10 @@ interface ErrorHandler {
     /**
      * Handles the [exception] in [context].
      */
-    fun handleException(exception: Throwable, context: Context, thread: Thread, coroutineContext: CoroutineContext)
+    fun handleException(
+        exception: Throwable,
+        context: Context,
+        thread: Thread,
+        coroutineContext: CoroutineContext? = null
+    )
 }
