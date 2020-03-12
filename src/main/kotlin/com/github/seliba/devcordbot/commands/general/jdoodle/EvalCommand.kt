@@ -56,7 +56,7 @@ class EvalCommand : AbstractCommand() {
 
     override fun execute(context: Context) {
         context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).flatMap(fun(it: Message): MessageAction {
-            val text = context.args.raw
+            val text = context.args.join()
 
             if (!text.startsWith("```") && !text.endsWith("```")) {
                 return it.editMessage(example("Das Skript muss in einem Multiline-Codeblock liegen"))
