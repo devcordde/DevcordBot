@@ -21,20 +21,17 @@ import com.github.seliba.devcordbot.constants.Colors
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.editMessage
 import com.github.seliba.devcordbot.dsl.embed
-import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.event.EventSubscriber
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
 import java.awt.Color
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.CoroutineContext
 import kotlin.math.ceil
 import kotlin.math.min
 
@@ -77,10 +74,9 @@ class Paginator(
             message = context.respond(Embeds.loading(loadingTitle, loadingDescription)).complete()
             context.jda.addEventListener(this)
             CompletableFuture.allOf(*listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).map {
-                message.addReaction(it).submit()
-            }.toTypedArray())
+                    message.addReaction(it).submit()
+                }.toTypedArray())
                 .thenAccept {
-                    throw Exception("TEST LOL")
                     paginate(currentPage)
                 }
                 .exceptionally {

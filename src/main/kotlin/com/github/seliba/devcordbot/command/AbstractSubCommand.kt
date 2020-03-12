@@ -17,6 +17,7 @@
 package com.github.seliba.devcordbot.command
 
 import com.github.seliba.devcordbot.command.permission.Permission
+import java.lang.Exception
 
 /**
  * Skeleton of a sub command.
@@ -25,6 +26,7 @@ import com.github.seliba.devcordbot.command.permission.Permission
  */
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
+    override val callback = Exception()
     override val category: CommandCategory
         get() = parent.category
     override val permission: Permission
