@@ -16,7 +16,6 @@
 
 package com.github.seliba.devcordbot
 
-import com.github.seliba.devcordbot.core.DevCordBotImpl
 import com.github.seliba.devcordbot.core.GameAnimator
 import io.github.cdimascio.dotenv.dotenv
 import io.sentry.Sentry
@@ -30,6 +29,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import net.dv8tion.jda.api.entities.Activity
 import org.slf4j.LoggerFactory
+import com.github.seliba.devcordbot.core.DevCordBotImpl as DevCordBot
 
 private val logger = KotlinLogging.logger {}
 
@@ -84,5 +84,5 @@ fun main(args: Array<String>) {
     }
 
     logger.info { "Launching DevCordBot..." }
-    DevCordBotImpl(token, games, env, debugMode)
+    DevCordBot(token, games, env, debugMode)
 }
