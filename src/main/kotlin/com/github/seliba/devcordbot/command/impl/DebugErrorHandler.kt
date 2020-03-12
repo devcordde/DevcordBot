@@ -32,8 +32,10 @@ class DebugErrorHandler : ErrorHandler {
         exception: Throwable,
         context: Context,
         thread: Thread,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext?
     ) {
         logger.error(exception) { "An error occurred while executing a command in $context." }
+        context.respond("Es ist ein Fehler aufgetreten! Der ErrorHandler wurde wegen des Debug modus deaktiviert")
+            .queue()
     }
 }
