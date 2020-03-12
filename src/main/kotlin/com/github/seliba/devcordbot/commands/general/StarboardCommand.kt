@@ -108,7 +108,7 @@ class StarboardCommand : AbstractCommand() {
             Paginator(
                 starrers,
                 context.author,
-                context.channel,
+                context,
                 "Stargazors"
             )
         }
