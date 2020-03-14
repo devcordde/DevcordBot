@@ -74,7 +74,8 @@ internal class DevCordBotImpl(
             SelfMentionListener(),
             DatabaseUpdater(),
             commandClient,
-            starboard
+            starboard,
+            CommonPitfallListener(httpClient)
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
