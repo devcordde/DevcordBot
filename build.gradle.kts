@@ -63,7 +63,9 @@ dependencies {
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.1.4")
     implementation("com.squareup.okhttp3", "okhttp", "4.4.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.2.1")
+    implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
+    implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
+
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.3.3")
