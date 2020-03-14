@@ -49,15 +49,17 @@ class TagCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
 
     init {
-        registerCommands(CreateCommand())
-        registerCommands(AliasCommand())
-        registerCommands(EditCommand())
-        registerCommands(InfoCommand())
-        registerCommands(DeleteCommand())
-        registerCommands(ListCommand())
-        registerCommands(FromCommand())
-        registerCommands(SearchCommand())
-        registerCommands(RawCommand())
+        registerCommands(
+            CreateCommand(),
+            AliasCommand(),
+            EditCommand(),
+            InfoCommand(),
+            DeleteCommand(),
+            ListCommand(),
+            FromCommand(),
+            SearchCommand(),
+            RawCommand()
+        )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
 
@@ -239,7 +241,7 @@ class TagCommand : AbstractCommand() {
             if (tags.isEmpty()) {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags.")).queue()
             }
-            Paginator(tags, context.author, context.channel, "Tags")
+            Paginator(tags, context.author, context, "Tags")
         }
     }
 
@@ -256,7 +258,7 @@ class TagCommand : AbstractCommand() {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
                     .queue()
             }
-            Paginator(tags, context.author, context.channel, "Tags von ${user.name}")
+            Paginator(tags, context.author, context, "Tags von ${user.name}")
         }
     }
 
@@ -279,7 +281,7 @@ class TagCommand : AbstractCommand() {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Namen."))
                     .queue()
             }
-            Paginator(tags, context.author, context.channel, "Suche für $name")
+            Paginator(tags, context.author, context, "Suche für $name")
         }
     }
 
