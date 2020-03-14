@@ -20,7 +20,7 @@ changeBuildType(RelativeId("Build")) {
     }
     steps {
         update<GradleBuildStep>(0) {
-            dockerImage = "adoptopenjdk/openjdk13:alpine"
+            jdkHome = "%env.JDK_13_x64%"
         }
     }
 }
