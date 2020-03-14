@@ -1,6 +1,9 @@
+
 plugins {
     java
+    application
     kotlin("jvm")
+    id("com.github.johnrengelman.shadow")
 }
 
 group = "com.github.seliba"
@@ -30,6 +33,21 @@ dependencies {
     // util
     implementation("io.github.cdimascio", "java-dotenv", "5.1.3")
 }
+
+application {
+    mainClassName = "com.github.seliba.devcordbot.LauncherKt"
+}
+
+tasks {
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = "12"
+    }
+
+    jar {
+        archiveClassifier.set("original")
+    }
+}
+
 
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_13
