@@ -1,5 +1,6 @@
 plugins {
     java
+    kotlin("jvm")
 }
 
 group = "com.github.seliba"
@@ -24,12 +25,18 @@ dependencies {
     implementation("org.jetbrains.exposed", "exposed-jdbc", "0.21.1")
     implementation("org.jetbrains.exposed", "exposed-java-time", "0.21.1")
     implementation("org.postgresql", "postgresql", "42.2.10")
+    implementation("com.zaxxer", "HikariCP", "3.4.2")
 
     // util
-
     implementation("io.github.cdimascio", "java-dotenv", "5.1.3")
 }
 
 configure<JavaPluginConvention> {
-    sourceCompatibility = JavaVersion.VERSION_12
+    sourceCompatibility = JavaVersion.VERSION_13
+}
+
+tasks {
+    compileKotlin {
+        kotlinOptions.jvmTarget = "12"
+    }
 }
