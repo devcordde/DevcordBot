@@ -64,7 +64,7 @@ internal class DevCordBotImpl(
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
 
-    override val jda: JDA = JDABuilder(token)
+    override val jda: JDA = JDABuilder.createDefault(token)
         .setEventManager(AnnotatedEventManager())
         .setActivity(Activity.playing("Starting ..."))
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
