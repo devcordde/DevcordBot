@@ -31,6 +31,7 @@ import com.github.seliba.devcordbot.database.Users.level
 import net.dv8tion.jda.api.entities.Message
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.`java-time`.timestamp
 import java.time.Instant
@@ -89,4 +90,29 @@ object TagAliases : IdTable<String>() {
     val tag: Column<EntityID<String>> = reference("tag", Tags)
 
     override val primaryKey: PrimaryKey = PrimaryKey(id)
+}
+
+/**
+ * Representation of starboard entries table.
+ * @property botMessageId the id of the bot's tracking message
+ * @property messageId the id of the starred message
+ * @property channelId the id of the channel the message was sent in
+ * @property authorId the id of the author who sent the message
+ */
+object StarboardEntries : LongIdTable() {
+    val botMessageId: Column<Long> = long("bot_message_id")
+    val messageId: Column<Long> = long("message_id")
+    val channelId: Column<Long> = long("channel_id")
+    val authorId: Column<Long> = long("author_id")
+}
+
+/**
+ * Representation of the Starrers table.
+ * @property authorId id of the user who starred
+ * @property entry the starred starboardentry
+ * @see StarboardEntries
+ */
+object Starrers : LongIdTable() {
+    val authorId: Column<Long> = long("author_id")
+    val entry: Column<EntityID<Long>> = reference("entry_id", StarboardEntries)
 }

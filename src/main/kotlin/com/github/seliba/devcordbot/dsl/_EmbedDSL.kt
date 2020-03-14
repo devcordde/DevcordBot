@@ -68,7 +68,8 @@ fun embed(builder: EmbedCreator): EmbedConvention = EmbedConvention().apply(buil
  * @property timeStamp timestamp of the embed
  */
 @Suppress("MemberVisibilityCanBePrivate") // Is supposed to be accessible as DSL
-class EmbedConvention {
+class
+EmbedConvention {
 
     private val fields = mutableListOf<MessageEmbed.Field>()
     private var author: AuthorConvention? = null

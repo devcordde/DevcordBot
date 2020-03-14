@@ -16,18 +16,17 @@
 
 package com.github.seliba.devcordbot.menu
 
+import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.constants.Colors
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.editMessage
 import com.github.seliba.devcordbot.dsl.embed
-import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.event.EventSubscriber
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
 import java.awt.Color
@@ -51,7 +50,7 @@ import kotlin.math.min
 class Paginator(
     private val items: List<CharSequence>,
     private val user: User,
-    channel: TextChannel,
+    context: Context,
     private val title: String,
     private val timeoutMillis: Long = TimeUnit.SECONDS.toMillis(15),
     firstPage: Int = 1,
@@ -72,17 +71,22 @@ class Paginator(
         pages = ceil(items.size.toDouble() / itemsPerPage).toInt()
         require(firstPage <= pages) { "First page must exist" }
         if (pages > 1) {
-            message = channel.sendMessage(Embeds.loading(loadingTitle, loadingDescription)).complete()
-            channel.jda.addEventListener(this)
+            message = context.respond(Embeds.loading(loadingTitle, loadingDescription)).complete()
+            context.jda.addEventListener(this)
             CompletableFuture.allOf(*listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).map {
-                message.addReaction(it).submit()
-            }.toTypedArray())
+                    message.addReaction(it).submit()
+                }.toTypedArray())
                 .thenAccept {
                     paginate(currentPage)
                 }
+                .exceptionally {
+                    context.commandClient.errorHandler.handleException(it, context, Thread.currentThread())
+                    close()
+                    null // You cannot return Void
+                }
             rescheduleTimeout()
         } else {
-            message = channel.sendMessage(renderEmbed(items)).complete()
+            message = context.respond(renderEmbed(items)).complete()
         }
     }
 
