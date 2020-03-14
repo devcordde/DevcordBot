@@ -16,6 +16,10 @@
 
 package com.github.seliba.devcordbot.core
 
+import com.codewaves.codehighlight.core.Highlighter
+import com.codewaves.codehighlight.core.StyleRendererFactory
+import com.codewaves.codehighlight.renderer.HtmlRenderer
+import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.constants.Emotes
 import com.github.seliba.devcordbot.database.Tag
@@ -35,19 +39,24 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 
+private const val MAX_LINES = 10
+private val WHITELIST = listOf(486916258965618690, 649253900473597952, 671772614993379328)
+private val KNOWN_LANGUAGES = arrayOf("java", "python", "go", "kotlin", "cs")
+
 /**
  * Automatic analzyer for common pitfalls.
  */
 class CommonPitfallListener(private val httpClient: OkHttpClient) {
     private val logger = KotlinLogging.logger {}
+    private val languageGuesser = Highlighter(UselessRendererFactoryThing())
 
     /**
      * Listens for new messages.
      */
     @EventSubscriber
     fun onMessage(event: GuildMessageReceivedEvent) {
-        if (event.author.isBot) return
         val input = event.message.contentRaw
+        if (event.author.isBot || event.channel.parent?.idLong !in WHITELIST || Constants.prefix.find(input) != null) return
         val hastebinMatch = HASTEBIN_PATTERN.find(input)
         val firstAttachment = event.message.attachments.firstOrNull()
         val actualInput =
@@ -81,9 +90,9 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
     private fun analyzeInput(input: Pair<String?, Boolean>, event: GuildMessageReceivedEvent) {
         val (inputString, wasPaste) = input
         require(inputString != null)
-        if (!wasPaste) {
+        if (!wasPaste && isCode(inputString)) {
             val hastebinUrlFuture = HastebinUtil.postErrorToHastebin(inputString, httpClient)
-            if (inputString.lines().size > 5) {
+            if (inputString.lines().size > MAX_LINES) {
                 event.channel.sendMessage(
                         buildTooLongEmbed(Emotes.LOADING)
                     )
@@ -103,11 +112,13 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
         return Embeds.warn(
             "Huch ist das viel?",
             """Bitte sende, lange Codeteile nicht über den Chat oder als File, benutze stattdessen, ein haste Tool. Mehr dazu findest du, bei `sudo tag haste`.
-                                        |Faustregel: Alles, was mehr als 5 Zeilen hat.
+                                        |Faustregel: Alles, was mehr als $MAX_LINES Zeilen hat.
                                         |Hier ich mache das schnell für dich: $url
                                     """.trimMargin()
         )
     }
+
+    private fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, KNOWN_LANGUAGES)
 
     private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent) {
         val exception = with(match.groupValues[1]) { substring(lastIndexOf('.') + 1) }
@@ -122,6 +133,8 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // We know that all the tags exist
         event.channel.sendMessage(tagContent).queue()
     }
+
+    private fun isCode(potentialCode: String) = guessLanguage(potentialCode).language != null
 
     private fun fetchContent(url: String): CompletableFuture<Pair<String?, Boolean>> {
         val request = Request.Builder()
@@ -148,3 +161,7 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
         private val PASTEBIN_PATTERN = "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.*)".toRegex()
     }
 }
+
+// We don't want to highlight anything
+@Suppress("FunctionName") // It should act like a class
+private fun UselessRendererFactoryThing() = StyleRendererFactory { HtmlRenderer("") }
