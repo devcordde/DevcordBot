@@ -29,8 +29,10 @@ import com.github.seliba.devcordbot.command.permission.Permission
  * @property permission the command permissions
  * @property commandAssociations all alias-command associations of sub-commands
  * @property category the [CommandCategory] of the command
+ * @property callback an [Exception] that is supposed to highlight class defention line
  */
 abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
+    open val callback: Exception = Exception()
 
     override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
 
