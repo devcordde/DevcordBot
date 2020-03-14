@@ -23,16 +23,35 @@ import org.jetbrains.exposed.sql.deleteAll
 import javax.sql.DataSource
 import org.jetbrains.exposed.sql.transactions.transaction as kotlinTransaction
 
+/**
+ * A class which provides useful Kotlin methods for Java classes
+ */
 object KotlinHelper {
+    /**
+     * Connect to the database with a [DataSource]
+     * @param dataSource The [DataSource] which should be used for the connection
+     */
     @JvmStatic
-    fun connectToDatabase(dataSource: DataSource) = Database.connect(dataSource)
+    fun connectToDatabase(dataSource: DataSource): Database = Database.connect(dataSource)
 
+    /**
+     * Runs a transaction
+     * @param runnable The [Runnable] which should be executed
+     */
     @JvmStatic
-    fun transaction(runnable: Runnable) = kotlinTransaction { runnable.run() }
+    fun transaction(runnable: Runnable): Unit = kotlinTransaction { runnable.run() }
 
+    /**
+     * Create a new [DevCordUser] by the [id] and apply [init] to it
+     * @param id The id of the [DevCordUser]
+     * @param init The initial statement to apply
+     */
     @JvmStatic
-    fun createUser(id: Long, init: DevCordUser.() -> Unit) = DevCordUser.new(id, init)
+    fun createUser(id: Long, init: DevCordUser.() -> Unit): DevCordUser = DevCordUser.new(id, init)
 
+    /**
+     * Removes all [Users] from the database
+     */
     @JvmStatic
-    fun delete() = kotlinTransaction { Users.deleteAll() }
+    fun delete(): Int = kotlinTransaction { Users.deleteAll() }
 }
