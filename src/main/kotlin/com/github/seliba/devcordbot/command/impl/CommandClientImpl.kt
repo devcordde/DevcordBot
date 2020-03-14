@@ -64,7 +64,7 @@ class CommandClientImpl(
 
     override val permissionHandler: PermissionHandler = RolePermissionHandler()
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
-    override val errorHandler: ErrorHandler = HastebinErrorHandler()
+    override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
 
     /**
      * Listens for message updates.
@@ -102,17 +102,19 @@ class CommandClientImpl(
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
-        message.textChannel.sendTyping().queue()
-        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
-        if (!permissionHandler.isCovered(
-                command.permission,
-                message.member!!
-            )
-        ) return handleNoPermission(command.permission, message.textChannel)
+        message.textChannel.sendTyping()
+            .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
+                @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
+                if (!permissionHandler.isCovered(
+                        command.permission,
+                        message.member!!
+                    )
+                ) return handleNoPermission(command.permission, message.textChannel)
 
-        val context = Context(bot, command, arguments, message, this)
+                val context = Context(bot, command, arguments, message, this)
 
-        processCommand(command, context)
+                processCommand(command, context)
+            })
     }
 
     private fun processCommand(command: AbstractCommand, context: Context) {
@@ -136,7 +138,7 @@ class CommandClientImpl(
             // Search command associated with invoke or return previously found command
             val foundCommand = associations[invoke] ?: return command?.let { CommandContainer(it, arguments) }
             // Cut off invoke
-            val newArgs = Arguments(arguments.drop(1), raw = arguments.raw.substring(invoke.length).trim())
+            val newArgs = Arguments(arguments.drop(1), raw = arguments.join().substring(invoke.length).trim())
             // Look for sub commands
             if (foundCommand.hasSubCommands() and newArgs.isNotEmpty()) {
                 return findCommand(newArgs, foundCommand.commandAssociations, foundCommand)

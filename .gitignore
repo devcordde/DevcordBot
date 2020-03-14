@@ -122,4 +122,7 @@ gradle-app.setting
 # Ignore .env file to protect the discord bot token
 .env
 
+# Ignore toml files
+*.toml
+
 # End of https://www.gitignore.io/api/gradle,kotlin,intellij+iml

@@ -26,6 +26,9 @@ import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.dsl.embed
 import com.github.seliba.devcordbot.menu.Paginator
+import net.dv8tion.jda.api.entities.IMentionable
+import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
@@ -46,15 +49,17 @@ class TagCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
 
     init {
-        registerCommands(CreateCommand())
-        registerCommands(AliasCommand())
-        registerCommands(EditCommand())
-        registerCommands(InfoCommand())
-        registerCommands(DeleteCommand())
-        registerCommands(ListCommand())
-        registerCommands(FromCommand())
-        registerCommands(SearchCommand())
-        registerCommands(RawCommand())
+        registerCommands(
+            CreateCommand(),
+            AliasCommand(),
+            EditCommand(),
+            InfoCommand(),
+            DeleteCommand(),
+            ListCommand(),
+            FromCommand(),
+            SearchCommand(),
+            RawCommand()
+        )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
 
@@ -99,14 +104,17 @@ class TagCommand : AbstractCommand() {
         override val aliases: List<String> = listOf("alias")
         override val displayName: String = "Add"
         override val description: String = "Erstellt einen neuen Tag Alias"
-        override val usage: String = "<alias> <tag>"
+        override val usage: String = """<alias> <tag> / "<alias>" "<tag>""""
 
         override fun execute(context: Context) {
             val args = context.args
-            val aliasName = args.requiredArgument(0, context) ?: return
-            val tagName = args.subList(1, args.size).joinToString(" ")
-            if (tagName.isBlank()) {
-                return context.sendHelp().queue()
+            val multiWordMatcher = multiWordAliasRegex.matchEntire(args.join())
+            val (aliasName, tagName) = if (multiWordMatcher == null) {
+                if (args.size < 2) return context.sendHelp().queue()
+                args.first() to args[1]
+            } else {
+                @Suppress("ReplaceNotNullAssertionWithElvisReturn") // We know this pattern has 2 groups
+                multiWordMatcher.groups[1]!!.value to multiWordMatcher.groups[2]!!.value
             }
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
             if (transaction { checkTagExists(aliasName, context) }) return
@@ -119,10 +127,11 @@ class TagCommand : AbstractCommand() {
             context.respond(
                 Embeds.success(
                     "Alias erfolgreich erstellt",
-                    "Es wurde erfolgreich ein Alias mit dem Namen $newAliasName für den Tag $newTagName erstellt"
+                    "Es wurde erfolgreich ein Alias mit dem Namen `$newAliasName` für den Tag `$newTagName` erstellt"
                 )
             ).queue()
         }
+
     }
 
     private inner class EditCommand : AbstractSubCommand(this) {
@@ -232,7 +241,7 @@ class TagCommand : AbstractCommand() {
             if (tags.isEmpty()) {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags.")).queue()
             }
-            Paginator(tags, context.author, context.channel, "Tags")
+            Paginator(tags, context.author, context, "Tags")
         }
     }
 
@@ -249,7 +258,7 @@ class TagCommand : AbstractCommand() {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
                     .queue()
             }
-            Paginator(tags, context.author, context.channel, "Tags von ${user.name}")
+            Paginator(tags, context.author, context, "Tags von ${user.name}")
         }
     }
 
@@ -272,7 +281,7 @@ class TagCommand : AbstractCommand() {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Namen."))
                     .queue()
             }
-            Paginator(tags, context.author, context.channel, "Suche für $name")
+            Paginator(tags, context.author, context, "Suche für $name")
         }
     }
 
@@ -288,7 +297,7 @@ class TagCommand : AbstractCommand() {
             }
             val tagName = context.args.join()
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
-            val content = MarkdownSanitizer.sanitize(tag.content, MarkdownSanitizer.SanitizationStrategy.ESCAPE)
+            val content = MarkdownSanitizer.escape(tag.content)
             context.respond(content).queue()
         }
     }
@@ -312,6 +321,27 @@ class TagCommand : AbstractCommand() {
     }
 
     private fun parseTag(context: Context): Pair<String, String>? {
+        fun sanitizeMentions(content: String): String {
+            fun sanitizeMention(mentionable: IMentionable): String {
+                return when (mentionable) {
+                    is Member -> mentionable.user.asTag
+                    is Role -> mentionable.name
+                    else -> "Unknown mention"
+                }
+            }
+
+            val mentions: List<IMentionable> = context.message.mentionedMembers + context.message.mentionedRoles
+
+            return mentions
+                .fold(content, fun(previous: String, mentionable: IMentionable): String {
+                    val mention = mentionable.asMention
+                    if (content.contains(mention)) {
+                        return previous.replace(mention, sanitizeMention(mentionable))
+                    }
+                    return previous
+                })
+        }
+
         val args = context.args.split("\n")
         val (name, content) = when {
             context.args.isEmpty() -> {
@@ -319,10 +349,10 @@ class TagCommand : AbstractCommand() {
             }
             args.size == 1 -> {
                 val name = context.args.first()
-                name to context.args.join().substring(name.length)
+                name to sanitizeMentions(context.args.join().substring(name.length))
             }
             else -> {
-                args.first().trim() to args.subList(1, args.size).joinToString("\n")
+                args.first().trim() to sanitizeMentions(args.subList(1, args.size).joinToString("\n"))
             }
         }
         if (name.isBlank() or content.isBlank()) {
@@ -388,5 +418,9 @@ class TagCommand : AbstractCommand() {
             return true
         }
         return false
+    }
+
+    companion object {
+        private val multiWordAliasRegex = """"(.*)" "(.*)"""".toRegex()
     }
 }

@@ -93,23 +93,26 @@ object Embeds {
     fun command(command: AbstractCommand): EmbedConvention {
         return info("${command.displayName} - Hilfe", command.description) {
             addField("Aliases", command.aliases.joinToString(prefix = "`", separator = "`, `", postfix = "`"))
-            addField("Usage", formatUsage(command))
+            addField("Usage", formatCommandUsage(command))
             addField("Permission", command.permission.name)
-            val subCommands = command.registeredCommands.map(::formatUsage)
+            val subCommands = command.registeredCommands.map(::formatSubCommandUsage)
             if (subCommands.isNotEmpty()) {
                 addField("Sub commands", subCommands.joinToString("\n"))
             }
         }
     }
 
-    private fun formatUsage(command: AbstractCommand): String {
+    private fun formatCommandUsage(command: AbstractCommand): String =
+        "${Constants.firstPrefix} ${command.name} ${command.usage}"
+
+    private fun formatSubCommandUsage(command: AbstractSubCommand): String {
         val builder = StringBuilder(Constants.firstPrefix)
         builder.append(' ').append(command.name).append(' ').append(command.usage.replace("\n", "\\n"))
-        if (command is AbstractSubCommand) {
-            val prefix = " ${command.parent.name} "
-            builder.insert(Constants.firstPrefix.length, prefix)
-            builder.append(" - ").append(command.description)
-        }
+
+        val prefix = " ${command.parent.name} "
+        builder.insert(Constants.firstPrefix.length, prefix)
+        builder.append(" - ").append(command.description)
+
         return builder.toString()
     }
 

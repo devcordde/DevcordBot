@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.seliba.devcordbot.commands.general.jdoodle
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
@@ -23,10 +23,10 @@ import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.editMessage
-import com.github.seliba.devcordbot.util.jdoodle.JDoodle
-import com.github.seliba.devcordbot.util.jdoodle.Language
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.exceptions.ParsingException
 import net.dv8tion.jda.api.requests.restaction.MessageAction
+import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import net.dv8tion.jda.api.utils.data.DataObject
 
 /**
@@ -36,7 +36,7 @@ class EvalCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("eval", "exec", "execute", "run")
     override val displayName: String = "eval"
     override val description: String = "Führt den angegebenen Code aus."
-    override val usage: String = "[language] \n <code>"
+    override val usage: String = MarkdownSanitizer.escape("\n```<language>\n<code>\n```")
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
@@ -44,28 +44,29 @@ class EvalCommand : AbstractCommand() {
         registerCommands(ListCommand())
     }
 
+    private fun example(title: String) = Embeds.error(
+        title,
+        "`Beispiel`\n${MarkdownSanitizer.escape("```kotlin\nfun main() = print(\"Hello World\")\n```")}"
+    )
+
+    private fun internalError() = Embeds.error(
+        "Ein interner Fehler ist aufgetreten",
+        "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
+    )
+
     override fun execute(context: Context) {
         context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).flatMap(fun(it: Message): MessageAction {
-            val text = context.args.raw
+            val text = context.args.join()
 
             if (!text.startsWith("```") && !text.endsWith("```")) {
-                return it.editMessage(
-                    Embeds.error(
-                        "Konnte nicht evaluiert werden.",
-                        "Die Nachricht muss in einem Multiline-Codeblock liegen"
-                    )
-                )
+                return it.editMessage(example("Das Skript muss in einem Multiline-Codeblock liegen"))
             }
 
             val split = text.substring(3, text.length - 3).split("\n")
+            val scriptEmpty = split.subList(1, split.size).joinToString("").trim().isEmpty()
 
-            if (split.size < 2) {
-                return it.editMessage(
-                    Embeds.error(
-                        "Kein Skript angegeben.",
-                        "Benutze ein Skript"
-                    )
-                )
+            if (split.size < 2 || scriptEmpty) {
+                return it.editMessage(example("Benutze ein Skript"))
             }
 
             val languageString = split.first()
@@ -84,19 +85,18 @@ class EvalCommand : AbstractCommand() {
             val script = split.subList(1, split.size).joinToString("\n")
 
             val response = JDoodle.execute(context.jda.httpClient, language, script)
-                ?: return it.editMessage(
-                    Embeds.error(
-                        "Ein interner Fehler ist aufgetreten",
-                        "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
-                    )
-                )
+                ?: return it.editMessage(internalError())
 
-            val output = DataObject.fromJson(response)["output"].toString()
+            val output = try {
+                DataObject.fromJson(response)["output"].toString()
+            } catch (p: ParsingException) {
+                return it.editMessage(internalError())
+            }
 
             return it.editMessage(
                 Embeds.success(
                     "Skript ausgeführt",
-                    "Sprache: ${language.humanReadable}\nSkript:```$script```Output:\n```$output```"
+                    "Sprache: `${language.humanReadable}`\nSkript:${text}Output:\n```$output```"
                 )
             )
         }).queue()
@@ -124,4 +124,3 @@ class EvalCommand : AbstractCommand() {
         }
     }
 }
-
