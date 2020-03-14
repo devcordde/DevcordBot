@@ -24,5 +24,15 @@ enum class CommandCategory(val displayName: String) {
     /**
      * General commands.
      */
-    GENERAL("Allgemein")
+    GENERAL("Allgemein"),
+
+    /**
+     * Bot owner exclusive commands.
+     */
+    BOT_OWNER("Bot-Entwickler"),
+
+    /**
+     * It's fun.
+     */
+    FUN("Spaß")
 }

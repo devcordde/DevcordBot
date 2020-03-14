@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.command.impl
 
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.constants.Constants
 import net.dv8tion.jda.api.entities.Member
 
 /**
@@ -31,10 +32,12 @@ class RolePermissionHandler : PermissionHandler {
         permission: Permission,
         executor: Member
     ): Boolean {
+        if (executor.idLong in Constants.BOT_OWNERS) return true
         return when (permission) {
             Permission.ANY -> true
             Permission.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
             Permission.ADMIN -> executor.roles.any { it.name.matches(adminPattern) }
+            Permission.BOT_OWNER -> false
         }
     }
 }

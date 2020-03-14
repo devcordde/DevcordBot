@@ -14,23 +14,28 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command
+package com.github.seliba.devcordbot.command.impl
 
+import com.github.seliba.devcordbot.command.ErrorHandler
 import com.github.seliba.devcordbot.command.context.Context
+import mu.KotlinLogging
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Interface for handling errors during command execution
+ * Implementation of [ErrorHandler] that only logs the error.
  */
-interface ErrorHandler {
+class DebugErrorHandler : ErrorHandler {
 
-    /**
-     * Handles the [exception] in [context].
-     */
-    fun handleException(
+    private val logger = KotlinLogging.logger { }
+
+    override fun handleException(
         exception: Throwable,
         context: Context,
         thread: Thread,
-        coroutineContext: CoroutineContext? = null
-    )
+        coroutineContext: CoroutineContext?
+    ) {
+        logger.error(exception) { "An error occurred while executing a command in $context." }
+        context.respond("Es ist ein Fehler aufgetreten! Der ErrorHandler wurde wegen des Debug modus deaktiviert")
+            .queue()
+    }
 }

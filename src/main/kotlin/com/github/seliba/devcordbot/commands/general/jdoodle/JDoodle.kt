@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.util.jdoodle
+package com.github.seliba.devcordbot.commands.general.jdoodle
 
 import io.github.cdimascio.dotenv.dotenv
 import net.dv8tion.jda.api.utils.data.DataObject

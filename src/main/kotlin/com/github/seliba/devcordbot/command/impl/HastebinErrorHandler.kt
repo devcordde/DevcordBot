@@ -18,20 +18,13 @@ package com.github.seliba.devcordbot.command.impl
 
 import com.github.seliba.devcordbot.command.ErrorHandler
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.constants.Emotes
 import com.github.seliba.devcordbot.dsl.editMessage
+import com.github.seliba.devcordbot.util.HastebinUtil
+import com.github.seliba.devcordbot.util.stringify
 import mu.KotlinLogging
-import net.dv8tion.jda.api.utils.data.DataObject
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.IOException
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.time.LocalDateTime
-import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -47,7 +40,7 @@ class HastebinErrorHandler : ErrorHandler {
         exception: Throwable,
         context: Context,
         thread: Thread,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext?
     ) {
         logger.error(exception) { "An error occurred whilst command execution" }
         context.respond(
@@ -57,7 +50,7 @@ class HastebinErrorHandler : ErrorHandler {
             )
         ).submit().thenCompose { message ->
             val error = collectErrorInformation(exception, context, thread, coroutineContext)
-            postErrorToHastebin(error, context.jda.httpClient).thenApply { it to message }
+            HastebinUtil.postErrorToHastebin(error, context.jda.httpClient).thenApply { it to message }
         }.thenAccept { (url, message) ->
             message.editMessage(
                 Embeds.error(
@@ -68,38 +61,11 @@ class HastebinErrorHandler : ErrorHandler {
         }
     }
 
-    private fun postErrorToHastebin(text: String, client: OkHttpClient): CompletableFuture<String> {
-        val body = text.toRequestBody("application/json".toMediaTypeOrNull())
-        val request = Request.Builder()
-            .url(Constants.hastebinUrl.newBuilder().addPathSegment("documents").build())
-            .post(body)
-            .build()
-        val future = CompletableFuture<String>()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                future.completeExceptionally(e)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    future.complete(
-                        Constants.hastebinUrl.newBuilder().addPathSegment(
-                            DataObject.fromJson(response.body!!.string()).getString(
-                                "key"
-                            )
-                        ).toString()
-                    )
-                }
-            }
-        })
-        return future
-    }
-
     private fun collectErrorInformation(
         e: Throwable,
         context: Context,
         thread: Thread,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext?
     ): String {
         val information = StringBuilder()
         val channel = context.channel
@@ -119,16 +85,5 @@ class HastebinErrorHandler : ErrorHandler {
         information.append("Coroutine: ").appendln(coroutineContext)
         information.append("Stacktrace: ").appendln().append(e.stringify())
         return information.toString()
-    }
-
-    private fun Throwable.stringify(): String {
-        val stringWriter = StringWriter()
-        val printWriter = PrintWriter(stringWriter)
-        return stringWriter.use {
-            printWriter.use {
-                printStackTrace(printWriter)
-                stringWriter.buffer.toString()
-            }
-        }
     }
 }
