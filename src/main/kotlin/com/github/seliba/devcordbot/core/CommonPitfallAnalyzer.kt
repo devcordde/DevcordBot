@@ -36,6 +36,7 @@ import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 
 private const val MAX_LINES = 10
+private val WHITELIST = listOf(486916258965618690, 649253900473597952, 671772614993379328)
 
 /**
  * Automatic analzyer for common pitfalls.
@@ -48,7 +49,7 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
      */
     @EventSubscriber
     fun onMessage(event: GuildMessageReceivedEvent) {
-        if (event.author.isBot) return
+        if (event.author.isBot || event.channel.parent?.idLong !in WHITELIST) return
         val input = event.message.contentRaw
         val hastebinMatch = HASTEBIN_PATTERN.find(input)
         val firstAttachment = event.message.attachments.firstOrNull()
