@@ -35,6 +35,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 
+private const val MAX_LINES = 10
+
 /**
  * Automatic analzyer for common pitfalls.
  */
@@ -83,7 +85,7 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
         require(inputString != null)
         if (!wasPaste) {
             val hastebinUrlFuture = HastebinUtil.postErrorToHastebin(inputString, httpClient)
-            if (inputString.lines().size > 5) {
+            if (inputString.lines().size > MAX_LINES) {
                 event.channel.sendMessage(
                         buildTooLongEmbed(Emotes.LOADING)
                     )
@@ -103,7 +105,7 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
         return Embeds.warn(
             "Huch ist das viel?",
             """Bitte sende, lange Codeteile nicht über den Chat oder als File, benutze stattdessen, ein haste Tool. Mehr dazu findest du, bei `sudo tag haste`.
-                                        |Faustregel: Alles, was mehr als 5 Zeilen hat.
+                                        |Faustregel: Alles, was mehr als $MAX_LINES Zeilen hat.
                                         |Hier ich mache das schnell für dich: $url
                                     """.trimMargin()
         )
