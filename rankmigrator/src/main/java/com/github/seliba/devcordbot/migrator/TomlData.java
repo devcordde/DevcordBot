@@ -116,9 +116,9 @@ public class TomlData {
     }
 
     /**
-     * @return All entrys that are saved in the TOML file
+     * @return All entries that are saved in the TOML file
      */
-    public Map<String, Object> getEntrys() {
+    public Map<String, Object> getEntries() {
         return entrys;
     }
 
