@@ -104,7 +104,7 @@ class DatabaseUpdater {
         }
     }
 
-    private fun getXpToLevelup(level: Int) = (25 * sqrt(level.toDouble())).toLong()
+    private fun getXpToLevelup(level: Int) = (75 * sqrt(level.toDouble())).toLong()
 
 }
 
