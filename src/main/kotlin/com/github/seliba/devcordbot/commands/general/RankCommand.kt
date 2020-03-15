@@ -26,7 +26,9 @@ import com.github.seliba.devcordbot.util.XPUtil
 import net.dv8tion.jda.api.entities.User
 import org.jetbrains.exposed.sql.transactions.transaction
 
-
+/**
+ * Rank command.
+ */
 class RankCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("rank", "r")
     override val displayName: String = "Rank"
