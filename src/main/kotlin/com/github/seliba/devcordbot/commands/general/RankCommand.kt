@@ -50,34 +50,25 @@ class RankCommand : AbstractCommand() {
             Embeds.info(
                 "Rang von ${user.asTag}",
                 ""
-            ).toEmbedBuilder()
-                .addField(
+            ) {
+                addField(
                     "Level",
                     entry.level.toString(),
                     true
-                ).addField(
-                    "Nächstes Level",
-                    "${currentXP}/${nextLevelXP}XP ${buildProgressBar(currentXP, nextLevelXP)}",
-                    false
                 )
+                addField(
+                    "Nächstes Level",
+                    "${currentXP}/${nextLevelXP}XP ${buildProgressBar(currentXP, nextLevelXP)}"
+                )
+            }
         ).queue()
     }
 
     private fun buildProgressBar(current: Long, next: Long): String? {
         val stringBuilder = StringBuilder()
-        val barProgress: Double = current.toDouble() / next * 20
-        run {
-            var i = 0
-            while (i < barProgress) {
-                stringBuilder.append("█")
-                i++
-            }
-        }
-        var i = 0
-        while (i < 20 - barProgress) {
-            stringBuilder.append("▒")
-            i++
-        }
+        val barProgress = (current.toDouble() / next * 20).toInt()
+        stringBuilder.append("█".repeat(barProgress))
+            .append("▒".repeat(20 - barProgress))
         return stringBuilder.toString()
     }
 }

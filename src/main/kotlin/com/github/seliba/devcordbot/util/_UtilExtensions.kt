@@ -87,3 +87,9 @@ fun Throwable.stringify(): String {
         }
     }
 }
+
+/**
+ * Limits the length of a string by [amount] and adds [contraction] at the end.
+ */
+fun String.limit(amount: Int, contraction: String = "..."): String =
+    if (length < amount) this else "${substring(0, amount - contraction.length)}$contraction"

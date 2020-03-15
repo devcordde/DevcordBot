@@ -18,11 +18,6 @@
 
 package com.github.seliba.devcordbot.database
 
-import com.github.seliba.devcordbot.database.StarboardEntries.authorId
-import com.github.seliba.devcordbot.database.StarboardEntries.botMessageId
-import com.github.seliba.devcordbot.database.StarboardEntries.channelId
-import com.github.seliba.devcordbot.database.StarboardEntries.messageId
-import com.github.seliba.devcordbot.database.Starrers.authorId
 import com.github.seliba.devcordbot.database.Starrers.entry
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
@@ -38,6 +33,7 @@ import java.time.Instant
  * @property userID accessor for the value of [id]
  * @property level the current level of the user
  * @property experience the current amount of experience points of the user
+ * @property lastUpgrade the last time the user gained XP
  */
 class DevCordUser(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<DevCordUser>(Users)
@@ -46,6 +42,7 @@ class DevCordUser(id: EntityID<Long>) : LongEntity(id) {
         get() = id.value
     var level: Int by Users.level
     var experience: Long by Users.experience
+    var lastUpgrade: Instant by Users.lastUpgrade
 }
 
 /**

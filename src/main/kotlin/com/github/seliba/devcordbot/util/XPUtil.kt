@@ -18,6 +18,12 @@ package com.github.seliba.devcordbot.util
 
 import kotlin.math.sqrt
 
+/**
+ * XP utilities.
+ */
 object XPUtil {
-    fun getXpToLevelup(level: Int) = (25 * sqrt(level.toDouble())).toLong()
+    /**
+     * Calculates the needed amount of xp to [level].
+     */
+    fun getXpToLevelup(level: Int): Long = (25 * sqrt(level.toDouble())).toLong()
 }
