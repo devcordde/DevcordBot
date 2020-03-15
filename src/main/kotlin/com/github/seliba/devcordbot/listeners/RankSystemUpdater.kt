@@ -23,6 +23,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -104,7 +105,7 @@ class DatabaseUpdater {
         }
     }
 
-    private fun getXpToLevelup(level: Int) = (75 * sqrt(level.toDouble())).toLong()
+    private fun getXpToLevelup(level: Int): Long = (5 * level.toDouble().pow(2) + 50 * level + 100).toLong()
 
 }
 
