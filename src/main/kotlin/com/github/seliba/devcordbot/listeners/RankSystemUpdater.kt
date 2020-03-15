@@ -23,11 +23,8 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 import org.jetbrains.exposed.sql.transactions.transaction
-import kotlin.math.pow
 import java.time.Duration
 import java.time.Instant
-import kotlin.math.sqrt
-import kotlin.random.Random
 
 /**
  * Updates the Database based on Discord events.
