@@ -67,7 +67,7 @@ class EvalCommand : AbstractCommand() {
             )
             scriptEngine.put("context", context)
             val result = try {
-                val evaluation = scriptEngine.eval(script).toString()
+                val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
                 if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebniss: ``````".length) {
                     val result = Embeds.info(
                         "Zu langes Ergebniss!",

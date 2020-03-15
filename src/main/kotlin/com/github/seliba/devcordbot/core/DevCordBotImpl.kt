@@ -38,11 +38,15 @@ import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
 import net.dv8tion.jda.api.events.ResumedEvent
+import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
+import net.dv8tion.jda.api.utils.MemberCachePolicy
+import net.dv8tion.jda.api.utils.cache.CacheFlag
 import okhttp3.OkHttpClient
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 import com.github.seliba.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 
 /**
@@ -64,8 +68,18 @@ internal class DevCordBotImpl(
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
 
-    override val jda: JDA = JDABuilder.createDefault(token)
+    override val jda: JDA = JDABuilder.create(
+            token,
+            GatewayIntent.getIntents(
+                GatewayIntent.ALL_INTENTS and GatewayIntent.getRaw(
+                    GatewayIntent.GUILD_MESSAGE_TYPING,
+                    GatewayIntent.DIRECT_MESSAGE_TYPING
+                ).inv()
+            )
+        )
         .setEventManager(AnnotatedEventManager())
+        .setDisabledCacheFlags(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
+        .setMemberCachePolicy(MemberCachePolicy.ALL)
         .setActivity(Activity.playing("Starting ..."))
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
         .setHttpClient(httpClient)
@@ -174,3 +188,4 @@ internal class DevCordBotImpl(
         )
     }
 }
+
