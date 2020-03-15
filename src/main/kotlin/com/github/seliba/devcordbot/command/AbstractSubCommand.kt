@@ -17,7 +17,6 @@
 package com.github.seliba.devcordbot.command
 
 import com.github.seliba.devcordbot.command.permission.Permission
-import java.lang.Exception
 
 /**
  * Skeleton of a sub command.

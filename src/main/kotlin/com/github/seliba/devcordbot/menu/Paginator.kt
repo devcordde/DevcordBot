@@ -39,7 +39,7 @@ import kotlin.math.min
  * Reaction and embed based paginator for string lists.
  * @param items the list of items to paginate
  * @param user the user that is allowed to paginate
- * @param channel the channel to send the paginatable list to
+ * @param context the context to send the paginatable list to
  * @param timeoutMillis amount of milliseconds after the paginator should timeout
  * @param firstPage the first page that should be shown
  * @param itemsPerPage the amount of items per page
@@ -114,10 +114,10 @@ class Paginator(
      */
     @EventSubscriber
     fun onReaction(event: GuildMessageReactionAddEvent) {
+        if (event.reactionEmote.isEmote || event.user != user || event.messageIdLong != message.idLong) return
         if (event.user != event.jda.selfUser) {
             event.reaction.removeReaction(event.user).queue()
         } else return // Don't react to the bots reactions
-        if (event.reactionEmote.isEmote || event.user != user || event.messageIdLong != message.idLong) return
 
         val nextPage = when (event.reactionEmote.emoji) {
             BULK_LEFT -> 1
