@@ -35,10 +35,16 @@ dependencies {
 }
 
 application {
-    mainClassName = "com.github.seliba.devcordbot.LauncherKt"
+    mainClassName = "com.github.seliba.devcordbot.migrator.Migrator"
 }
 
 tasks {
+    compileKotlin {
+        kotlinOptions {
+            jvmTarget = "12"
+        }
+    }
+
     compileTestKotlin {
         kotlinOptions.jvmTarget = "12"
     }
@@ -51,10 +57,4 @@ tasks {
 
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_13
-}
-
-tasks {
-    compileKotlin {
-        kotlinOptions.jvmTarget = "12"
-    }
 }
