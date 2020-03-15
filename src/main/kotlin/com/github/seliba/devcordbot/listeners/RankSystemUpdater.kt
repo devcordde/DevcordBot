@@ -60,7 +60,7 @@ class DatabaseUpdater {
     @SubscribeEvent
     fun onMessageSent(event: GuildMessageReceivedEvent) {
         val user = createUserIfNeeded(event.author.idLong) ?: return
-        if (Duration.between(user.lastUpgrade, Instant.now()) < Duration.ofSeconds(30)) {
+        if (Duration.between(user.lastUpgrade, Instant.now()) < Duration.ofSeconds(15)) {
             return
         }
         val previousLevel = user.level
