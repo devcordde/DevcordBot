@@ -21,11 +21,12 @@ import com.github.seliba.devcordbot.command.permission.Permission
 /**
  * Skeleton of a sub command.
  * @property parent the parent of the command
+ * @property callback an [Exception] that is supposed to highlight class defention line
  * @see AbstractCommand
  */
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
-    override val callback = Exception()
+    override val callback: Exception = Exception()
     override val category: CommandCategory
         get() = parent.category
     override val permission: Permission
