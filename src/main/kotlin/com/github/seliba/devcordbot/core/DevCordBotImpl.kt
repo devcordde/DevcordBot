@@ -21,7 +21,6 @@ import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.commands.`fun`.SourceCommand
 import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
-import com.github.seliba.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
@@ -44,6 +43,7 @@ import okhttp3.OkHttpClient
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import com.github.seliba.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 
 /**
  * General class to manage the Discord bot.
@@ -169,7 +169,8 @@ internal class DevCordBotImpl(
             EvalCommand(),
             OwnerEvalCommand(),
             StarboardCommand(),
-            SourceCommand()
+            SourceCommand(),
+            RankCommand()
         )
     }
 }

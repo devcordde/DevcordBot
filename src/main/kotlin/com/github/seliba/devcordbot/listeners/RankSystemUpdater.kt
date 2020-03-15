@@ -17,12 +17,12 @@
 package com.github.seliba.devcordbot.listeners
 
 import com.github.seliba.devcordbot.database.DevCordUser
+import com.github.seliba.devcordbot.util.XPUtil
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 import org.jetbrains.exposed.sql.transactions.transaction
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -62,7 +62,7 @@ class DatabaseUpdater {
         val level = transaction {
             user.experience += Random.nextLong(5, 20)
 
-            val xpToLevelup = getXpToLevelup(user.level)
+            val xpToLevelup = XPUtil.getXpToLevelup(user.level)
             if (user.experience >= xpToLevelup) {
                 user.experience -= xpToLevelup
                 user.level++
@@ -102,9 +102,6 @@ class DatabaseUpdater {
             DevCordUser.findById(id)?.delete() ?: Unit
         }
     }
-
-    private fun getXpToLevelup(level: Int) = (25 * sqrt(level.toDouble())).toLong()
-
 }
 
 /**
