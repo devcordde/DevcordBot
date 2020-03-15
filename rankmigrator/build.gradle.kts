@@ -1,6 +1,9 @@
+
 plugins {
     java
+    application
     kotlin("jvm")
+    id("com.github.johnrengelman.shadow")
 }
 
 group = "com.github.seliba"
@@ -31,12 +34,27 @@ dependencies {
     implementation("io.github.cdimascio", "java-dotenv", "5.1.3")
 }
 
-configure<JavaPluginConvention> {
-    sourceCompatibility = JavaVersion.VERSION_13
+application {
+    mainClassName = "com.github.seliba.devcordbot.migrator.Migrator"
 }
 
 tasks {
     compileKotlin {
+        kotlinOptions {
+            jvmTarget = "12"
+        }
+    }
+
+    compileTestKotlin {
         kotlinOptions.jvmTarget = "12"
     }
+
+    jar {
+        archiveClassifier.set("original")
+    }
+}
+
+
+configure<JavaPluginConvention> {
+    sourceCompatibility = JavaVersion.VERSION_13
 }
