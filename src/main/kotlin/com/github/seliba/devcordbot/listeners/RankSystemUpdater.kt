@@ -17,7 +17,6 @@
 package com.github.seliba.devcordbot.listeners
 
 import com.github.seliba.devcordbot.database.DevCordUser
-import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -48,8 +47,8 @@ class DatabaseUpdater {
             return null
         }
 
-        return DevCordUser.findById(id) ?: transaction {
-            DevCordUser.new(id) {}
+        return transaction {
+            DevCordUser.findById(id) ?: DevCordUser.new(id) {}
         }
     }
 
@@ -68,10 +67,10 @@ class DatabaseUpdater {
                 user.experience -= xpToLevelup
                 user.level++
             }
-            
+
             user.level
         }
-        
+
         if (previousLevel != level) {
             updateLevel(event, level)
         }
