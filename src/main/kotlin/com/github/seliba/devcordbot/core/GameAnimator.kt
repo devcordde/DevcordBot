@@ -18,7 +18,6 @@ package com.github.seliba.devcordbot.core
 
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.ticker
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Activity
 import java.io.Closeable
