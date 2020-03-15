@@ -17,8 +17,10 @@
 package com.github.seliba.devcordbot.core
 
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ticker
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Activity
 import java.io.Closeable
@@ -27,19 +29,19 @@ import java.util.concurrent.TimeUnit
 /**
  * Animates the bot's activity status.
  */
+@Suppress("EXPERIMENTAL_API_USAGE")
 class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) : Closeable {
 
-    private lateinit var job: Job
+    private val channel = ticker(TimeUnit.SECONDS.toMillis(30), 0)
     private val executor = DefaultThreadFactory.newSingleThreadExecutor("GameAnimator").asCoroutineDispatcher()
 
     /**
      * Starts the game animation.
      */
     fun start() {
-        job = GlobalScope.launch(executor) {
-            while (true) {
+        GlobalScope.launch(executor) {
+            for (unit in channel) {
                 animate()
-                delay(TimeUnit.SECONDS.toMillis(30))
             }
         }
     }
@@ -47,11 +49,7 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
     /**
      * Stops the animation.
      */
-    fun stop() {
-        if (::job.isInitialized) {
-            job.cancel()
-        }
-    }
+    fun stop(): Unit = channel.cancel()
 
     private fun animate() {
         jda.presence.activity = games.random().animate(jda)
