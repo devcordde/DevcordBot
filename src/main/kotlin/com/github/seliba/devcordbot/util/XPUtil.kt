@@ -14,21 +14,16 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command
+package com.github.seliba.devcordbot.util
 
-import com.github.seliba.devcordbot.command.permission.Permission
+import kotlin.math.sqrt
 
 /**
- * Skeleton of a sub command.
- * @property parent the parent of the command
- * @property callback an [Exception] that is supposed to highlight class defention line
- * @see AbstractCommand
+ * XP utilities.
  */
-@Suppress("MemberVisibilityCanBePrivate")
-abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
-    override val callback: Exception = Exception()
-    override val category: CommandCategory
-        get() = parent.category
-    override val permission: Permission
-        get() = parent.permission
+object XPUtil {
+    /**
+     * Calculates the needed amount of xp to [level].
+     */
+    fun getXpToLevelup(level: Int): Long = (25 * sqrt(level.toDouble())).toLong()
 }

@@ -24,7 +24,9 @@ import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.constants.Emotes
 import com.github.seliba.devcordbot.dsl.editMessage
 import com.github.seliba.devcordbot.util.HastebinUtil
+import com.github.seliba.devcordbot.util.limit
 import com.github.seliba.devcordbot.util.stringify
+import net.dv8tion.jda.api.entities.MessageEmbed
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
@@ -57,6 +59,7 @@ class EvalCommand : AbstractCommand() {
                 import com.github.seliba.devcordbot.command.*
                 import com.github.seliba.devcordbot.command.permission.Permission as BotPermission
                 import com.github.seliba.devcordbot.command.context.*
+                import org.jetbrains.exposed.sql.transactions.*
                 import okhttp3.*
                 import net.dv8tion.jda.api.*
                 import net.dv8tion.jda.api.entities.*
@@ -64,12 +67,26 @@ class EvalCommand : AbstractCommand() {
             )
             scriptEngine.put("context", context)
             val result = try {
-                val evaluation = scriptEngine.eval(script)
-                Embeds.info("Erfolgreich ausgeführt!", "Ergebniss: ```$evaluation```")
+                val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
+                if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebniss: ``````".length) {
+                    val result = Embeds.info(
+                        "Zu langes Ergebniss!",
+                        "Ergebniss: ${Emotes.LOADING}"
+                    )
+                    HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient).thenAccept { hasteUrl ->
+                        it.editMessage(result.apply {
+                            @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
+                            description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
+                        }).queue()
+                    }
+                    result
+                } else {
+                    Embeds.info("Erfolgreich ausgeführt!", "Ergebniss: ```$evaluation```")
+                }
             } catch (e: ScriptException) {
                 val result = Embeds.error(
                     "Fehler!",
-                    "Es ist folgender Fehler aufgetreten: ```${e.message}``` Detailierter Fehler: ${Emotes.LOADING}"
+                    "Es ist folgender Fehler aufgetreten: ```${e.message?.limit(1024)}``` Detailierter Fehler: ${Emotes.LOADING}"
                 )
                 HastebinUtil.postErrorToHastebin(e.stringify(), context.bot.httpClient).thenAccept { hasteUrl ->
                     it.editMessage(result.apply {
