@@ -29,24 +29,26 @@ import java.util.concurrent.TimeUnit
 @Suppress("EXPERIMENTAL_API_USAGE")
 class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) : Closeable {
 
-    private val channel = ticker(TimeUnit.SECONDS.toMillis(30), 0)
+    private lateinit var job: Job
     private val executor = DefaultThreadFactory.newSingleThreadExecutor("GameAnimator").asCoroutineDispatcher()
 
     /**
      * Starts the game animation.
      */
     fun start() {
-        GlobalScope.launch(executor) {
-            for (unit in channel) {
-                animate()
-            }
+        job = GlobalScope.launch(executor) {
+            animate()
+            delay(TimeUnit.SECONDS.toMillis(30))
         }
     }
 
     /**
      * Stops the animation.
      */
-    fun stop(): Unit = channel.cancel()
+    fun stop() {
+        job.cancel()
+        executor.close()
+    }
 
     private fun animate() {
         jda.presence.activity = games.random().animate(jda)

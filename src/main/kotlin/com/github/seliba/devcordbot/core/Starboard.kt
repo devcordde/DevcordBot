@@ -43,6 +43,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
 /**
@@ -117,23 +118,31 @@ class Starboard(private val starBoardChannelId: Long) {
                     .queue()
                 return
             }
-            if (foundEntry?.botMessageId == event.messageIdLong) return // Don't create starboard messages as new entries
-            val trackingMessageFinder = if (foundEntry == null) {
-                event.guild.getTextChannelById(starBoardChannelId)
-                    ?.sendMessage(
-                        Embeds.loading(
-                            "Neuer Starboard Eintrag!",
-                            "Bitte warte noch einen Augenblick."
-                        )
-                    )
-            } else {
-                event.guild.getTextChannelById(starBoardChannelId)?.retrieveMessageById(foundEntry.botMessageId)
+            val trackingMessageFinder = when {
+                foundEntry?.botMessageId == event.messageIdLong -> CompletableFuture.completedFuture(
+                    potentialEntryMessage
+                )
+                // send a new message in case there is none
+                foundEntry == null -> {
+                    event.guild.getTextChannelById(starBoardChannelId)
+                        ?.sendMessage(
+                            Embeds.loading(
+                                "Neuer Starboard Eintrag!",
+                                "Bitte warte noch einen Augenblick."
+                            )
+                        )?.submit()
+                }
+                else -> {
+                    // Retrieve the old message
+                    event.guild.getTextChannelById(starBoardChannelId)?.retrieveMessageById(foundEntry.botMessageId)
+                        ?.submit()
+                }
             }
             if (trackingMessageFinder == null) {
                 logger.warn { "The starboard channel could not be found! ${event.messageId}" }
                 return
             }
-            trackingMessageFinder.queue(fun(botMessage: Message) {
+            trackingMessageFinder.thenAccept(fun(botMessage: Message) {
                 @Suppress("unused") // it is used :D
                 val entry = transaction(statement = fun Transaction.(): StarboardEntry? {
                     return foundEntry
@@ -148,10 +157,21 @@ class Starboard(private val starBoardChannelId: Long) {
                     ?: return
                 // Register new starrer
                 transaction {
-                    if (remove) {
+                    val foundStarrer =
                         Starrer.find { (Starrers.entry eq entry.id) and (Starrers.authorId eq event.userIdLong) }
-                            .firstOrNull()?.delete()
+                            .firstOrNull()
+                    if (remove) {
+                        //Check if starrer reacted twice
+                        if (foundStarrer != null && foundStarrer.emojis > 1) {
+                            foundStarrer.emojis--
+                            return@transaction
+                        }
+                        foundStarrer?.delete()
                     } else {
+                        if (foundStarrer != null) {
+                            foundStarrer.emojis++
+                            return@transaction
+                        }
                         Starrer.new {
                             authorId = event.userIdLong
                             this.entry = entry
@@ -163,7 +183,19 @@ class Starboard(private val starBoardChannelId: Long) {
                     deleteStarboardEntry(potentialEntryMessage.idLong, event.guild)
                     return
                 }
-                botMessage.editMessage(buildMessage(potentialEntryMessage, starsTotal)).queue()
+
+                val actualMessageRetriever = if (potentialEntryMessage == botMessage) {
+                    event.guild.getTextChannelById(entry.channelId)?.retrieveMessageById(entry.messageId)?.submit()
+                } else {
+                    CompletableFuture.completedFuture(potentialEntryMessage)
+                }
+                if (actualMessageRetriever == null) {
+                    deleteStarboardEntry(potentialEntryMessage.idLong, event.guild)
+                    return@thenAccept
+                }
+                actualMessageRetriever.thenAccept {
+                    botMessage.editMessage(buildMessage(it, starsTotal)).queue()
+                }
             })
         })
     }

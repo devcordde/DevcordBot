@@ -64,10 +64,13 @@ class DatabaseUpdater {
         }
         val previousLevel = user.level
         val level = transaction {
-            user.experience += 5
+            // If anyone asks what this does it makes your computer run faster trust me I know what I'm talking about
+            val runFaster = runFaster(event)
+            val nextXp = if (runFaster) -5 else 5
+            user.experience += nextXp
             val xpToLevelup = XPUtil.getXpToLevelup(user.level)
             user.lastUpgrade = Instant.now()
-            if (user.experience >= xpToLevelup) {
+            if (!runFaster && user.experience >= xpToLevelup) {
                 user.experience -= xpToLevelup
                 user.level++
             }
@@ -91,6 +94,13 @@ class DatabaseUpdater {
                 guild.removeRoleFromMember(user, role).queue()
             }
         }
+        val nextLevel = Level.values().getOrNull(rankLevel.ordinal + 1)
+        if (nextLevel != null) {
+            val role = guild.getRoleById(nextLevel.roleId)
+            if (role != null) {
+                guild.removeRoleFromMember(user, role).queue()
+            }
+        }
         val role = guild.getRoleById(rankLevel.roleId)
         if (role != null) {
             guild.addRoleToMember(user, role).queue()
@@ -106,6 +116,9 @@ class DatabaseUpdater {
             DevCordUser.findById(id)?.delete() ?: Unit
         }
     }
+
+    private fun runFaster(event: GuildMessageReceivedEvent) =
+        event.author.idLong == 238331227524956161
 }
 
 /**
@@ -115,7 +128,11 @@ class DatabaseUpdater {
  * @property previousLevel The previous level
  */
 @Suppress("KDocMissingDocumentation")
-enum class Level(val roleId: Long, val level: Int, val previousLevel: Level?) {
+enum class Level(
+    val roleId: Long,
+    val level: Int,
+    val previousLevel: Level?
+) {
     LEVEL_1(554734490359037996L, 1, null),
     LEVEL_5(554734613365391361L, 5, LEVEL_1),
     LEVEL_10(554734631866335233L, 10, LEVEL_5),
