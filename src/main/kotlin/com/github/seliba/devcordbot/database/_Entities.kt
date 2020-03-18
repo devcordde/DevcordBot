@@ -110,6 +110,7 @@ class StarboardEntry(id: EntityID<Long>) : LongEntity(id) {
  * Representation of the Starrers table.
  * @property authorId id of the user who starred
  * @property entry the starred starboardentry
+ * @property emojis the amount of emojis the starrer added
  * @see StarboardEntry
  */
 class Starrer(id: EntityID<Long>) : LongEntity(id) {
@@ -117,4 +118,5 @@ class Starrer(id: EntityID<Long>) : LongEntity(id) {
 
     var authorId: Long by Starrers.authorId
     var entry: StarboardEntry by StarboardEntry referencedOn Starrers.entry
+    var emojis: Int by Starrers.emojis
 }
