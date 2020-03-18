@@ -41,7 +41,7 @@ import java.util.concurrent.CompletableFuture
 
 private const val MAX_LINES = 10
 private val WHITELIST = listOf(486916258965618690, 649253900473597952, 671772614993379328)
-private val KNOWN_LANGUAGES = arrayOf("java", "python", "go", "kotlin", "cs")
+private val KNOWN_LANGUAGES = arrayOf("java", "go", "kotlin")
 
 /**
  * Automatic analzyer for common pitfalls.
@@ -102,9 +102,8 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
                     }
             }
         }
-        val exceptionMatch = JVM_EXCEPTION_PATTERN.find(inputString)
-        if (exceptionMatch != null) {
-            handleCommonException(exceptionMatch, event)
+        JVM_EXCEPTION_PATTERN.findAll(inputString).first {
+            handleCommonException(it, event)
         }
     }
 
@@ -120,7 +119,7 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
 
     private fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, KNOWN_LANGUAGES)
 
-    private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent) {
+    private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent): Boolean {
         val exception = with(match.groupValues[1]) { substring(lastIndexOf('.') + 1) }
         val exceptionName = exception.toLowerCase()
         val tag = when {
@@ -128,10 +127,11 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
             exceptionName == "unsupportedclassversionerror" -> "class-version"
             match.groupValues[2] == "Plugin already initialized!" -> "plugin-already-initialized"
             else -> null
-        } ?: return
+        } ?: return false
         val tagContent = transaction { Tag.find { Tags.name eq tag }.first().content }
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // We know that all the tags exist
         event.channel.sendMessage(tagContent).queue()
+        return true
     }
 
     private fun isCode(potentialCode: String) = guessLanguage(potentialCode).language != null
