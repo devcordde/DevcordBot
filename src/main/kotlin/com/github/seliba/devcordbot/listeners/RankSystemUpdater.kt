@@ -17,14 +17,14 @@
 package com.github.seliba.devcordbot.listeners
 
 import com.github.seliba.devcordbot.database.DevCordUser
-import net.dv8tion.jda.api.entities.Role
+import com.github.seliba.devcordbot.util.XPUtil
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 import org.jetbrains.exposed.sql.transactions.transaction
-import kotlin.math.sqrt
-import kotlin.random.Random
+import java.time.Duration
+import java.time.Instant
 
 /**
  * Updates the Database based on Discord events.
@@ -48,8 +48,8 @@ class DatabaseUpdater {
             return null
         }
 
-        return DevCordUser.findById(id) ?: transaction {
-            DevCordUser.new(id) {}
+        return transaction {
+            DevCordUser.findById(id) ?: DevCordUser.new(id) {}
         }
     }
 
@@ -59,19 +59,22 @@ class DatabaseUpdater {
     @SubscribeEvent
     fun onMessageSent(event: GuildMessageReceivedEvent) {
         val user = createUserIfNeeded(event.author.idLong) ?: return
+        if (Duration.between(user.lastUpgrade, Instant.now()) < Duration.ofSeconds(15)) {
+            return
+        }
         val previousLevel = user.level
         val level = transaction {
-            user.experience += Random.nextLong(5, 20)
-
-            val xpToLevelup = getXpToLevelup(user.level)
+            user.experience += 5
+            val xpToLevelup = XPUtil.getXpToLevelup(user.level)
+            user.lastUpgrade = Instant.now()
             if (user.experience >= xpToLevelup) {
                 user.experience -= xpToLevelup
                 user.level++
             }
-            
+
             user.level
         }
-        
+
         if (previousLevel != level) {
             updateLevel(event, level)
         }
@@ -103,9 +106,6 @@ class DatabaseUpdater {
             DevCordUser.findById(id)?.delete() ?: Unit
         }
     }
-
-    private fun getXpToLevelup(level: Int) = (25 * sqrt(level.toDouble())).toLong()
-
 }
 
 /**
