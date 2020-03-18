@@ -80,6 +80,7 @@ class Starboard(private val starBoardChannelId: Long) {
     /**
      * Listens for starboard message edits.
      */
+    @EventSubscriber
     fun starboardMessageEdited(event: GuildMessageUpdateEvent) {
         val entry =
             transaction { StarboardEntry.find { StarboardEntries.messageId eq event.messageIdLong }.firstOrNull() }
@@ -91,7 +92,7 @@ class Starboard(private val starBoardChannelId: Long) {
                 }
         trackingMessageRetriever.queue({
             transaction {
-                it.editMessage(buildMessage(event.message, entry.starrers.count()))
+                it.editMessage(buildMessage(event.message, entry.starrers.count())).queue()
             }
         }, {
             if (it is ErrorResponseException && it.errorResponse == ErrorResponse.UNKNOWN_MESSAGE) {
