@@ -299,7 +299,8 @@ class TagCommand : AbstractCommand() {
             }
             val tagName = context.args.join()
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
-            val content = MarkdownSanitizer.escape(tag.content)
+            val content =
+                MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
             context.respond(content).queue()
         }
     }
