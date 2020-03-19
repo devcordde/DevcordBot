@@ -64,7 +64,6 @@ class DatabaseUpdater {
         }
         val previousLevel = user.level
         val level = transaction {
-            // If anyone asks what this does it makes your computer run faster trust me I know what I'm talking about
             user.experience += 5
             val xpToLevelup = XPUtil.getXpToLevelup(user.level)
             user.lastUpgrade = Instant.now()
