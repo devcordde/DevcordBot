@@ -22,6 +22,7 @@ import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Colors
+import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.dsl.embed
@@ -31,7 +32,6 @@ import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -170,7 +170,7 @@ class TagCommand : AbstractCommand() {
             val name = args.join()
             val tag = transaction { checkNotTagExists(name, context) } ?: return
             val rank = transaction {
-                Tags.select { (Tags.usages greaterEq tag.usages) and (Tags.createdAt greaterEq tag.createdAt) }.count()
+                Tags.select { (Tags.usages greaterEq tag.usages) }.count()
             }
             val author = context.jda.getUserById(tag.author)
             context.respond(
@@ -184,6 +184,7 @@ class TagCommand : AbstractCommand() {
                     addField("Erstellt von", creator, inline = true)
                     addField("Benutzungen", tag.usages.toString(), inline = true)
                     addField("Rang", rank.toString(), inline = true)
+                    addField("Erstellt", Constants.DATE_FORMAT.format(tag.createdAt))
                     transaction {
                         val aliases = TagAlias.find { TagAliases.tag eq tag.name }
                         if (!aliases.empty()) {
@@ -201,6 +202,7 @@ class TagCommand : AbstractCommand() {
                 }
             ).queue()
         }
+
     }
 
     private inner class DeleteCommand : AbstractSubCommand(this) {
@@ -297,7 +299,8 @@ class TagCommand : AbstractCommand() {
             }
             val tagName = context.args.join()
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
-            val content = MarkdownSanitizer.escape(tag.content)
+            val content =
+                MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
             context.respond(content).queue()
         }
     }

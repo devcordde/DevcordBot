@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Animates the bot's activity status.
  */
+@Suppress("EXPERIMENTAL_API_USAGE")
 class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) : Closeable {
 
     private lateinit var job: Job
@@ -47,9 +48,8 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
      * Stops the animation.
      */
     fun stop() {
-        if (::job.isInitialized) {
-            job.cancel()
-        }
+        job.cancel()
+        executor.close()
     }
 
     private fun animate() {

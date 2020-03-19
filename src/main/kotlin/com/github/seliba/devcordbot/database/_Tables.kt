@@ -23,6 +23,7 @@ import com.github.seliba.devcordbot.database.StarboardEntries.botMessageId
 import com.github.seliba.devcordbot.database.StarboardEntries.channelId
 import com.github.seliba.devcordbot.database.StarboardEntries.messageId
 import com.github.seliba.devcordbot.database.Starrers.authorId
+import com.github.seliba.devcordbot.database.Starrers.emojis
 import com.github.seliba.devcordbot.database.Starrers.entry
 import com.github.seliba.devcordbot.database.TagAliases.name
 import com.github.seliba.devcordbot.database.TagAliases.tag
@@ -119,9 +120,11 @@ object StarboardEntries : LongIdTable() {
  * Representation of the Starrers table.
  * @property authorId id of the user who starred
  * @property entry the starred starboardentry
+ * @property emojis the amount of emojis the starrer added
  * @see StarboardEntries
  */
 object Starrers : LongIdTable() {
     val authorId: Column<Long> = long("author_id")
     val entry: Column<EntityID<Long>> = reference("entry_id", StarboardEntries)
+    val emojis: Column<Int> = integer("emojis").default(1)
 }
