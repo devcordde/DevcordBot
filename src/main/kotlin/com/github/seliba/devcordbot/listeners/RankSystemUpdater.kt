@@ -115,7 +115,11 @@ class DatabaseUpdater {
  * @property previousLevel The previous level
  */
 @Suppress("KDocMissingDocumentation")
-enum class Level(val roleId: Long, val level: Int, val previousLevel: Level?) {
+enum class Level(
+    val roleId: Long,
+    val level: Int,
+    val previousLevel: Level?
+) {
     LEVEL_1(554734490359037996L, 1, null),
     LEVEL_5(554734613365391361L, 5, LEVEL_1),
     LEVEL_10(554734631866335233L, 10, LEVEL_5),
