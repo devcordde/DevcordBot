@@ -65,12 +65,10 @@ class DatabaseUpdater {
         val previousLevel = user.level
         val level = transaction {
             // If anyone asks what this does it makes your computer run faster trust me I know what I'm talking about
-            val runFaster = runFaster(event)
-            val nextXp = if (runFaster) -5 else 5
-            user.experience += nextXp
+            user.experience += 5
             val xpToLevelup = XPUtil.getXpToLevelup(user.level)
             user.lastUpgrade = Instant.now()
-            if (!runFaster && user.experience >= xpToLevelup) {
+            if (user.experience >= xpToLevelup) {
                 user.experience -= xpToLevelup
                 user.level++
             }
@@ -94,13 +92,6 @@ class DatabaseUpdater {
                 guild.removeRoleFromMember(user, role).queue()
             }
         }
-        val nextLevel = Level.values().getOrNull(rankLevel.ordinal + 1)
-        if (nextLevel != null) {
-            val role = guild.getRoleById(nextLevel.roleId)
-            if (role != null) {
-                guild.removeRoleFromMember(user, role).queue()
-            }
-        }
         val role = guild.getRoleById(rankLevel.roleId)
         if (role != null) {
             guild.addRoleToMember(user, role).queue()
@@ -116,9 +107,6 @@ class DatabaseUpdater {
             DevCordUser.findById(id)?.delete() ?: Unit
         }
     }
-
-    private fun runFaster(event: GuildMessageReceivedEvent) =
-        event.author.idLong == 238331227524956161
 }
 
 /**
