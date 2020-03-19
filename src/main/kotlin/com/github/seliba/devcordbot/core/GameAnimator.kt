@@ -37,8 +37,10 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
      */
     fun start() {
         job = GlobalScope.launch(executor) {
-            animate()
-            delay(TimeUnit.SECONDS.toMillis(30))
+            while (true) {
+                animate()
+                delay(TimeUnit.SECONDS.toMillis(30))
+            }
         }
     }
 

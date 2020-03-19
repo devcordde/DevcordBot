@@ -18,6 +18,10 @@ package com.github.seliba.devcordbot.constants
 
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.*
 
 /**
  * Miscellaneous constants used in the bot.
@@ -43,5 +47,13 @@ object Constants {
      * URL that is used for pasting text.
      */
     val hastebinUrl: HttpUrl = "https://haste.schlaubi.me".toHttpUrl()
+
+    /**
+     * Dateformat used in the bot.
+     */
+    val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter
+        .ofLocalizedDateTime(FormatStyle.SHORT)
+        .withLocale(Locale.GERMAN)
+        .withZone(ZoneId.of("Europe/Berlin")) // To lazy to set server timezone :P
 
 }
