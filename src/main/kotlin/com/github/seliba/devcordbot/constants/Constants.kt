@@ -31,7 +31,7 @@ object Constants {
     /**
      * Array of the bot owners Discord ids.
      */
-    val BOT_OWNERS: LongArray = longArrayOf(416902379598774273, 450632370354126858, 303980949962489858)
+    val BOT_OWNERS: LongArray = longArrayOf(450632370354126858, 303980949962489858)
 
     /**
      * The prefix used for commands.
@@ -46,7 +46,7 @@ object Constants {
     /**
      * URL that is used for pasting text.
      */
-    val hastebinUrl: HttpUrl = "https://haste.schlaubi.me".toHttpUrl()
+    val hastebinUrl: HttpUrl = "https://hasteb.in".toHttpUrl()
 
     /**
      * Dateformat used in the bot.
