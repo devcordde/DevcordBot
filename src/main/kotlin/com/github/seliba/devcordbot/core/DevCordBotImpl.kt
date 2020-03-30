@@ -69,14 +69,14 @@ internal class DevCordBotImpl(
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
 
     override val jda: JDA = JDABuilder.create(
-            token,
-            GatewayIntent.getIntents(
-                GatewayIntent.ALL_INTENTS and GatewayIntent.getRaw(
-                    GatewayIntent.GUILD_MESSAGE_TYPING,
-                    GatewayIntent.DIRECT_MESSAGE_TYPING
-                ).inv()
-            )
+        token,
+        GatewayIntent.getIntents(
+            GatewayIntent.ALL_INTENTS and GatewayIntent.getRaw(
+                GatewayIntent.GUILD_MESSAGE_TYPING,
+                GatewayIntent.DIRECT_MESSAGE_TYPING
+            ).inv()
         )
+    )
         .setEventManager(AnnotatedEventManager())
         .setDisabledCacheFlags(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
         .setMemberCachePolicy(MemberCachePolicy.ALL)
@@ -135,13 +135,13 @@ internal class DevCordBotImpl(
      * Fired when the bot can resume its previous connections when reconnecting.
      */
     @EventSubscriber
-    fun whenResumed(event: ResumedEvent) = reinitialize()
+    fun whenResumed(@Suppress("UNUSED_PARAMETER") event: ResumedEvent) = reinitialize()
 
     /**
      * Fired when the bot reconnects.
      */
     @EventSubscriber
-    fun whenReconnect(event: ReconnectedEvent) = reinitialize()
+    fun whenReconnect(@Suppress("UNUSED_PARAMETER") event: ReconnectedEvent) = reinitialize()
 
     private fun reinitialize() {
         logger.info {
