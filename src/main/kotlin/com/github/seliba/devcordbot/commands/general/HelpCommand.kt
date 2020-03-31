@@ -36,10 +36,6 @@ class HelpCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override fun execute(context: Context) {
-        if (context.args.firstOrNull() == "secret") {
-            return context.respond(Embeds.info("Test")).flatMap { it.editMessage(Embeds.info("test2")) }
-                .delay(Duration.ofSeconds(2)).queue()
-        }
         val commandName = context.args.optionalArgument(0)
         if (commandName == null) {
             sendCommandList(context)
