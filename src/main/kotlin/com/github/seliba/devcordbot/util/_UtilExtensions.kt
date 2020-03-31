@@ -19,6 +19,7 @@ package com.github.seliba.devcordbot.util
 import com.github.seliba.devcordbot.command.AbstractCommand
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
@@ -93,3 +94,8 @@ fun Throwable.stringify(): String {
  */
 fun String.limit(amount: Int, contraction: String = "..."): String =
     if (length < amount) this else "${substring(0, amount - contraction.length)}$contraction"
+
+/**
+ * Public map constructor of [DataObject].
+ */
+class MapJsonObject(map: Map<String, Any>) : DataObject(map)
