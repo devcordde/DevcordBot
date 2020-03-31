@@ -32,7 +32,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class RankCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("rank", "r")
     override val displayName: String = "Rank"
-    override val description: String = "Rank Command erklärtt sich halt hoffentlich von selbst du banane"
+    override val description: String = "Zeigt die Ränge von Usern an."
     override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
