@@ -56,4 +56,9 @@ object Constants {
         .withLocale(Locale.GERMAN)
         .withZone(ZoneId.of("Europe/Berlin")) // To lazy to set server timezone :P
 
+    /**
+     * Regex that matches discord code blocks.
+     */
+    val CODE_BLOCK_REGEX: Regex = "```(.*)?(?s)(.*)```".toRegex()
+
 }

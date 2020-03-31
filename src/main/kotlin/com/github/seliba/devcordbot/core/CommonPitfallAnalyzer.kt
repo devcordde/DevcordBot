@@ -32,7 +32,6 @@ import com.github.seliba.devcordbot.util.HastebinUtil
 import com.github.seliba.devcordbot.util.executeAsync
 import mu.KotlinLogging
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.BufferedReader
@@ -46,7 +45,7 @@ private val KNOWN_LANGUAGES = arrayOf("java", "python", "go", "kotlin", "cs")
 /**
  * Automatic analzyer for common pitfalls.
  */
-class CommonPitfallListener(private val httpClient: OkHttpClient) {
+class CommonPitfallListener(private val bot: DevCordBot) {
     private val logger = KotlinLogging.logger {}
     private val languageGuesser = Highlighter(UselessRendererFactoryThing())
 
@@ -56,7 +55,10 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
     @EventSubscriber
     fun onMessage(event: GuildMessageReceivedEvent) {
         val input = event.message.contentRaw
-        if (event.author.isBot || event.channel.parent?.idLong !in WHITELIST || Constants.prefix.find(input) != null) return
+        if (event.author.isBot || (!bot.debugMode && event.channel.parent?.idLong !in WHITELIST) || Constants.prefix.find(
+                input
+            ) != null
+        ) return
         val hastebinMatch = HASTEBIN_PATTERN.find(input)
         val firstAttachment = event.message.attachments.firstOrNull()
         val actualInput =
@@ -90,22 +92,25 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
     private fun analyzeInput(input: Pair<String?, Boolean>, event: GuildMessageReceivedEvent) {
         val (inputString, wasPaste) = input
         require(inputString != null)
-        if (!wasPaste && isCode(inputString)) {
-            val hastebinUrlFuture = HastebinUtil.postErrorToHastebin(inputString, httpClient)
+        val inputBlockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(inputString)
+        val cleanInput = if (inputBlockMatch != null) inputBlockMatch.groupValues[2].trim() else inputString
+        if (!wasPaste && isCode(cleanInput)) {
+            val hastebinUrlFuture = HastebinUtil.postErrorToHastebin(cleanInput, bot.httpClient)
             if (inputString.lines().size > MAX_LINES) {
                 event.channel.sendMessage(
-                        buildTooLongEmbed(Emotes.LOADING)
-                    )
+                    buildTooLongEmbed(Emotes.LOADING)
+                )
                     .submit()
                     .thenCombine(hastebinUrlFuture) { message, url ->
                         message.editMessage(buildTooLongEmbed(url)).queue()
                     }
             }
         }
-        val exceptionMatch = JVM_EXCEPTION_PATTERN.find(inputString)
+        val exceptionMatch = JVM_EXCEPTION_PATTERN.find(cleanInput)
         if (exceptionMatch != null) {
             handleCommonException(exceptionMatch, event)
         }
+
     }
 
     private fun buildTooLongEmbed(url: String): EmbedConvention {
@@ -141,7 +146,7 @@ class CommonPitfallListener(private val httpClient: OkHttpClient) {
             .url(url)
             .get()
             .build()
-        return httpClient.newCall(request).executeAsync().thenApply { response ->
+        return bot.httpClient.newCall(request).executeAsync().thenApply { response ->
             response.body.use {
                 it?.string() to true
             }
