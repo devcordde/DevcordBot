@@ -115,9 +115,7 @@ abstract class JavadocCommand(private val url: String) : AbstractCommand() {
             if (classDoc.enumConstants.isNotEmpty()) {
                 addField("values", classDoc.enumConstants.joinToString("\n"))
             }
-            if (classDoc.deprecation != null) {
-                addField("Deprecated", classDoc.deprecation)
-            }
+
             renderTags(classDoc.topTags)
         }
     }
@@ -134,6 +132,9 @@ abstract class JavadocCommand(private val url: String) : AbstractCommand() {
     private fun renderDoc(context: Context, doc: Documented, block: EmbedConvention.() -> Unit) {
         context.respond(embed {
             description = doc.description.limit(MessageEmbed.TEXT_MAX_LENGTH)
+            if (doc.deprecation != null) {
+                addField("Deprecated", classDoc.deprecation)
+            }
             renderTags(doc.tags)
         }.apply(block)).queue()
     }
