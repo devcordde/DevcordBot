@@ -53,7 +53,7 @@ fun SpigotJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
  */
 fun SpigotLegacyJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
     "https://helpch.at/docs/1.8.8/allclasses-noframe.html",
-    listOf("spigot", "1.15", "115", "sdoc"),
+    listOf("spigotlegacy", "1.8", "118", "sldoc"),
     "javaodc",
     "Lässt dich javadoc benutzen"
 )
