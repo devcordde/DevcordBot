@@ -184,7 +184,10 @@ internal class DevCordBotImpl(
             OwnerEvalCommand(),
             StarboardCommand(),
             SourceCommand(),
-            RankCommand()
+            RankCommand(),
+            OracleJavaDocCommand(),
+            SpigotJavaDocCommand(),
+            SpigotLegacyJavaDocCommand()
         )
     }
 }
