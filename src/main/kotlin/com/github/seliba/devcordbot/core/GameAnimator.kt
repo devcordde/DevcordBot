@@ -48,7 +48,9 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
      * Stops the animation.
      */
     fun stop() {
-        job.cancel()
+        if (::job.isInitialized) {
+            job.cancel()
+        }
         executor.close()
     }
 

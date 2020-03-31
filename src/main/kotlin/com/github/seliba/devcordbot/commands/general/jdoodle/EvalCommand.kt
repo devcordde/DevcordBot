@@ -21,6 +21,7 @@ import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.editMessage
 import net.dv8tion.jda.api.entities.Message
@@ -58,18 +59,18 @@ class EvalCommand : AbstractCommand() {
         context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).flatMap(fun(it: Message): MessageAction {
             val text = context.args.join()
 
-            if (!text.startsWith("```") && !text.endsWith("```")) {
+            val blockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(text)
+
+            if (blockMatch == null || blockMatch.groups.size < 2) {
                 return it.editMessage(example("Das Skript muss in einem Multiline-Codeblock liegen"))
             }
 
-            val split = text.substring(3, text.length - 3).split("\n")
-            val scriptEmpty = split.subList(1, split.size).joinToString("").trim().isEmpty()
+            val languageString = blockMatch.groupValues[1]
+            val script = blockMatch.groupValues[2].trim()
 
-            if (split.size < 2 || scriptEmpty) {
+            if (script.isEmpty()) {
                 return it.editMessage(example("Benutze ein Skript"))
             }
-
-            val languageString = split.first()
 
             val language = try {
                 Language.valueOf(languageString.toUpperCase())
@@ -82,9 +83,7 @@ class EvalCommand : AbstractCommand() {
                 )
             }
 
-            val script = split.subList(1, split.size).joinToString("\n")
-
-            val response = JDoodle.execute(context.jda.httpClient, language, script)
+            val response = JDoodle.execute(language, script)
                 ?: return it.editMessage(internalError())
 
             val output = try {
