@@ -133,7 +133,7 @@ abstract class JavadocCommand(private val url: String) : AbstractCommand() {
         context.respond(embed {
             description = doc.description.limit(MessageEmbed.TEXT_MAX_LENGTH)
             if (doc.deprecation != null) {
-                addField("Deprecated", classDoc.deprecation)
+                addField("Deprecated", doc.deprecation)
             }
             renderTags(doc.tags)
         }.apply(block)).queue()
