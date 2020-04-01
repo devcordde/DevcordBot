@@ -16,157 +16,81 @@
 
 package com.github.seliba.devcordbot.commands.general
 
-import com.github.johnnyjayjay.javadox.*
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.CommandCategory
+import com.github.johnnyjayjay.javadox.JavadocParser
+import com.github.johnnyjayjay.javadox.Javadocs
 import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.dsl.EmbedConvention
-import com.github.seliba.devcordbot.dsl.embed
-import com.github.seliba.devcordbot.util.limit
-import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter
-import net.dv8tion.jda.api.entities.MessageEmbed
 import org.jsoup.Jsoup
 
 /**
- * Abstract implementation for javadoc search command.
- * @property url the url of the javadoc
+ * Generic javadoc command.
  */
-abstract class JavadocCommand(private val url: String) : AbstractCommand() {
-    override val usage: String
-        get() = "[reference]"
-    override val permission: Permission = Permission.ANY
-    override val category: CommandCategory = CommandCategory.GENERAL
-
-    private val parser: JavadocParser = JavadocParser(htmlRenderer::convert)
-
-    private val docs: Javadocs = Javadocs(allClasses = url, parser = parser) {
-        Jsoup.connect(it).userAgent("Mozilla").get()
-    }
+class JavadocCommand : AbstractJavadocCommand() {
+    override val displayName: String = "Javadoc"
+    override val aliases: List<String> = listOf("javadoc", "jdoc")
+    override val usage: String = "[type] [version] <query>"
+    override val description: String = "Erlaubt dir andere Versionen von Docs zu benutzen"
 
     override fun execute(context: Context) {
-        val queryRaw = context.args.optionalArgument(0) ?: return context.respond(
-            Embeds.info(
-                "Javadocs",
-                "Die javadocs findest du [hier]($url)"
-            )
-        ).queue()
-        val classReference = classReferenceRegex.matchEntire(queryRaw)
-        // I srsly could not think of a better name than pakage
-        val (pakage, clazz, method) = if (classReference != null) {
-            Reference(classReference.groupValues[1], classReference.groupValues[2], null)
+        val args = context.args
+        val (_, version, query) = when (args.size) {
+            0 -> return context.sendHelp().queue()
+            1 -> RequestContainer(query = args.join(), version = defaultVersionForType("java"))
+            2 -> {
+                val type = parseType(args.first(), context) ?: return
+                RequestContainer(type, defaultVersionForType(type), query = args[1])
+            }
+            else -> {
+                val type = parseType(args.first(), context) ?: return
+                val version = DocumentedVersion.values().firstOrNull { it.humanName == args[1] }
+                    ?: return context.respond(Embeds.info("Ungültige Version!", "Bitte gebe eine gültige version an"))
+                        .queue()
+                if (version.docType == type) {
+                    return context.respond(
+                        Embeds.error(
+                            "Inkompatieble Version!",
+                            "Diese version ist nicht mit dem angebeenen Typ kompatiebel"
+                        )
+                    ).queue()
+                }
+                RequestContainer(type, version, args[2])
+            }
+        }
+
+        val parser = JavadocParser(htmlRenderer::convert)
+
+        val docs = Javadocs(allClasses = version.url, parser = parser) {
+            Jsoup.connect(it).userAgent("Mozilla").get()
+        }
+
+        execute(context, version.url, docs, query)
+    }
+
+    private fun parseType(input: String, context: Context): String? {
+        return if (input.equals("java", ignoreCase = true) or input.equals("spigot", ignoreCase = true)) {
+            input
         } else {
-            val genericReference = referenceRegex.matchEntire(queryRaw)
-            if (genericReference != null) {
-                Reference(
-                    genericReference.groupValues[1],
-                    genericReference.groupValues[2],
-                    genericReference.groupValues[3]
-                )
-
-            } else {
-                Reference(null, null, null)
-            }
-        }
-
-        if (pakage == null || clazz == null) {
-            return context.respond(
+            context.respond(
                 Embeds.error(
-                    "Ungültige Referenz",
-                    "Bitte gebe eine gültige Referenz an: `java.util.List#add()`"
+                    "Ungültiger typ",
+                    "Du kannst entweder `java` oder `spigot` als Typ angeben"
                 )
             ).queue()
-        }
-
-        // ClassDoc:TM:
-        val classDoc = docs.find(pakage, clazz).firstOrNull() ?: return context.respond(
-            Embeds.error("Nicht gefunden", "Es konnte kein javadoc für `$queryRaw` gefunden werden")
-        ).queue()
-
-        if (method != null) {
-            val methodDoc = classDoc.methods.find {
-                it.name.equals(method, ignoreCase = true)
-            } ?: classDoc.methods.find {
-                it.name.substring(0, it.name.lastIndexOf('('))
-                    .equals(
-                        if ('(' in method) method.substring(0, method.lastIndexOf('(')) else method,
-                        ignoreCase = true
-                    )
-            }
-            ?: return context.respond(
-                Embeds.error(
-                    "Nicht gefunden",
-                    "Ich konnte die Methode `$method` der klasse `$pakage.$clazz` nicht finden"
-                )
-            ).queue()
-            return renderMethod(context, methodDoc)
-        }
-
-        renderClass(context, classDoc)
-    }
-
-    private fun renderClass(context: Context, classDoc: DocumentedType) {
-        renderDoc(context, classDoc) {
-            title {
-                url = classDoc.uri
-                title = classDoc.displayName
-            }
-            if (classDoc.enumConstants.isNotEmpty()) {
-                addField("values", classDoc.enumConstants.joinToString("\n"))
-            }
-
-            renderTags(classDoc.topTags)
+            null
         }
     }
 
-    private fun renderMethod(context: Context, methodDoc: DocumentedMember) {
-        renderDoc(context, methodDoc) {
-            title {
-                url = methodDoc.uri
-                title = methodDoc.name
-            }
-        }
+    private fun defaultVersionForType(type: String): DocumentedVersion {
+        return if (type.equals(
+                "java",
+                ignoreCase = true
+            )
+        ) DocumentedVersion.V_10 else DocumentedVersion.V_1_15_2
     }
 
-    private fun renderDoc(context: Context, doc: Documented, block: EmbedConvention.() -> Unit) {
-        context.respond(embed {
-            description = doc.description.limit(MessageEmbed.TEXT_MAX_LENGTH)
-            if (doc.deprecation != null) {
-                addField("Deprecated", doc.deprecation)
-            }
-            renderTags(doc.tags)
-        }.apply(block)).queue()
-    }
-
-    private fun limit(string: String) =
-        with(string.limit(MessageEmbed.VALUE_MAX_LENGTH, "")) {
-            if (',' in this) {
-                substring(
-                    0,
-                    kotlin.math.min(length, lastIndexOf(','))
-                )
-            } else string
-        }
-
-    private fun EmbedConvention.renderTags(tags: List<Pair<String, List<String>>>) =
-        tags.forEach { (name, value) ->
-            addField(name, limit(value.joinToString("\n")))
-        }
-
-    private val DocumentedType.displayName: String
-        get() = "$type $name"
-
-    private data class Reference(val pakage: String?, val clazz: String?, val method: String?)
-
-    companion object {
-        // https://regex101.com/r/JvZoYD/3
-        private val classReferenceRegex = "((?:(?:[a-zA-Z0-9]+)\\.?)+)\\.([a-zA-Z0-9]+)".toRegex()
-
-        // https://regex101.com/r/26jVyw/4
-        private val referenceRegex = "((?:[a-zA-Z0-9]+\\.?)+)\\.([a-zA-Z0-9]+)(?:#|\\.)([a-zA-Z0-9(), ]+)".toRegex()
-
-        private val htmlRenderer = FlexmarkHtmlConverter.builder().build()
-    }
-
+    private data class RequestContainer(
+        val type: String = "java",
+        val version: DocumentedVersion,
+        val query: String
+    )
 }

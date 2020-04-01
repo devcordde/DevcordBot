@@ -18,21 +18,33 @@
 
 package com.github.seliba.devcordbot.commands.general
 
+import com.github.johnnyjayjay.javadox.JavadocParser
+import com.github.johnnyjayjay.javadox.Javadocs
 import com.github.seliba.devcordbot.command.AbstractCommand
+import com.github.seliba.devcordbot.command.context.Context
+import org.jsoup.Jsoup
 
 private fun URLJavaDocCommand(url: String, aliases: List<String>, displayName: String, description: String) =
-    object : JavadocCommand(url) {
+    object : AbstractJavadocCommand() {
         override val aliases: List<String> = aliases
         override val displayName: String = displayName
         override val description: String = description
+
+        private val parser: JavadocParser = JavadocParser(htmlRenderer::convert)
+
+        private val docs: Javadocs = Javadocs(allClasses = url, parser = parser) {
+            Jsoup.connect(it).userAgent("Mozilla").get()
+        }
+
+        override fun execute(context: Context) = execute(context, url, docs)
     }
 
 /**
  * Command for oracle (java 10) doc.
  */
 fun OracleJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
-    "https://docs.oracle.com/javase/10/docs/api/allclasses-noframe.html",
-    listOf("javadoc", "jdoc", "doc", "docs"),
+    "https://download.java.net/java/GA/jdk14/docs/api/overview-tree.html",
+    listOf("doc", "docs"),
     "javaodc",
     "Lässt dich javadoc benutzen"
 )

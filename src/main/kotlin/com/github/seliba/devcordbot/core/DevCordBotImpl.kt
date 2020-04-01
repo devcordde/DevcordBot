@@ -185,6 +185,7 @@ internal class DevCordBotImpl(
             StarboardCommand(),
             SourceCommand(),
             RankCommand(),
+            JavadocCommand(),
             OracleJavaDocCommand(),
             SpigotJavaDocCommand(),
             SpigotLegacyJavaDocCommand()
