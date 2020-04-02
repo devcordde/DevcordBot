@@ -37,7 +37,7 @@ class RankCommand : AbstractCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         val user = context.args.optionalUser(0, jda = context.jda)
             ?: return sendRankInformation(context.author, context)
         sendRankInformation(user, context)
