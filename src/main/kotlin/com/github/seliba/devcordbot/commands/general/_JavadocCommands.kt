@@ -32,7 +32,7 @@ private fun URLJavaDocCommand(url: String, aliases: List<String>, displayName: S
 
         private val parser: JavadocParser = JavadocParser(htmlRenderer::convert)
 
-        private val docs: Javadocs = Javadocs(allClasses = url, parser = parser) {
+        private val docs: Javadocs = Javadocs(tree = url, parser = parser) {
             Jsoup.connect(it).userAgent("Mozilla").get()
         }
 
@@ -43,7 +43,7 @@ private fun URLJavaDocCommand(url: String, aliases: List<String>, displayName: S
  * Command for oracle (java 10) doc.
  */
 fun OracleJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
-    "https://download.java.net/java/GA/jdk14/docs/api/overview-tree.html",
+    DocumentedVersion.V_10.url,
     listOf("doc", "docs"),
     "javaodc",
     "Lässt dich javadoc benutzen"
@@ -53,7 +53,7 @@ fun OracleJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
  * Command for spigot (1.15.2) doc.
  */
 fun SpigotJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
-    "https://hub.spigotmc.org/javadocs/spigot/allclasses-noframe.html",
+    "https://hub.spigotmc.org/javadocs/spigot/overview-tree.html",
     listOf("spigot", "1.15", "115", "sdoc"),
     "javaodc",
     "Lässt dich javadoc benutzen"
@@ -64,7 +64,7 @@ fun SpigotJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
  * Because some YT tutorial guy had to make videos for an 5 year old version
  */
 fun SpigotLegacyJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
-    "https://helpch.at/docs/1.8.8/allclasses-noframe.html",
+    "https://helpch.at/docs/1.8.8/overview-tree.html",
     listOf("spigotlegacy", "1.8", "118", "sldoc"),
     "javaodc",
     "Lässt dich javadoc benutzen"

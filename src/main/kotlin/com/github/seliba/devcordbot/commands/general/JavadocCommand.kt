@@ -59,7 +59,7 @@ class JavadocCommand : AbstractJavadocCommand() {
 
         val parser = JavadocParser(htmlRenderer::convert)
 
-        val docs = Javadocs(allClasses = version.url, parser = parser) {
+        val docs = Javadocs(tree = version.url, parser = parser) {
             Jsoup.connect(it).userAgent("Mozilla").get()
         }
 
