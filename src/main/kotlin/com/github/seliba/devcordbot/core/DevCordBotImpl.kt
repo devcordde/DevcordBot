@@ -89,7 +89,12 @@ internal class DevCordBotImpl(
             DatabaseUpdater(),
             commandClient,
             starboard,
-            CommonPitfallListener(this)
+            CommonPitfallListener(
+                this,
+                env["AUTO_HELP_WHITELIST"]!!.split(','),
+                env["AUTO_HELP_BLACKLIST"]!!.split(','),
+                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(',')
+            )
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
