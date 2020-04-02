@@ -39,15 +39,19 @@ import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 
 private const val MAX_LINES = 10
-private val WHITELIST = listOf(486916258965618690, 649253900473597952, 671772614993379328)
-private val KNOWN_LANGUAGES = arrayOf("java", "python", "go", "kotlin", "cs")
 
 /**
  * Automatic analzyer for common pitfalls.
  */
-class CommonPitfallListener(private val bot: DevCordBot) {
+class CommonPitfallListener(
+    private val bot: DevCordBot,
+    private val whitelist: List<String>,
+    private val blacklist: List<String>,
+    knownLanguages: List<String>
+) {
     private val logger = KotlinLogging.logger {}
     private val languageGuesser = Highlighter(UselessRendererFactoryThing())
+    private val knownLanguages = knownLanguages.toTypedArray()
 
     /**
      * Listens for new messages.
@@ -55,9 +59,12 @@ class CommonPitfallListener(private val bot: DevCordBot) {
     @EventSubscriber
     fun onMessage(event: GuildMessageReceivedEvent) {
         val input = event.message.contentRaw
-        if (event.author.isBot || (!bot.debugMode && event.channel.parent?.idLong !in WHITELIST) || Constants.prefix.find(
+        if (event.author.isBot ||
+            (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
+                    event.channel.id in blacklist)) ||
+            Constants.prefix.containsMatchIn(
                 input
-            ) != null
+            )
         ) return
         val hastebinMatch = HASTEBIN_PATTERN.find(input)
         val firstAttachment = event.message.attachments.firstOrNull()
@@ -106,11 +113,10 @@ class CommonPitfallListener(private val bot: DevCordBot) {
                     }
             }
         }
-        val exceptionMatch = JVM_EXCEPTION_PATTERN.find(cleanInput)
-        if (exceptionMatch != null) {
-            handleCommonException(exceptionMatch, event)
-        }
 
+        JVM_EXCEPTION_PATTERN.findAll(cleanInput).first {
+            handleCommonException(it, event)
+        }
     }
 
     private fun buildTooLongEmbed(url: String): EmbedConvention {
@@ -123,9 +129,9 @@ class CommonPitfallListener(private val bot: DevCordBot) {
         )
     }
 
-    private fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, KNOWN_LANGUAGES)
+    private fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, knownLanguages)
 
-    private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent) {
+    private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent): Boolean {
         val exception = with(match.groupValues[1]) { substring(lastIndexOf('.') + 1) }
         val exceptionName = exception.toLowerCase()
         val tag = when {
@@ -133,10 +139,11 @@ class CommonPitfallListener(private val bot: DevCordBot) {
             exceptionName == "unsupportedclassversionerror" -> "class-version"
             match.groupValues[2] == "Plugin already initialized!" -> "plugin-already-initialized"
             else -> null
-        } ?: return
+        } ?: return false
         val tagContent = transaction { Tag.find { Tags.name eq tag }.first().content }
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // We know that all the tags exist
         event.channel.sendMessage(tagContent).queue()
+        return true
     }
 
     private fun isCode(potentialCode: String) = guessLanguage(potentialCode).language != null
