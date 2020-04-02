@@ -114,7 +114,7 @@ class CommonPitfallListener(
             }
         }
 
-        JVM_EXCEPTION_PATTERN.findAll(cleanInput).first {
+        JVM_EXCEPTION_PATTERN.findAll(cleanInput).firstOrNull {
             handleCommonException(it, event)
         }
     }
