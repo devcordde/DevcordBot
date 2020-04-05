@@ -92,7 +92,6 @@ class RankCommand : AbstractCommand() {
             val users = transaction {
                 DevCordUser.all().orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC).limit(10)
                     .map {
-                        println(it)
                         val name = context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"
                         "`${++counter}.` `${name}`: Level `${it.level}`"
                     }
