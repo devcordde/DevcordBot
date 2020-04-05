@@ -35,7 +35,7 @@ class LmgtfyCommand : AbstractCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         val arguments = context.args
 
         if (arguments.isEmpty()) {

@@ -156,6 +156,11 @@ class AnnotatedEventManager(
             require(function.visibility == KVisibility.PUBLIC) { "Listener function cannot be private" }
         }
 
-        fun call(vararg parameters: Any?) = function.call(instance, *parameters)
+        suspend fun call(vararg parameters: Any?) =
+            function.callSuspend(
+                instance,
+                *parameters
+            ) // thankfully callSuspend checks if it's actuall a suspend function or not
+
     }
 }
