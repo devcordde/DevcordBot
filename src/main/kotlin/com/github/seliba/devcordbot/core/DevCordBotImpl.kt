@@ -189,8 +189,7 @@ internal class DevCordBotImpl(
             OwnerEvalCommand(),
             StarboardCommand(),
             SourceCommand(),
-            RankCommand(),
-            LeaderboardCommand()
+            RankCommand()
         )
     }
 }
