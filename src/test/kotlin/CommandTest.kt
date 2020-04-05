@@ -26,8 +26,7 @@ import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -95,7 +94,8 @@ class CommandTest {
         client.registerCommands(command)
         client.onMessage(event)
         val actualCommand = subCommand ?: command
-        GlobalScope.launch {
+
+        runBlocking {
             verify(actualCommand).execute(argThat {
                 arguments == args.toList() &&
                         client === this.commandClient &&
