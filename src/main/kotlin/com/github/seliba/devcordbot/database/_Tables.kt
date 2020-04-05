@@ -55,7 +55,7 @@ object Users : IdTable<Long>() {
     override val id: Column<EntityID<Long>> = long("id").entityId()
     val level: Column<Int> = integer("level").default(1)
     val experience: Column<Long> = long("experience").default(0L)
-    val lastUpgrade = timestamp("last_experience_gained").default(Instant.now())
+    val lastUpgrade: Column<Instant> = timestamp("last_experience_gained").default(Instant.now())
 
     override val primaryKey: PrimaryKey = PrimaryKey(id)
 }
