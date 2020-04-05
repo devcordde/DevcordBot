@@ -18,6 +18,8 @@ package com.github.seliba.devcordbot.listeners
 
 import com.github.seliba.devcordbot.database.DevCordUser
 import com.github.seliba.devcordbot.util.XPUtil
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -81,18 +83,19 @@ class DatabaseUpdater {
     }
 
     private fun updateLevel(event: GuildMessageReceivedEvent, level: Int) {
-        val rankLevel = Level.values().firstOrNull { it.level == level } ?: return
+        val rankLevel = Level.values().findLast { it.level <= level } ?: return
         val guild = event.guild
         val user = event.member ?: return
 
         if (rankLevel.previousLevel != null) {
             val role = guild.getRoleById(rankLevel.previousLevel.roleId)
-            if (role != null) {
+            if (role != null && role in user.roles) {
                 guild.removeRoleFromMember(user, role).queue()
             }
         }
+
         val role = guild.getRoleById(rankLevel.roleId)
-        if (role != null) {
+        if (role != null && role !in user.roles) {
             guild.addRoleToMember(user, role).queue()
         }
     }
