@@ -26,6 +26,8 @@ import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -93,13 +95,15 @@ class CommandTest {
         client.registerCommands(command)
         client.onMessage(event)
         val actualCommand = subCommand ?: command
-        verify(actualCommand).execute(argThat {
-            arguments == args.toList() &&
-                    client === this.commandClient &&
-                    message === this.message &&
-                    bot === this.bot &&
-                    author === this.author
-        })
+        GlobalScope.launch {
+            verify(actualCommand).execute(argThat {
+                arguments == args.toList() &&
+                        client === this.commandClient &&
+                        message === this.message &&
+                        bot === this.bot &&
+                        author === this.author
+            })
+        }
     }
 
     private fun mockMessage(
