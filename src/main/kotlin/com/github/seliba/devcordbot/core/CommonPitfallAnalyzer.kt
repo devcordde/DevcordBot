@@ -32,7 +32,6 @@ import com.github.seliba.devcordbot.util.HastebinUtil
 import com.github.seliba.devcordbot.util.await
 import com.github.seliba.devcordbot.util.executeAsync
 import kotlinx.coroutines.future.await
-import mu.KotlinLogging
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import okhttp3.Request
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -40,7 +39,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 
-private const val MAX_LINES = 10
+private const val MAX_LINES = 15
 
 /**
  * Automatic analzyer for common pitfalls.
@@ -101,10 +100,9 @@ class CommonPitfallListener(
         val inputBlockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(inputString)
         val cleanInput = if (inputBlockMatch != null) inputBlockMatch.groupValues[2].trim() else inputString
         if (!wasPaste && isCode(cleanInput)) {
-            val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
-            val hastebinUrl = HastebinUtil.postErrorToHastebin(cleanInput, bot.httpClient).await()
-
             if (inputString.lines().size > MAX_LINES) {
+                val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
+                val hastebinUrl = HastebinUtil.postErrorToHastebin(cleanInput, bot.httpClient).await()
                 message.editMessage(buildTooLongEmbed(hastebinUrl)).queue()
             }
         }
