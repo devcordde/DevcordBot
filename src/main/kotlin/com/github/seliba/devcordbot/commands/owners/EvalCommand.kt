@@ -42,7 +42,7 @@ class EvalCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.BOT_OWNER
 
     @Suppress("KDocMissingDocumentation")
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         context.respond(
             Embeds.loading(
                 "Code wird kompiliert und ausgeführt",

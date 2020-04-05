@@ -38,7 +38,7 @@ dependencies {
     runtimeOnly(kotlin("scripting-jsr223"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.4")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.3.4")
 
     // Logging
     implementation("io.github.microutils", "kotlin-logging", "1.7.8")
