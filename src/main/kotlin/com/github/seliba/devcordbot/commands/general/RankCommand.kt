@@ -87,7 +87,7 @@ class RankCommand : AbstractCommand() {
         override val description: String = "Zeigt die höchstgerankten 5 Spieler an."
         override val usage: String = ""
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             var counter = 0
             val users = transaction {
                 DevCordUser.all().orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC).limit(10)
