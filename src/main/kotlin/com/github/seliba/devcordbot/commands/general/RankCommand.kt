@@ -17,13 +17,16 @@
 package com.github.seliba.devcordbot.commands.general
 
 import com.github.seliba.devcordbot.command.AbstractCommand
+import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.database.DevCordUser
+import com.github.seliba.devcordbot.database.Users
 import com.github.seliba.devcordbot.util.XPUtil
 import net.dv8tion.jda.api.entities.User
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
@@ -36,6 +39,10 @@ class RankCommand : AbstractCommand() {
     override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+
+    init {
+        registerCommands(TopCommand())
+    }
 
     override fun execute(context: Context) {
         val user = context.args.optionalUser(0, jda = context.jda)
@@ -72,5 +79,31 @@ class RankCommand : AbstractCommand() {
         stringBuilder.append("█".repeat(barProgress))
             .append("▒".repeat(20 - barProgress))
         return stringBuilder.toString()
+    }
+
+    private inner class TopCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("top", "t")
+        override val displayName: String = "Top"
+        override val description: String = "Zeigt die höchstgerankten 5 Spieler an."
+        override val usage: String = ""
+
+        override fun execute(context: Context) {
+            var counter = 0
+            val users = transaction {
+                DevCordUser.all().orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC).limit(10)
+                    .map {
+                        println(it)
+                        val name = context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"
+                        "`${++counter}.` `${name}`: Level `${it.level}`"
+                    }
+            }
+
+            if (users.isEmpty()) {
+                return
+            }
+
+            context.respond(Embeds.info("Rangliste", users.joinToString("\n"))).queue()
+        }
+
     }
 }
