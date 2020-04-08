@@ -82,23 +82,20 @@ class RankCommand : AbstractCommand() {
     }
 
     private inner class TopCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("top", "t")
+        override val aliases: List<String> = listOf("top", "t", "leaderboard", "thebest")
         override val displayName: String = "Top"
         override val description: String = "Zeigt die höchstgerankten 5 Spieler an."
-        override val usage: String = ""
+        override val usage: String = "[offset]"
 
         override suspend fun execute(context: Context) {
-            var counter = 0
+            val offset = context.args.optionalInt(0) ?: 0
             val users = transaction {
-                DevCordUser.all().orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC).limit(10)
-                    .map {
+                DevCordUser.all().limit(10, offset)
+                    .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
+                    .mapIndexed { index, it ->
                         val name = context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"
-                        "`${++counter}.` `${name}`: Level `${it.level}`"
+                        "`${index + offset + 1}.` `${name}`: Level `${it.level}`"
                     }
-            }
-
-            if (users.isEmpty()) {
-                return
             }
 
             context.respond(Embeds.info("Rangliste", users.joinToString("\n"))).queue()
