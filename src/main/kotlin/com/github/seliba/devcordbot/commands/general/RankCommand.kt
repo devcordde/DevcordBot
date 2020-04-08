@@ -94,7 +94,7 @@ class RankCommand : AbstractCommand() {
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
                     .mapIndexed { index, it ->
                         val name = context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"
-                        "`${index + 1}.` `${name}`: Level `${it.level}`"
+                        "`${index + offset + 1}.` `${name}`: Level `${it.level}`"
                     }
             }
 
