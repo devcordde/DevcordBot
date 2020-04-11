@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -63,7 +63,8 @@ internal class DevCordBotImpl(
     private val restActionLogger = KotlinLogging.logger("RestAction")
     private lateinit var dataSource: HikariDataSource
 
-    override val commandClient: CommandClient = CommandClientImpl(this, Constants.prefix)
+    override val commandClient: CommandClient =
+        CommandClientImpl(this, Constants.prefix, env["BOT_OWNERS"]!!.split(','))
     override val httpClient: OkHttpClient = OkHttpClient()
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
@@ -189,7 +190,8 @@ internal class DevCordBotImpl(
             OwnerEvalCommand(),
             StarboardCommand(),
             SourceCommand(),
-            RankCommand()
+            RankCommand(),
+            BlacklistCommand()
         )
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ class EvalCommand : AbstractCommand() {
     )
 
     override suspend fun execute(context: Context) {
-        val message = context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).await()
+        val message = context.respond(Embeds.loading("Lädt.", "Skript wird ausgeführt.")).await()
         val text = context.args.join()
 
         val blockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(text)

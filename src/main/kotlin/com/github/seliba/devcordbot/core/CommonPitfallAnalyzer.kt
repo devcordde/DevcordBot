@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -133,9 +133,8 @@ class CommonPitfallListener(
             match.groupValues[2] == "Plugin already initialized!" -> "plugin-already-initialized"
             else -> null
         } ?: return false
-        val tagContent = transaction { Tag.find { Tags.name eq tag }.first().content }
-        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // We know that all the tags exist
-        event.channel.sendMessage(tagContent).queue()
+        val tagContent = transaction { Tag.find { Tags.name eq tag }.firstOrNull() } ?: return false
+        event.channel.sendMessage(tagContent.content).queue()
         return true
     }
 
