@@ -29,11 +29,6 @@ import java.util.*
 object Constants {
 
     /**
-     * Array of the bot owners Discord ids.
-     */
-    val BOT_OWNERS: LongArray = longArrayOf(450632370354126858, 303980949962489858)
-
-    /**
      * The prefix used for commands.
      */
     val prefix: Regex = "^((?i)s(u(do)?)?(?-i)|!)".toRegex()
