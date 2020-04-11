@@ -17,6 +17,7 @@
 package com.github.seliba.devcordbot.command
 
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.command.permission.PermissionState
 import net.dv8tion.jda.api.entities.Member
 
 /**
@@ -30,5 +31,5 @@ interface PermissionHandler {
     fun isCovered(
         permission: Permission,
         executor: Member
-    ): Boolean
+    ): PermissionState
 }

@@ -23,6 +23,7 @@ import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.context.Arguments
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.sendMessage
@@ -103,19 +104,23 @@ class CommandClientImpl(
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
-        message.textChannel.sendTyping()
-            .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
-                @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
-                if (!permissionHandler.isCovered(
-                        command.permission,
-                        message.member!!
-                    )
-                ) return handleNoPermission(command.permission, message.textChannel)
+        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
+        val permissionState = permissionHandler.isCovered(
+            command.permission,
+            message.member!!
+        )
 
-                val context = Context(bot, command, arguments, message, this)
-
-                processCommand(command, context)
-            })
+        when (permissionState) {
+            PermissionState.IGNORED -> return
+            PermissionState.DECLINED -> handleNoPermission(command.permission, message.textChannel)
+            PermissionState.ACCEPTED -> {
+                message.textChannel.sendTyping()
+                    .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
+                        val context = Context(bot, command, arguments, message, this)
+                        processCommand(command, context)
+                    })
+            }
+        }
     }
 
     private fun processCommand(command: AbstractCommand, context: Context) {

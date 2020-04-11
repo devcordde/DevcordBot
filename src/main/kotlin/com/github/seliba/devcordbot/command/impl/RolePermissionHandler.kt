@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.command.impl
 
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.database.DevCordUser
 import net.dv8tion.jda.api.entities.Member
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -36,14 +37,14 @@ class RolePermissionHandler(
     override fun isCovered(
         permission: Permission,
         executor: Member
-    ): Boolean {
-        if (executor.id in botOwners) return true
-        if (isBlacklisted(executor.idLong)) return false
+    ): PermissionState {
+        if (executor.id in botOwners) return PermissionState.ACCEPTED
+        if (isBlacklisted(executor.idLong)) return PermissionState.IGNORED
         return when (permission) {
-            Permission.ANY -> true
-            Permission.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
-            Permission.ADMIN -> executor.roles.any { it.name.matches(adminPattern) }
-            Permission.BOT_OWNER -> false
+            Permission.ANY -> PermissionState.ACCEPTED
+            Permission.MODERATOR -> if (executor.roles.any { it.name.matches(moderatorPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
+            Permission.ADMIN -> if (executor.roles.any { it.name.matches(adminPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
+            Permission.BOT_OWNER -> PermissionState.DECLINED
         }
     }
 
