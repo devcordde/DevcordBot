@@ -50,12 +50,14 @@ import java.time.Instant
  * @property level The level row of the table
  * @property experience The experience row of the table
  * @property lastUpgrade the last time the user gained XP
+ * @property blacklisted user is blacklisted for commands
  */
 object Users : IdTable<Long>() {
     override val id: Column<EntityID<Long>> = long("id").entityId()
     val level: Column<Int> = integer("level").default(1)
     val experience: Column<Long> = long("experience").default(0L)
     val lastUpgrade: Column<Instant> = timestamp("last_experience_gained").default(Instant.now())
+    val blacklisted: Column<Boolean> = bool("blacklisted").default(false)
 
     override val primaryKey: PrimaryKey = PrimaryKey(id)
 }

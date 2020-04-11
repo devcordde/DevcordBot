@@ -34,6 +34,7 @@ import java.time.Instant
  * @property level the current level of the user
  * @property experience the current amount of experience points of the user
  * @property lastUpgrade the last time the user gained XP
+ * @property blacklisted user is blacklisted for commands
  */
 class DevCordUser(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<DevCordUser>(Users)
@@ -43,6 +44,7 @@ class DevCordUser(id: EntityID<Long>) : LongEntity(id) {
     var level: Int by Users.level
     var experience: Long by Users.experience
     var lastUpgrade: Instant by Users.lastUpgrade
+    var blacklisted: Boolean by Users.blacklisted
 }
 
 /**
