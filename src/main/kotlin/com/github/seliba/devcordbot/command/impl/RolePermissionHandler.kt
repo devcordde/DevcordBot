@@ -18,13 +18,18 @@ package com.github.seliba.devcordbot.command.impl
 
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Constants
+import com.github.seliba.devcordbot.database.DevCordUser
 import net.dv8tion.jda.api.entities.Member
+import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Implementation of [PermissionHandler] that checks the users roles,
+ *
+ *
  */
-class RolePermissionHandler : PermissionHandler {
+class RolePermissionHandler(
+    private val botOwners: List<String>
+) : PermissionHandler {
     private val moderatorPattern = "(?i)moderator|admin(istrator)?".toRegex()
     private val adminPattern = "(?i)admin(istrator)?".toRegex()
 
@@ -32,7 +37,7 @@ class RolePermissionHandler : PermissionHandler {
         permission: Permission,
         executor: Member
     ): Boolean {
-        if (executor.idLong in Constants.BOT_OWNERS) return true
+        if (executor.id in botOwners) return true
         return when (permission) {
             Permission.ANY -> true
             Permission.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
