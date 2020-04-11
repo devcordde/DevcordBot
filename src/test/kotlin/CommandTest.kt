@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -143,7 +143,7 @@ class CommandTest {
             bot = mock {
                 on { isInitialized }.thenReturn(true)
             }
-            client = CommandClientImpl(bot, Constants.prefix, Dispatchers.Unconfined)
+            client = CommandClientImpl(bot, Constants.prefix, listOf(), Dispatchers.Unconfined)
             jda = mock()
             channel = mock {
                 on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
