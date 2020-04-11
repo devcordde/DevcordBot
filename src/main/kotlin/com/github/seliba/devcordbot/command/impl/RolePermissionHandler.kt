@@ -38,11 +38,19 @@ class RolePermissionHandler(
         executor: Member
     ): Boolean {
         if (executor.id in botOwners) return true
+        if (isBlacklisted(executor.idLong)) return false
         return when (permission) {
             Permission.ANY -> true
             Permission.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
             Permission.ADMIN -> executor.roles.any { it.name.matches(adminPattern) }
             Permission.BOT_OWNER -> false
+        }
+    }
+
+    private fun isBlacklisted(executorId: Long): Boolean {
+        return transaction {
+            val user = DevCordUser.findById(executorId) ?: DevCordUser.new(executorId) {}
+            user.blacklisted
         }
     }
 }
