@@ -133,9 +133,8 @@ class CommonPitfallListener(
             match.groupValues[2] == "Plugin already initialized!" -> "plugin-already-initialized"
             else -> null
         } ?: return false
-        val tagContent = transaction { Tag.find { Tags.name eq tag }.first().content }
-        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // We know that all the tags exist
-        event.channel.sendMessage(tagContent).queue()
+        val tagContent = transaction { Tag.find { Tags.name eq tag }.firstOrNull() } ?: return false
+        event.channel.sendMessage(tagContent.content).queue()
         return true
     }
 
