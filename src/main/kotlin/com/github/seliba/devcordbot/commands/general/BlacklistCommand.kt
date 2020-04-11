@@ -17,12 +17,14 @@
 package com.github.seliba.devcordbot.commands.general
 
 import com.github.seliba.devcordbot.command.AbstractCommand
+import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.database.DevCordUser
+import com.github.seliba.devcordbot.database.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
@@ -36,13 +38,13 @@ class BlacklistCommand : AbstractCommand() {
     override val permission: Permission = Permission.ADMIN
     override val category: CommandCategory = CommandCategory.GENERAL
 
+    init {
+        registerCommands(BlacklistListCommand())
+    }
+
     override suspend fun execute(context: Context) {
         val user = context.args.optionalUser(0, jda = context.jda)
             ?: return context.sendHelp().queue()
-
-        if (user.idLong in Constants.BOT_OWNERS) {
-            return
-        }
 
         val blacklisted = transaction {
             val dcUser = DevCordUser.findById(user.idLong) ?: DevCordUser.new(user.idLong) {}
@@ -51,9 +53,32 @@ class BlacklistCommand : AbstractCommand() {
             dcUser.blacklisted
         }
 
-
-
         context.respond(Embeds.success(if (blacklisted) "User zur blacklist hinzugefügt." else "User aus der Blacklist entfernt."))
+            .queue()
+    }
+
+    private inner class BlacklistListCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("list", "l")
+        override val displayName: String = "list"
+        override val description: String = "Listet geblacklistete User auf."
+        override val usage: String = ""
+
+        override suspend fun execute(context: Context) {
+            val userNames = transaction {
+                DevCordUser.find {
+                    Users.blacklisted eq true
+                }.map {
+                    "`${context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"}`"
+                }
+            }
+
+            if (userNames.isEmpty()) {
+                return
+            }
+
+            context.respond(Embeds.success("Blacklisted Users", userNames.joinToString(", "))).queue()
+        }
+
     }
 
 }
