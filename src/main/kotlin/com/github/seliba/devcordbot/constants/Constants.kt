@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,11 +27,6 @@ import java.util.*
  * Miscellaneous constants used in the bot.
  */
 object Constants {
-
-    /**
-     * Array of the bot owners Discord ids.
-     */
-    val BOT_OWNERS: LongArray = longArrayOf(450632370354126858, 303980949962489858)
 
     /**
      * The prefix used for commands.

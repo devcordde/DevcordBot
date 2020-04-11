@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import com.github.seliba.devcordbot.database.Tags.content
 import com.github.seliba.devcordbot.database.Tags.createdAt
 import com.github.seliba.devcordbot.database.Tags.name
 import com.github.seliba.devcordbot.database.Tags.usages
+import com.github.seliba.devcordbot.database.Users.blacklisted
 import com.github.seliba.devcordbot.database.Users.experience
 import com.github.seliba.devcordbot.database.Users.id
 import com.github.seliba.devcordbot.database.Users.lastUpgrade
@@ -50,12 +51,14 @@ import java.time.Instant
  * @property level The level row of the table
  * @property experience The experience row of the table
  * @property lastUpgrade the last time the user gained XP
+ * @property blacklisted user is blacklisted for commands
  */
 object Users : IdTable<Long>() {
     override val id: Column<EntityID<Long>> = long("id").entityId()
     val level: Column<Int> = integer("level").default(1)
     val experience: Column<Long> = long("experience").default(0L)
     val lastUpgrade: Column<Instant> = timestamp("last_experience_gained").default(Instant.now())
+    val blacklisted: Column<Boolean> = bool("blacklisted").default(false)
 
     override val primaryKey: PrimaryKey = PrimaryKey(id)
 }

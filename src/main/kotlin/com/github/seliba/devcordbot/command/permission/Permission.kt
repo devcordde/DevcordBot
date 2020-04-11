@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,14 +24,17 @@ enum class Permission {
      * Anyone can execute the command.
      */
     ANY,
+
     /**
      * Only moderators can execute the command.
      */
     MODERATOR,
+
     /**
      * Only administrators can execute the command.
      */
     ADMIN,
+
     /**
      * Commands only executable by bot owners.
      */
