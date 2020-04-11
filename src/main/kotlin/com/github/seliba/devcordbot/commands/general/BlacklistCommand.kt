@@ -74,10 +74,7 @@ class BlacklistCommand : AbstractCommand() {
             if (userNames.isEmpty()) {
                 return
             }
-
             context.respond(Embeds.success("Blacklisted Users", userNames.joinToString(", "))).queue()
         }
-
     }
-
 }
