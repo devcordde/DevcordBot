@@ -20,6 +20,7 @@ import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Embeds
 
 /**
@@ -65,7 +66,7 @@ class HelpCommand : AbstractCommand() {
                     context.commandClient.permissionHandler.isCovered(
                         it.permission,
                         context.member
-                    )
+                    ) == PermissionState.ACCEPTED
                 }
                 CommandCategory.values().forEach { category ->
                     val categoryCommands = commands.filter { it.category == category }.map { it.name }

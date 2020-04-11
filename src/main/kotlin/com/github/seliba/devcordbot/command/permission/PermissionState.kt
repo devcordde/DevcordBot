@@ -17,26 +17,21 @@
 package com.github.seliba.devcordbot.command.permission
 
 /**
- * Enum for command permissions.
+ * PermissionState returned when checking the user permissions
  */
-enum class Permission {
+enum class PermissionState {
     /**
-     * Anyone can execute the command.
+     * Accepted means the command may be executed.
      */
-    ANY,
+    ACCEPTED,
 
     /**
-     * Only moderators can execute the command.
+     * Declined means the user has no Permission. He will get a permission error.
      */
-    MODERATOR,
+    DECLINED,
 
     /**
-     * Only administrators can execute the command.
+     * Ignored means the command is ignored for the user.
      */
-    ADMIN,
-
-    /**
-     * Commands only executable by bot owners.
-     */
-    BOT_OWNER
+    IGNORED
 }
