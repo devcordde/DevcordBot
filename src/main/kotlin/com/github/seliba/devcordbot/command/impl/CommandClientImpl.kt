@@ -53,7 +53,9 @@ import kotlin.coroutines.CoroutineContext
  * @param prefix the prefix used for commands
  */
 class CommandClientImpl(
-    private val bot: DevCordBot, private val prefix: Regex, botOwners: List<String>,
+    private val bot: DevCordBot,
+    private val prefix: Regex,
+    override val permissionHandler: PermissionHandler,
     override val executor: CoroutineContext =
         Executors.newFixedThreadPool(
             5,
@@ -64,7 +66,6 @@ class CommandClientImpl(
     private val logger = KotlinLogging.logger { }
     private val delimiter = "\\s+".toRegex()
 
-    override val permissionHandler: PermissionHandler = RolePermissionHandler(botOwners)
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
 
