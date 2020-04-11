@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.core
 
 import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
+import com.github.seliba.devcordbot.command.impl.RolePermissionHandler
 import com.github.seliba.devcordbot.commands.`fun`.SourceCommand
 import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
@@ -64,7 +65,7 @@ internal class DevCordBotImpl(
     private lateinit var dataSource: HikariDataSource
 
     override val commandClient: CommandClient =
-        CommandClientImpl(this, Constants.prefix, env["BOT_OWNERS"]!!.split(','))
+        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(env["BOT_OWNERS"]!!.split(',')))
     override val httpClient: OkHttpClient = OkHttpClient()
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
