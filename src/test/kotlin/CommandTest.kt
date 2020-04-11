@@ -16,8 +16,10 @@
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
+import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.util.asMention
@@ -138,12 +140,11 @@ class CommandTest {
 
         @BeforeAll
         @JvmStatic
-        @Suppress("unused")
         fun `setup mock objects`() {
             bot = mock {
                 on { isInitialized }.thenReturn(true)
             }
-            client = CommandClientImpl(bot, Constants.prefix, listOf(), Dispatchers.Unconfined)
+            client = CommandClientImpl(bot, Constants.prefix, TestPermissionHandler(), Dispatchers.Unconfined)
             jda = mock()
             channel = mock {
                 on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
@@ -179,4 +180,10 @@ private class EmptyRestAction<T> : RestAction<T> {
 
     override fun setCheck(checks: BooleanSupplier?): RestAction<T> = this
 
+}
+
+private class TestPermissionHandler : PermissionHandler {
+    override fun isCovered(permission: Permission, executor: Member): PermissionState {
+        return PermissionState.ACCEPTED
+    }
 }
