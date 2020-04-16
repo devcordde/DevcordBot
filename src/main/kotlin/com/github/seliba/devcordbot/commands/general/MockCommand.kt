@@ -67,10 +67,12 @@ class MockCommand : AbstractCommand() {
                 return
             }
 
-            val message = paginator[1].contentRaw
-            if (message.isEmpty()) return
+            val message = paginator[1]
+            if (message.contentRaw.isEmpty() || message.author.idLong == context.me.idLong) {
+                return
+            }
 
-            context.respond(mock(paginator[1].contentRaw)).queue()
+            context.respond(mock(message.contentRaw)).queue()
         }
 
     }
