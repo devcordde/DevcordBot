@@ -68,7 +68,7 @@ class MockCommand : AbstractCommand() {
             }
 
             val message = paginator[1]
-            if (message.contentRaw.isEmpty() || message.author.idLong == context.me.idLong) {
+            if (message.contentRaw.isEmpty() || message.author.idLong == context.selfUser.idLong) {
                 return
             }
 
