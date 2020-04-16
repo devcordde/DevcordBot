@@ -32,7 +32,6 @@ class SelfMentionListener {
      * Listens for new Guild messages.
      */
     @SubscribeEvent
-    @Suppress("unused")
     fun onMessageReceive(event: GuildMessageReceivedEvent) {
         if (event.message.contentRaw == event.guild.selfMember.asMention()) {
             event.channel.sendMessage(Embeds.info("DevCordBot") {
