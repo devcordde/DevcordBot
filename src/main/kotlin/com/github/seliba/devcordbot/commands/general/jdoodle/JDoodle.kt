@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 
 package com.github.seliba.devcordbot.commands.general.jdoodle
 
+import com.github.seliba.devcordbot.util.MapJsonObject
 import io.github.cdimascio.dotenv.dotenv
-import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.time.Duration
 
 
 /**
@@ -30,6 +31,12 @@ import okhttp3.RequestBody.Companion.toRequestBody
 object JDoodle {
     private val clientId: String
     private val clientSecret: String
+    private val httpClient = OkHttpClient.Builder()
+        .callTimeout(Duration.ofMinutes(2))
+        .connectTimeout(Duration.ofMinutes(2))
+        .readTimeout(Duration.ofMinutes(2))
+        .writeTimeout(Duration.ofMinutes(2))
+        .build()
 
     /**
      * Init the values for execution.
@@ -46,20 +53,24 @@ object JDoodle {
      * @param language the script's language
      * @param script the script
      */
-    fun execute(client: OkHttpClient, language: Language, script: String): String? {
-        val dataObject = DataObject.empty()
-        dataObject.put("clientId", clientId)
-        dataObject.put("clientSecret", clientSecret)
-        dataObject.put("script", script)
-        dataObject.put("language", language.lang)
-        dataObject.put("versionIndex", language.code)
+    fun execute(language: Language, script: String): String? {
+        val dataObject = MapJsonObject(
+            mapOf(
+                "clientId" to clientId,
+                "clientSecret" to clientSecret,
+                "script" to script,
+                "language" to language.lang,
+                "versionIndex" to language.code
+            )
+        )
+
         val bodyString = dataObject.toString()
 
         val request = Request.Builder()
             .url("https://api.jdoodle.com/v1/execute")
             .post(bodyString.toRequestBody("application/json".toMediaTypeOrNull())).build()
 
-        val response = client.newCall(request).execute()
+        val response = httpClient.newCall(request).execute()
 
         if (response.code != 200) {
             return null

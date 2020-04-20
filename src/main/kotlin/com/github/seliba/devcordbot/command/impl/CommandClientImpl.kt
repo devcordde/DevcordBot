@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.context.Arguments
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.sendMessage
@@ -52,7 +53,10 @@ import kotlin.coroutines.CoroutineContext
  * @param prefix the prefix used for commands
  */
 class CommandClientImpl(
-    private val bot: DevCordBot, private val prefix: Regex, override val executor: CoroutineContext =
+    private val bot: DevCordBot,
+    private val prefix: Regex,
+    override val permissionHandler: PermissionHandler,
+    override val executor: CoroutineContext =
         Executors.newFixedThreadPool(
             5,
             DefaultThreadFactory("CommandExecution")
@@ -62,7 +66,6 @@ class CommandClientImpl(
     private val logger = KotlinLogging.logger { }
     private val delimiter = "\\s+".toRegex()
 
-    override val permissionHandler: PermissionHandler = RolePermissionHandler()
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
 
@@ -102,19 +105,23 @@ class CommandClientImpl(
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
-        message.textChannel.sendTyping()
-            .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
-                @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
-                if (!permissionHandler.isCovered(
-                        command.permission,
-                        message.member!!
-                    )
-                ) return handleNoPermission(command.permission, message.textChannel)
+        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
+        val permissionState = permissionHandler.isCovered(
+            command.permission,
+            message.member!!
+        )
 
-                val context = Context(bot, command, arguments, message, this)
-
-                processCommand(command, context)
-            })
+        when (permissionState) {
+            PermissionState.IGNORED -> return
+            PermissionState.DECLINED -> handleNoPermission(command.permission, message.textChannel)
+            PermissionState.ACCEPTED -> {
+                message.textChannel.sendTyping()
+                    .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
+                        val context = Context(bot, command, arguments, message, this)
+                        processCommand(command, context)
+                    })
+            }
+        }
     }
 
     private fun processCommand(command: AbstractCommand, context: Context) {

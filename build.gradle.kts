@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ dependencies {
     runtimeOnly(kotlin("scripting-jsr223"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.4")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.3.4")
 
     // Logging
     implementation("io.github.microutils", "kotlin-logging", "1.7.8")

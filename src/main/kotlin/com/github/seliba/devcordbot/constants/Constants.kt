@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -29,11 +29,6 @@ import java.util.*
 object Constants {
 
     /**
-     * Array of the bot owners Discord ids.
-     */
-    val BOT_OWNERS: LongArray = longArrayOf(416902379598774273, 450632370354126858, 303980949962489858)
-
-    /**
      * The prefix used for commands.
      */
     val prefix: Regex = "^((?i)s(u(do)?)?(?-i)|!)".toRegex()
@@ -46,7 +41,7 @@ object Constants {
     /**
      * URL that is used for pasting text.
      */
-    val hastebinUrl: HttpUrl = "https://haste.schlaubi.me".toHttpUrl()
+    val hastebinUrl: HttpUrl = "https://hasteb.in".toHttpUrl()
 
     /**
      * Dateformat used in the bot.
@@ -55,5 +50,10 @@ object Constants {
         .ofLocalizedDateTime(FormatStyle.SHORT)
         .withLocale(Locale.GERMAN)
         .withZone(ZoneId.of("Europe/Berlin")) // To lazy to set server timezone :P
+
+    /**
+     * Regex that matches discord code blocks.
+     */
+    val CODE_BLOCK_REGEX: Regex = "```(.*)?(?s)(.*)```".toRegex()
 
 }

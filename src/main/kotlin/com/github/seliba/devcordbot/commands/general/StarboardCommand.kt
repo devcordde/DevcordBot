@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -50,7 +50,8 @@ class StarboardCommand : AbstractCommand() {
         )
     }
 
-    override fun execute(context: Context): Unit = context.sendHelp().queue() // You're supposed to use sub commands
+    override suspend fun execute(context: Context): Unit =
+        context.sendHelp().queue() // You're supposed to use sub commands
 
     private inner class StarCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("iamquitesurethisisimportant", "star")
@@ -58,7 +59,7 @@ class StarboardCommand : AbstractCommand() {
         override val description: String = "Lässt den bot eine message starren"
         override val usage: String = "<messageId>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val id = validateId(context) ?: return
             context.channel.retrieveMessageById(id).queue(fun(it: Message) {
                 if (checkEntryNotExists(it.idLong, context)) return
@@ -81,7 +82,7 @@ class StarboardCommand : AbstractCommand() {
         override val description: String = "Entfernt eine Nachricht aus dem Starboard"
         override val usage: String = "<messageId>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val id = validateId(context) ?: return
             val entry = checkEntryExists(id, context) ?: return
             context.bot.starboard.deleteStarboardEntry(entry.messageId, context.guild)
@@ -97,7 +98,7 @@ class StarboardCommand : AbstractCommand() {
 
         override val usage: String = "<messageId>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val id = validateId(context) ?: return
             val entry = checkEntryExists(id, context) ?: return
             val starrers = transaction {

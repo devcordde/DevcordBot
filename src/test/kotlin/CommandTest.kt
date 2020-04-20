@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
+import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.util.asMention
@@ -26,6 +28,7 @@ import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -93,13 +96,16 @@ class CommandTest {
         client.registerCommands(command)
         client.onMessage(event)
         val actualCommand = subCommand ?: command
-        verify(actualCommand).execute(argThat {
-            arguments == args.toList() &&
-                    client === this.commandClient &&
-                    message === this.message &&
-                    bot === this.bot &&
-                    author === this.author
-        })
+
+        runBlocking {
+            verify(actualCommand).execute(argThat {
+                arguments == args.toList() &&
+                        client === this.commandClient &&
+                        message === this.message &&
+                        bot === this.bot &&
+                        author === this.author
+            })
+        }
     }
 
     private fun mockMessage(
@@ -134,12 +140,11 @@ class CommandTest {
 
         @BeforeAll
         @JvmStatic
-        @Suppress("unused")
         fun `setup mock objects`() {
             bot = mock {
                 on { isInitialized }.thenReturn(true)
             }
-            client = CommandClientImpl(bot, Constants.prefix, Dispatchers.Unconfined)
+            client = CommandClientImpl(bot, Constants.prefix, TestPermissionHandler(), Dispatchers.Unconfined)
             jda = mock()
             channel = mock {
                 on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
@@ -175,4 +180,10 @@ private class EmptyRestAction<T> : RestAction<T> {
 
     override fun setCheck(checks: BooleanSupplier?): RestAction<T> = this
 
+}
+
+private class TestPermissionHandler : PermissionHandler {
+    override fun isCovered(permission: Permission, executor: Member): PermissionState {
+        return PermissionState.ACCEPTED
+    }
 }

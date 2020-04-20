@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.core
 
 import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
+import com.github.seliba.devcordbot.command.impl.RolePermissionHandler
 import com.github.seliba.devcordbot.commands.`fun`.SourceCommand
 import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
@@ -63,20 +64,21 @@ internal class DevCordBotImpl(
     private val restActionLogger = KotlinLogging.logger("RestAction")
     private lateinit var dataSource: HikariDataSource
 
-    override val commandClient: CommandClient = CommandClientImpl(this, Constants.prefix)
+    override val commandClient: CommandClient =
+        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(env["BOT_OWNERS"]!!.split(',')))
     override val httpClient: OkHttpClient = OkHttpClient()
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
 
     override val jda: JDA = JDABuilder.create(
-            token,
-            GatewayIntent.getIntents(
-                GatewayIntent.ALL_INTENTS and GatewayIntent.getRaw(
-                    GatewayIntent.GUILD_MESSAGE_TYPING,
-                    GatewayIntent.DIRECT_MESSAGE_TYPING
-                ).inv()
-            )
+        token,
+        GatewayIntent.getIntents(
+            GatewayIntent.ALL_INTENTS and GatewayIntent.getRaw(
+                GatewayIntent.GUILD_MESSAGE_TYPING,
+                GatewayIntent.DIRECT_MESSAGE_TYPING
+            ).inv()
         )
+    )
         .setEventManager(AnnotatedEventManager())
         .setDisabledCacheFlags(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
         .setMemberCachePolicy(MemberCachePolicy.ALL)
@@ -89,7 +91,12 @@ internal class DevCordBotImpl(
             DatabaseUpdater(),
             commandClient,
             starboard,
-            CommonPitfallListener(httpClient)
+            CommonPitfallListener(
+                this,
+                env["AUTO_HELP_WHITELIST"]!!.split(','),
+                env["AUTO_HELP_BLACKLIST"]!!.split(','),
+                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(',')
+            )
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
@@ -135,13 +142,13 @@ internal class DevCordBotImpl(
      * Fired when the bot can resume its previous connections when reconnecting.
      */
     @EventSubscriber
-    fun whenResumed(event: ResumedEvent) = reinitialize()
+    fun whenResumed(@Suppress("UNUSED_PARAMETER") event: ResumedEvent) = reinitialize()
 
     /**
      * Fired when the bot reconnects.
      */
     @EventSubscriber
-    fun whenReconnect(event: ReconnectedEvent) = reinitialize()
+    fun whenReconnect(@Suppress("UNUSED_PARAMETER") event: ReconnectedEvent) = reinitialize()
 
     private fun reinitialize() {
         logger.info {
@@ -184,7 +191,8 @@ internal class DevCordBotImpl(
             OwnerEvalCommand(),
             StarboardCommand(),
             SourceCommand(),
-            RankCommand()
+            RankCommand(),
+            BlacklistCommand()
         )
     }
 }

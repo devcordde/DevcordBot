@@ -14,16 +14,24 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.util
-
-import kotlin.math.sqrt
+package com.github.seliba.devcordbot.command.permission
 
 /**
- * XP utilities.
+ * PermissionState returned when checking the user permissions
  */
-object XPUtil {
+enum class PermissionState {
     /**
-     * Calculates the needed amount of xp to [level].
+     * Accepted means the command may be executed.
      */
-    fun getXpToLevelup(level: Int): Long = (25 * sqrt(level.toDouble())).toLong()
+    ACCEPTED,
+
+    /**
+     * Declined means the user has no Permission. He will get a permission error.
+     */
+    DECLINED,
+
+    /**
+     * Ignored means the command is ignored for the user.
+     */
+    IGNORED
 }

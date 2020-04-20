@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ class SelfMentionListener {
      * Listens for new Guild messages.
      */
     @SubscribeEvent
-    @Suppress("unused")
     fun onMessageReceive(event: GuildMessageReceivedEvent) {
         if (event.message.contentRaw == event.guild.selfMember.asMention()) {
             event.channel.sendMessage(Embeds.info("DevCordBot") {
