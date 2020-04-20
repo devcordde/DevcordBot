@@ -14,9 +14,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Get branch name
+      uses: nelonoel/branch-name@v1
     - name: Set TAG enviroment variable
       run: |
-          if [github.ref == "master"] then
+          if [$BRANCH_NAME == "master"] then
             export TAG = latest
           else
             export TAG = dev
