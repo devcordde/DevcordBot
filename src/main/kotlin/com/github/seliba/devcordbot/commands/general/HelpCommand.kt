@@ -45,12 +45,19 @@ class HelpCommand : AbstractCommand() {
 
     private fun sendCommandHelpMessage(context: Context, commandName: String) {
         val command = context.commandClient.commandAssociations[commandName.toLowerCase()]
-            ?: return context.respond(
+
+        if (command == null || context.commandClient.permissionHandler.isCovered(
+                command.permission,
+                context.member
+            ) != PermissionState.ACCEPTED
+        ) {
+            return context.respond(
                 Embeds.error(
                     "Befehl nicht gefunden!",
-                    "Es scheint keinen Befehl, mit diesem Namen, zu geben."
+                    "Es scheint für dich keinen Befehl mit diesem Namen zu geben."
                 )
             ).queue()
+        }
 
         context.respond(Embeds.command(command)).queue()
     }
