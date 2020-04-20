@@ -32,7 +32,7 @@ jobs:
         name: jkoenig134/devcordbot
         # Script body to compute tag name for the Docker image, has context as the main function argument
         tag script: |
-          if [context.ref == "master"] then
+          if context.ref == "master" then
             return latest
           else
             return dev
