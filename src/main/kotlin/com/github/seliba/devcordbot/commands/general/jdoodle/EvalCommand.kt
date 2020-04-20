@@ -23,8 +23,11 @@ import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
+import com.github.seliba.devcordbot.constants.Emotes
 import com.github.seliba.devcordbot.dsl.editMessage
+import com.github.seliba.devcordbot.util.HastebinUtil
 import com.github.seliba.devcordbot.util.await
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.exceptions.ParsingException
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import net.dv8tion.jda.api.utils.data.DataObject
@@ -91,12 +94,23 @@ class EvalCommand : AbstractCommand() {
             return message.editMessage(internalError()).queue()
         }
 
-        return message.editMessage(
-            Embeds.success(
-                "Skript ausgeführt",
-                "Sprache: `${language.humanReadable}`\nSkript:${text}Output:\n```$output```"
+        if (output.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
+            val result = Embeds.info(
+                "Zu langes Ergebnis!",
+                "Ergebnis: ${Emotes.LOADING}"
             )
-        ).queue()
+
+            message.editMessage(result)
+
+            HastebinUtil.postErrorToHastebin(output, context.bot.httpClient).thenAccept { hasteUrl ->
+                message.editMessage(result.apply {
+                    @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
+                    description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
+                }).queue()
+            }
+        } else {
+            message.editMessage(Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```")).queue()
+        }
     }
 
     private fun languageList() = Language.values().joinToString(
