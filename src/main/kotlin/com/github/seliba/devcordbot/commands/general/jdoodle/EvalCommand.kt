@@ -96,7 +96,7 @@ class EvalCommand : AbstractCommand() {
 
         if (output.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
             val result = Embeds.info(
-                "Zu langes Ergebnis!",
+                "Erfolgreich ausgeführt!",
                 "Ergebnis: ${Emotes.LOADING}"
             )
 

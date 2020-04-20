@@ -70,7 +70,7 @@ class EvalCommand : AbstractCommand() {
                 val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
                 if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
                     val result = Embeds.info(
-                        "Zu langes Ergebnis!",
+                        "Erfolgreich ausgeführt!",
                         "Ergebnis: ${Emotes.LOADING}"
                     )
                     HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient).thenAccept { hasteUrl ->
