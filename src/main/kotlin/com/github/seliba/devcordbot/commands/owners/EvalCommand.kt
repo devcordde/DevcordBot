@@ -68,10 +68,10 @@ class EvalCommand : AbstractCommand() {
             scriptEngine.put("context", context)
             val result = try {
                 val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
-                if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebniss: ``````".length) {
+                if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
                     val result = Embeds.info(
-                        "Zu langes Ergebniss!",
-                        "Ergebniss: ${Emotes.LOADING}"
+                        "Zu langes Ergebnis!",
+                        "Ergebnis: ${Emotes.LOADING}"
                     )
                     HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient).thenAccept { hasteUrl ->
                         it.editMessage(result.apply {
@@ -81,7 +81,7 @@ class EvalCommand : AbstractCommand() {
                     }
                     result
                 } else {
-                    Embeds.info("Erfolgreich ausgeführt!", "Ergebniss: ```$evaluation```")
+                    Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$evaluation```")
                 }
             } catch (e: ScriptException) {
                 val result = Embeds.error(
