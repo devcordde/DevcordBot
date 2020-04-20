@@ -24,3 +24,22 @@ jobs:
       run: ./gradlew test 
     - name: Build with Gradle
       run: ./gradlew build
+    - name: Docker Publish
+      if: success()
+      uses: manusa/actions-publish-docker@v1.0.1
+      with:
+        # Name of the Docker image
+        name: jkoenig134/devcordbot
+        # Script body to compute tag name for the Docker image, has context as the main function argument
+        tag script: |
+          if [context.ref == "master"] then
+            return latest
+          else
+            return dev
+          fi
+        # Username for Docker registry
+        username: ${{ secrets.DOCKER_USERNAME }}
+        # Password for Docker registry
+        password: ${{ secrets.DOCKER_SECRET }}
+        # Don't skip pull requests
+        include pull requests: false
