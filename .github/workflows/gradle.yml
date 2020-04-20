@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Set TAG enviroment variable
       run: |
-          if [context.ref == "master"] then
+          if [github.ref == "master"] then
             export TAG = latest
           else
             export TAG = dev
