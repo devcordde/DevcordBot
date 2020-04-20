@@ -15,11 +15,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set env to dev
-      if: endsWith(github.ref, '/develop')
+      if: endsWith(github.ref, 'develop')
       run: |
         echo "::set-env name=TAG::dev"
     - name: Set env to latest
-      if: endsWith(github.ref, '/master')
+      if: endsWith(github.ref, 'master')
       run: |
         echo "::set-env name=TAG::latest"
     - name: Set up JDK 1.12
