@@ -15,9 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set env to dev
-        if: endsWith(github.ref, '/github-actions')
-        run: |
-          echo "::set-env name=TAG::test"
+      if: endsWith(github.ref, '/github-actions')
+      run: |
+        echo "::set-env name=TAG::test"
     - name: Set env to dev
       if: endsWith(github.ref, '/develop')
       run: |
