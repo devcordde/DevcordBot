@@ -14,13 +14,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set TAG enviroment variable
+    - name: Set env to dev
+      if: endsWith(github.ref, '/develop')
       run: |
-          if ["${GITHUB_REF##*/}" = "master"] then
-            export TAG = latest
-          else
-            export TAG = dev
-          fi
+        echo "::set-env name=TAG::dev"
+    - name: Set env to latest
+      if: endsWith(github.ref, '/master')
+      run: |
+        echo "::set-env name=TAG::latest"
     - name: Set up JDK 1.12
       uses: actions/setup-java@v1
       with:
