@@ -192,7 +192,8 @@ internal class DevCordBotImpl(
             StarboardCommand(),
             SourceCommand(),
             RankCommand(),
-            BlacklistCommand()
+            BlacklistCommand(),
+            InfoCommand()
         )
     }
 }
