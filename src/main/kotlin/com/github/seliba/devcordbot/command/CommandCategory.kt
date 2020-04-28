@@ -32,6 +32,11 @@ enum class CommandCategory(val displayName: String) {
     BOT_OWNER("Bot-Entwickler"),
 
     /**
+     * Moderation Commands
+     */
+    MODERATION("Moderation"),
+
+    /**
      * It's fun.
      */
     FUN("Spaß")
