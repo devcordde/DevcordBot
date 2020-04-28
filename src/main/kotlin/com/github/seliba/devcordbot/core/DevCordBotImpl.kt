@@ -22,6 +22,8 @@ import com.github.seliba.devcordbot.command.impl.RolePermissionHandler
 import com.github.seliba.devcordbot.commands.`fun`.SourceCommand
 import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
+import com.github.seliba.devcordbot.commands.moderation.BlacklistCommand
+import com.github.seliba.devcordbot.commands.moderation.StarboardCommand
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
