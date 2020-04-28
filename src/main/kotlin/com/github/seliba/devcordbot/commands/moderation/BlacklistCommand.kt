@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.seliba.devcordbot.commands.moderation
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
@@ -32,10 +32,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class BlacklistCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("blacklist", "bl")
     override val displayName: String = "blacklist"
-    override val description: String = "Hindert einen User daran commands auszuführen."
+    override val description: String = "Hindert einen User daran Commands auszuführen."
     override val usage: String = "<playerid>"
     override val permission: Permission = Permission.ADMIN
-    override val category: CommandCategory = CommandCategory.GENERAL
+    override val category: CommandCategory = CommandCategory.MODERATION
 
     init {
         registerCommands(BlacklistListCommand())
