@@ -88,7 +88,8 @@ class RankCommand : AbstractCommand() {
         override val usage: String = "[offset]"
 
         override suspend fun execute(context: Context) {
-            val offset = context.args.optionalInt(0) ?: 0
+            var offset = context.args.optionalInt(0) ?: 0
+            if (offset < 0) offset = 0
             val users = transaction {
                 DevCordUser.all().limit(10, offset)
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
