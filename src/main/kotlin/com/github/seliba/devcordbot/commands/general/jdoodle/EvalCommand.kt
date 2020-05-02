@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,10 +23,12 @@ import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
+import com.github.seliba.devcordbot.constants.Emotes
 import com.github.seliba.devcordbot.dsl.editMessage
-import net.dv8tion.jda.api.entities.Message
+import com.github.seliba.devcordbot.util.HastebinUtil
+import com.github.seliba.devcordbot.util.await
+import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.exceptions.ParsingException
-import net.dv8tion.jda.api.requests.restaction.MessageAction
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import net.dv8tion.jda.api.utils.data.DataObject
 
@@ -55,50 +57,60 @@ class EvalCommand : AbstractCommand() {
         "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
     )
 
-    override fun execute(context: Context) {
-        context.respond(Embeds.loading("Läd.", "Skript wird ausgeführt.")).flatMap(fun(it: Message): MessageAction {
-            val text = context.args.join()
+    override suspend fun execute(context: Context) {
+        val message = context.respond(Embeds.loading("Lädt.", "Skript wird ausgeführt.")).await()
+        val text = context.args.join()
 
-            val blockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(text)
+        val blockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(text)
 
-            if (blockMatch == null || blockMatch.groups.size < 2) {
-                return it.editMessage(example("Das Skript muss in einem Multiline-Codeblock liegen"))
-            }
+        if (blockMatch == null || blockMatch.groups.size < 2) {
+            return message.editMessage(example("Das Skript muss in einem Multiline-Codeblock liegen")).queue()
+        }
 
-            val languageString = blockMatch.groupValues[1]
-            val script = blockMatch.groupValues[2].trim()
+        val languageString = blockMatch.groupValues[1]
+        val script = blockMatch.groupValues[2].trim()
 
-            if (script.isEmpty()) {
-                return it.editMessage(example("Benutze ein Skript"))
-            }
+        if (script.isEmpty()) {
+            return message.editMessage(example("Benutze ein Skript")).queue()
+        }
 
-            val language = try {
-                Language.valueOf(languageString.toUpperCase())
-            } catch (e: IllegalArgumentException) {
-                return it.editMessage(
-                    Embeds.error(
-                        "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
-                        languageList()
-                    )
+        val language = try {
+            Language.valueOf(languageString.toUpperCase())
+        } catch (e: IllegalArgumentException) {
+            return message.editMessage(
+                Embeds.error(
+                    "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
+                    languageList()
                 )
-            }
+            ).queue()
+        }
 
-            val response = JDoodle.execute(language, script)
-                ?: return it.editMessage(internalError())
+        val response = JDoodle.execute(language, script)
+            ?: return message.editMessage(internalError()).queue()
 
-            val output = try {
-                DataObject.fromJson(response)["output"].toString()
-            } catch (p: ParsingException) {
-                return it.editMessage(internalError())
-            }
+        val output = try {
+            DataObject.fromJson(response)["output"].toString()
+        } catch (p: ParsingException) {
+            return message.editMessage(internalError()).queue()
+        }
 
-            return it.editMessage(
-                Embeds.success(
-                    "Skript ausgeführt",
-                    "Sprache: `${language.humanReadable}`\nSkript:${text}Output:\n```$output```"
-                )
+        if (output.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
+            val result = Embeds.info(
+                "Erfolgreich ausgeführt!",
+                "Ergebnis: ${Emotes.LOADING}"
             )
-        }).queue()
+
+            message.editMessage(result)
+
+            HastebinUtil.postErrorToHastebin(output, context.bot.httpClient).thenAccept { hasteUrl ->
+                message.editMessage(result.apply {
+                    @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
+                    description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
+                }).queue()
+            }
+        } else {
+            message.editMessage(Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```")).queue()
+        }
     }
 
     private fun languageList() = Language.values().joinToString(
@@ -113,7 +125,7 @@ class EvalCommand : AbstractCommand() {
         override val description: String = "Listet die verfügbaren Sprachen auf."
         override val usage: String = ""
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             return context.respond(
                 Embeds.info(
                     "Verfügbare Sprachen",

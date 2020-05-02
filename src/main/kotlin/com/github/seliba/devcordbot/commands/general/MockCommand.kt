@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,8 +22,7 @@ import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.requests.restaction.MessageAction
+import com.github.seliba.devcordbot.util.await
 import kotlin.random.Random
 
 /**
@@ -41,7 +40,7 @@ class MockCommand : AbstractCommand() {
         registerCommands(MockLastCommand())
     }
 
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         val arguments = context.args
 
         if (arguments.isEmpty()) {
@@ -57,29 +56,23 @@ class MockCommand : AbstractCommand() {
         override val description: String = "Mockt die Nachricht über dem Command."
         override val usage: String = ""
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             if (!context.args.isEmpty()) {
                 return context.respond(Embeds.command(this)).queue()
             }
 
-            val paginator = context.channel.iterableHistory.limit(2).cache(false)
+            val paginator = context.channel.iterableHistory.limit(2).cache(false).await()
 
-            paginator.flatMap(fun(it: MutableList<Message>): MessageAction? {
-                if (it.size < 2) {
+            if (paginator.size < 2) {
+                return
+            }
 
-                    return context.respond(
-                        Embeds.error(
-                            "Keine Nachricht gefunden",
-                            "Es konnte keine Nachricht in dem aktuellen Channel gefunden werden."
-                        )
-                    )
-                }
+            val message = paginator[1]
+            if (message.contentRaw.isEmpty() || message.author.idLong == context.selfUser.idLong) {
+                return
+            }
 
-                val message = it[1].contentRaw
-                if (message.isEmpty()) return null
-
-                return context.respond(mock(it[1].contentRaw))
-            }).queue()
+            context.respond(mock(message.contentRaw)).queue()
         }
 
     }

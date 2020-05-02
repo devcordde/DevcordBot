@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -49,6 +49,6 @@ abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
      * Invokes the command.
      * @param context the [Context] in which the command is invoked
      */
-    abstract fun execute(context: Context)
+    abstract suspend fun execute(context: Context)
 
 }

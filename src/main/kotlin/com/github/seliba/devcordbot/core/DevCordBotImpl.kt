@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,9 +18,12 @@ package com.github.seliba.devcordbot.core
 
 import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
+import com.github.seliba.devcordbot.command.impl.RolePermissionHandler
 import com.github.seliba.devcordbot.commands.`fun`.SourceCommand
 import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
+import com.github.seliba.devcordbot.commands.moderation.BlacklistCommand
+import com.github.seliba.devcordbot.commands.moderation.StarboardCommand
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
@@ -63,7 +66,8 @@ internal class DevCordBotImpl(
     private val restActionLogger = KotlinLogging.logger("RestAction")
     private lateinit var dataSource: HikariDataSource
 
-    override val commandClient: CommandClient = CommandClientImpl(this, Constants.prefix)
+    override val commandClient: CommandClient =
+        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(env["BOT_OWNERS"]!!.split(',')))
     override val httpClient: OkHttpClient = OkHttpClient()
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
@@ -89,7 +93,12 @@ internal class DevCordBotImpl(
             DatabaseUpdater(),
             commandClient,
             starboard,
-            CommonPitfallListener(this)
+            CommonPitfallListener(
+                this,
+                env["AUTO_HELP_WHITELIST"]!!.split(','),
+                env["AUTO_HELP_BLACKLIST"]!!.split(','),
+                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(',')
+            )
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
@@ -184,6 +193,7 @@ internal class DevCordBotImpl(
             OwnerEvalCommand(),
             StarboardCommand(),
             SourceCommand(),
+            BlacklistCommand(),
             RankCommand(),
             JavadocCommand(),
             OracleJavaDocCommand(),

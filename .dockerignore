@@ -1,2 +1,2 @@
-rankmigrator
-.idea
+*
+!build/libs

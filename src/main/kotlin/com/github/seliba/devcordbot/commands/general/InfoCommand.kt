@@ -18,38 +18,22 @@ package com.github.seliba.devcordbot.commands.general
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Arguments
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Embeds
-import java.net.URLEncoder
+import com.github.seliba.devcordbot.listeners.SelfMentionListener
 
 /**
- * Lmgtfy command.
+ * InfoCommand
  */
-class LmgtfyCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("lmgtfy", "google", "g")
-    override val displayName: String = "lmgtfy"
-    override val description: String = "Gibt einen lmgtfy-Link aus."
-    override val usage: String = "<text>"
+class InfoCommand : AbstractCommand() {
+    override val aliases: List<String> = listOf("info", "i")
+    override val displayName: String = "info"
+    override val description: String = "Zeigt Bot-Informationen an."
+    override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override suspend fun execute(context: Context) {
-        val arguments = context.args
-
-        if (arguments.isEmpty()) {
-            return context.respond(Embeds.command(this)).queue()
-        }
-
-        context.respond(createLink(arguments)).queue()
+        SelfMentionListener.sendInfo(context.channel, context.jda.users.size)
     }
-
-    /**
-     * Create a lmgtfy link.
-     */
-    private fun createLink(arguments: Arguments) =
-        arguments.joinToString("+", prefix = "https://lmgtfy.com/?q=", postfix = "&iie=1") {
-            URLEncoder.encode(it, "utf-8")
-        }
 }

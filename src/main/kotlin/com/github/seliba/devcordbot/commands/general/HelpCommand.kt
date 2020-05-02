@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.dsl.editMessage
-import java.time.Duration
 
 /**
  * Help command.
@@ -35,7 +34,7 @@ class HelpCommand : AbstractCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         val commandName = context.args.optionalArgument(0)
         if (commandName == null) {
             sendCommandList(context)
@@ -46,12 +45,19 @@ class HelpCommand : AbstractCommand() {
 
     private fun sendCommandHelpMessage(context: Context, commandName: String) {
         val command = context.commandClient.commandAssociations[commandName.toLowerCase()]
-            ?: return context.respond(
+
+        if (command == null || context.commandClient.permissionHandler.isCovered(
+                command.permission,
+                context.member
+            ) != PermissionState.ACCEPTED
+        ) {
+            return context.respond(
                 Embeds.error(
                     "Befehl nicht gefunden!",
-                    "Es scheint keinen Befehl, mit diesem Namen, zu geben."
+                    "Es scheint für dich keinen Befehl mit diesem Namen zu geben."
                 )
             ).queue()
+        }
 
         context.respond(Embeds.command(command)).queue()
     }
@@ -67,7 +73,7 @@ class HelpCommand : AbstractCommand() {
                     context.commandClient.permissionHandler.isCovered(
                         it.permission,
                         context.member
-                    )
+                    ) == PermissionState.ACCEPTED
                 }
                 CommandCategory.values().forEach { category ->
                     val categoryCommands = commands.filter { it.category == category }.map { it.name }
