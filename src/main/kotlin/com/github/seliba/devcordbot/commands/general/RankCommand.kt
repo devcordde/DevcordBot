@@ -111,7 +111,12 @@ class RankCommand : AbstractCommand() {
             }
 
             if (invalidOffset) {
-                context.respond(Embeds.warn("Rangliste | Zu hohes Offset!", users.joinToString("\n"))).queue()
+                context.respond(
+                    Embeds.warn(
+                        "Rangliste | Zu hoher Offset! (Maximum: $offset)",
+                        users.joinToString("\n")
+                    )
+                ).queue()
                 return
             }
             context.respond(Embeds.info("Rangliste", users.joinToString("\n"))).queue()
