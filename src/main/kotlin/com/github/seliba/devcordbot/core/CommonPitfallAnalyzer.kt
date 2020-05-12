@@ -32,6 +32,8 @@ import com.github.seliba.devcordbot.util.HastebinUtil
 import com.github.seliba.devcordbot.util.await
 import com.github.seliba.devcordbot.util.executeAsync
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.runBlocking
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import okhttp3.Request
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -66,36 +68,76 @@ class CommonPitfallListener(
                 input
             )
         ) return
-        val hastebinMatch = HASTEBIN_PATTERN.find(input)
-        val firstAttachment = event.message.attachments.firstOrNull()
-        val actualInput =
-            if (firstAttachment != null && !firstAttachment.isImage && !firstAttachment.isVideo) {
-                val stream = firstAttachment.retrieveInputStream().await()
-                BufferedReader(InputStreamReader(stream)).use { reader ->
-                    reader.lineSequence().joinToString(System.lineSeparator()) to false
-                }
-            } else
-                if (hastebinMatch != null) {
-                    val hastebinSite = hastebinMatch.groupValues[1]
-                    val pasteId = hastebinMatch.groupValues[2]
-                    val domain = if (hastebinSite == ".com") "hastebin.com" else "hasteb.in"
-                    val rawPaste = "https://$domain/raw/$pasteId"
-                    fetchContent(rawPaste).await()
-                } else {
-                    val pastebinMatch = PASTEBIN_PATTERN.find(input)
-                    if (pastebinMatch != null) {
-                        val pasteId = pastebinMatch.groupValues[1]
-                        val rawPaste = "https://pastebin.com/raw/$pasteId"
-                        fetchContent(rawPaste).await()
-                    } else {
-                        CompletableFuture.completedFuture(input to false).await()
-                    }
-                }
-        analyzeInput(actualInput, event)
+
+        // Search for all kinds of sources that show common pitfalls (except github gist since I also need to do stuff for my job to earn money lol)
+        val hastebinMatches = HASTEBIN_PATTERN.findAll(input)
+        val pastebinMatches = PASTEBIN_PATTERN.findAll(input)
+        val attachments = event.message.attachments
+
+        // Fetch value of sources
+        val hastebinInputs = hastebinMatches.map {
+            runBlocking {
+                fetchHastebin(it)
+            }
+        }
+        val pastebinInputs = pastebinMatches.map {
+            runBlocking {
+                fetchPastebin(it)
+            }
+        }
+
+        // Collect remote sources (BEST PRACTICE!)
+        val remoteInputs = (hastebinInputs + pastebinInputs).toList()
+        val attachmentInputs = attachments.map {
+            fetchAttachment(it)
+        }
+
+        // If there is no paste source analyze the input directly
+        if (remoteInputs.isEmpty() and attachmentInputs.isEmpty()) {
+            analyzeInput(input, false, event)
+            return
+        }
+
+        // ragequit on first match
+        val remotePassed = remoteInputs.any {
+            analyzeInput(it, true, event)
+        }
+
+        // fallback to attachments
+        if (!remotePassed) {
+            // ragequit on first match
+            attachmentInputs.firstOrNull {
+                analyzeInput(it, false, event)
+            }
+        }
     }
 
-    private suspend fun analyzeInput(input: Pair<String?, Boolean>, event: GuildMessageReceivedEvent) {
-        val (inputString, wasPaste) = input
+    private suspend fun fetchAttachment(attachment: Message.Attachment): String {
+        val stream = attachment.retrieveInputStream().await()
+        return BufferedReader(InputStreamReader(stream)).use { reader ->
+            reader.lineSequence().joinToString(System.lineSeparator())
+        }
+    }
+
+    private suspend fun fetchHastebin(match: MatchResult): String? {
+        val hastebinSite = match.groupValues[1]
+        val pasteId = match.groupValues[2]
+        val domain = if (hastebinSite == ".com") "hastebin.com" else "hasteb.in"
+        val rawPaste = "https://$domain/raw/$pasteId"
+        return fetchContent(rawPaste).await()
+    }
+
+    private suspend fun fetchPastebin(match: MatchResult): String? {
+        val pasteId = match.groupValues[1]
+        val rawPaste = "https://pastebin.com/raw/$pasteId"
+        return fetchContent(rawPaste).await()
+    }
+
+    private suspend fun analyzeInput(
+        inputString: String?,
+        wasPaste: Boolean,
+        event: GuildMessageReceivedEvent
+    ): Boolean {
         require(inputString != null)
         val inputBlockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(inputString)
         val cleanInput = if (inputBlockMatch != null) inputBlockMatch.groupValues[2].trim() else inputString
@@ -107,7 +149,7 @@ class CommonPitfallListener(
             }
         }
 
-        JVM_EXCEPTION_PATTERN.findAll(cleanInput).firstOrNull {
+        return JVM_EXCEPTION_PATTERN.findAll(cleanInput).any {
             handleCommonException(it, event)
         }
     }
@@ -131,6 +173,7 @@ class CommonPitfallListener(
             exceptionName == "nullpointerexception" -> "nullpointerexception"
             exceptionName == "unsupportedclassversionerror" -> "class-version"
             match.groupValues[2] == "Plugin already initialized!" -> "plugin-already-initialized"
+            exceptionName == "invaliddescriptionexception" -> "plugin.yml"
             else -> null
         } ?: return false
         val tagContent = transaction { Tag.find { Tags.name eq tag }.firstOrNull() } ?: return false
@@ -140,22 +183,22 @@ class CommonPitfallListener(
 
     private fun isCode(potentialCode: String) = guessLanguage(potentialCode).language != null
 
-    private fun fetchContent(url: String): CompletableFuture<Pair<String?, Boolean>> {
+    private fun fetchContent(url: String): CompletableFuture<String?> {
         val request = Request.Builder()
             .url(url)
             .get()
             .build()
         return bot.httpClient.newCall(request).executeAsync().thenApply { response ->
             response.body.use {
-                it?.string() to true
+                it?.string()
             }
         }
     }
 
     companion object {
-        // https://regex101.com/r/vgz86r/5
+        // https://regex101.com/r/vgz86r/8
         private val JVM_EXCEPTION_PATTERN =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^\s*at .*)+""".toRegex()
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.*)(?:\R+^\s*.*)?(?:\R+^\s*at .*)+""".toRegex()
 
         // https://regex101.com/r/u0QAR6/2
         private val HASTEBIN_PATTERN =
