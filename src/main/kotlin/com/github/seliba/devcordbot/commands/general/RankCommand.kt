@@ -95,7 +95,7 @@ class RankCommand : AbstractCommand() {
             if (offset != 0) {
                 transaction {
                     maxOffset = DevCordUser.all().count() - 1
-                    if (maxOffset < offset) {
+                    if (maxOffset <= offset) {
                         invalidOffset = true
                         offset = maxOffset - 10
                     }
