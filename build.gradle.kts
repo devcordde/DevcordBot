@@ -65,6 +65,7 @@ dependencies {
     implementation("com.squareup.okhttp3", "okhttp", "4.4.0")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
     implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
+    implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
 
 
     // Testing
