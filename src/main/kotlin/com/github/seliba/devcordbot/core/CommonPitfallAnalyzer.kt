@@ -62,7 +62,8 @@ class CommonPitfallListener(
         val input = event.message.contentRaw
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
-                    event.channel.id in blacklist))
+                    event.channel.id in blacklist)) ||
+            BYPASS_WORD in input
         ) return
 
         // Search for all kinds of sources that show common pitfalls (except github gist since I also need to do stuff for my job to earn money lol)
@@ -202,6 +203,8 @@ class CommonPitfallListener(
 
         // https://regex101.com/r/N8NBDz/1
         private val PASTEBIN_PATTERN = "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.*)".toRegex()
+
+        private const val BYPASS_WORD = "_Ü?"
     }
 }
 
