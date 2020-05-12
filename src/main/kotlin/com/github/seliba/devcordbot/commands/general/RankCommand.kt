@@ -84,12 +84,24 @@ class RankCommand : AbstractCommand() {
     private inner class TopCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("top", "t", "leaderboard", "thebest")
         override val displayName: String = "Top"
-        override val description: String = "Zeigt die höchstgerankten 5 Spieler an."
+        override val description: String = "Zeigt die 10 User mit dem höchsten Rang an."
         override val usage: String = "[offset]"
 
         override suspend fun execute(context: Context) {
             var offset = context.args.optionalInt(0) ?: 0
+            var invalidOffset = false
+            var maxOffset = 0
             if (offset < 0) offset = 0
+            if (offset != 0) {
+                transaction {
+                    maxOffset = DevCordUser.all().count() - 1
+                    if (maxOffset <= offset) {
+                        invalidOffset = true
+                        offset = maxOffset - 10
+                    }
+                }
+            }
+
             val users = transaction {
                 DevCordUser.all().limit(10, offset)
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
@@ -99,6 +111,15 @@ class RankCommand : AbstractCommand() {
                     }
             }
 
+            if (invalidOffset) {
+                context.respond(
+                    Embeds.warn(
+                        "Rangliste | Zu hoher Offset! (Maximum: $maxOffset)",
+                        users.joinToString("\n")
+                    )
+                ).queue()
+                return
+            }
             context.respond(Embeds.info("Rangliste", users.joinToString("\n"))).queue()
         }
 
