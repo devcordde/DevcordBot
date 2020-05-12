@@ -93,7 +93,7 @@ class RankCommand : AbstractCommand() {
             if (offset < 0) offset = 0
             if (offset != 0) {
                 transaction {
-                    val maxOffset = DevCordUser.all().count()
+                    val maxOffset = DevCordUser.all().count() - 1
                     if (maxOffset < offset) {
                         invalidOffset = true
                         offset = maxOffset - 10
