@@ -90,10 +90,11 @@ class RankCommand : AbstractCommand() {
         override suspend fun execute(context: Context) {
             var offset = context.args.optionalInt(0) ?: 0
             var invalidOffset = false
+            var maxOffset = 0
             if (offset < 0) offset = 0
             if (offset != 0) {
                 transaction {
-                    val maxOffset = DevCordUser.all().count() - 1
+                    maxOffset = DevCordUser.all().count() - 1
                     if (maxOffset < offset) {
                         invalidOffset = true
                         offset = maxOffset - 10
@@ -113,7 +114,7 @@ class RankCommand : AbstractCommand() {
             if (invalidOffset) {
                 context.respond(
                     Embeds.warn(
-                        "Rangliste | Zu hoher Offset! (Maximum: $offset)",
+                        "Rangliste | Zu hoher Offset! (Maximum: $maxOffset)",
                         users.joinToString("\n")
                     )
                 ).queue()
