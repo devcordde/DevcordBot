@@ -54,12 +54,7 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
             )
         } else {
             val result = results[0]
-            context.respond(
-                """
-                **${result.title}**
-                *${result.snippet}*
-                ${result.link}""".trimIndent()
-            )
+            context.respond("**${result.title}**\n${result.link}")
         }
     }
 }
