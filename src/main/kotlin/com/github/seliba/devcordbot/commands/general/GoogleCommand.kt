@@ -21,6 +21,7 @@ import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
+import com.github.seliba.devcordbot.menu.Paginator
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.customsearch.Customsearch
@@ -52,8 +53,13 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
                 )
             )
         } else {
-            val result = results[0]
-            context.respond("**${result.title}**\n${result.link}")
+            val displayResults = results.map {
+                "**${it.title}**\n\"${it.snippet}\"\n[${it.displayLink}](${it.link})"
+            }
+            Paginator(
+                items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
+                context = context, user = context.author, timeoutMillis = 25 * 1000
+            )
         }
     }
 }
