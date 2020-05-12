@@ -32,7 +32,6 @@ import com.github.seliba.devcordbot.util.HastebinUtil
 import com.github.seliba.devcordbot.util.await
 import com.github.seliba.devcordbot.util.executeAsync
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import okhttp3.Request
@@ -63,27 +62,20 @@ class CommonPitfallListener(
         val input = event.message.contentRaw
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
-                    event.channel.id in blacklist)) ||
-            Constants.prefix.containsMatchIn(
-                input
-            )
+                    event.channel.id in blacklist))
         ) return
 
         // Search for all kinds of sources that show common pitfalls (except github gist since I also need to do stuff for my job to earn money lol)
-        val hastebinMatches = HASTEBIN_PATTERN.findAll(input)
-        val pastebinMatches = PASTEBIN_PATTERN.findAll(input)
+        val hastebinMatches = HASTEBIN_PATTERN.findAll(input).toList()
+        val pastebinMatches = PASTEBIN_PATTERN.findAll(input).toList()
         val attachments = event.message.attachments
 
         // Fetch value of sources
         val hastebinInputs = hastebinMatches.map {
-            runBlocking {
-                fetchHastebin(it)
-            }
+            fetchHastebin(it)
         }
         val pastebinInputs = pastebinMatches.map {
-            runBlocking {
-                fetchPastebin(it)
-            }
+            fetchPastebin(it)
         }
 
         // Collect remote sources (BEST PRACTICE!)
@@ -142,7 +134,11 @@ class CommonPitfallListener(
         val inputBlockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(inputString)
         val cleanInput = if (inputBlockMatch != null) inputBlockMatch.groupValues[2].trim() else inputString
         if (!wasPaste && isCode(cleanInput)) {
-            if (inputString.lines().size > MAX_LINES) {
+            if (inputString.lines().size > MAX_LINES &&
+                !Constants.prefix.containsMatchIn(
+                    inputString
+                )
+            ) {
                 val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
                 val hastebinUrl = HastebinUtil.postErrorToHastebin(cleanInput, bot.httpClient).await()
                 message.editMessage(buildTooLongEmbed(hastebinUrl)).queue()
