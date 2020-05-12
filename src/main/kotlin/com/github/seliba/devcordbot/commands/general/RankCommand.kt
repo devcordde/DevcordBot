@@ -84,7 +84,7 @@ class RankCommand : AbstractCommand() {
     private inner class TopCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("top", "t", "leaderboard", "thebest")
         override val displayName: String = "Top"
-        override val description: String = "Zeigt die höchstgerankten 5 Spieler an."
+        override val description: String = "Zeigt die 10 User mit dem höchsten Rang an."
         override val usage: String = "[offset]"
 
         override suspend fun execute(context: Context) {
