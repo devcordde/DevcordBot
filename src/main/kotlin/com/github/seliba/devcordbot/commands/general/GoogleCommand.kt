@@ -24,7 +24,6 @@ import com.github.seliba.devcordbot.constants.Embeds
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.customsearch.Customsearch
-import net.dv8tion.jda.api.utils.MarkdownSanitizer
 
 class GoogleCommand(private val apiKey: String, private val engineId: String) : AbstractCommand() {
 
