@@ -26,9 +26,15 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.customsearch.Customsearch
 
+/**
+ * Google command.
+ */
 class GoogleCommand(private val apiKey: String, private val engineId: String) : AbstractCommand() {
 
-    private val search = Customsearch(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
+    private val search =
+        Customsearch.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
+            .setApplicationName("DevcordBot")
+            .build()
 
     override val aliases: List<String> = listOf("google", "search", "g")
     override val displayName: String = "google"
@@ -38,16 +44,16 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override suspend fun execute(context: Context) {
-		if (apiKey.isEmpty() || engineId.isEmpty()) {
-			context.respond(
-			    Embeds.error(
-				    title = "Nicht verfügbar", 
-					description = "Dieser command ist zur Zeit nicht verfügbar."
-				)
-			)
-			return
-		}
-		
+        if (apiKey.isEmpty() || engineId.isEmpty()) {
+            context.respond(
+                Embeds.error(
+                    title = "Nicht verfügbar",
+                    description = "Dieser command ist zur Zeit nicht verfügbar."
+                )
+            )
+            return
+        }
+
         val query = context.args.join()
         val results = with(search.cse().list(query)) {
             key = apiKey
