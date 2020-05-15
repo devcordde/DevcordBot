@@ -38,6 +38,16 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override suspend fun execute(context: Context) {
+		if (apiKey.isEmpty() || engineId.isEmpty()) {
+			context.respond(
+			    Embeds.error(
+				    title = "Nicht verfügbar", 
+					description = "Dieser command ist zur Zeit nicht verfügbar."
+				)
+			)
+			return
+		}
+		
         val query = context.args.join()
         val results = with(search.cse().list(query)) {
             key = apiKey

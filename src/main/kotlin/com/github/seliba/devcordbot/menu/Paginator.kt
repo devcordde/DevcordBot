@@ -103,7 +103,7 @@ class Paginator(
         title(title)
         val rowBuilder = StringBuilder()
         rows.indices.forEach {
-            rowBuilder.append('`').append(it + 1).append("`. ").appendln(rows[it])
+            rowBuilder.append('`').append(it + (itemsPerPage * (currentPage - 1)) + 1).append("`. ").appendln(rows[it])
         }
         description = rowBuilder
         footer("Seite $currentPage/$pages (${rows.size} Einträge)")
