@@ -195,8 +195,8 @@ internal class DevCordBotImpl(
             SourceCommand(),
             RankCommand(),
             BlacklistCommand(),
-            InfoCommand(),
-            GoogleCommand(env["CSE_KEY"] ?: "", env["CSE_ID"] ?: "")
+            InfoCommand()
+            //GoogleCommand(env["CSE_KEY"] ?: "", env["CSE_ID"] ?: "")
         )
     }
 }
