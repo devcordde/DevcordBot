@@ -48,7 +48,8 @@ class AutoHelp(
     private val whitelist: List<String>,
     private val blacklist: List<String>,
     knownLanguages: List<String>,
-    private val bypassWord: String
+    private val bypassWord: String,
+    private val maxLines: Int
 ) {
 
     private val guesser = LanguageGusser(knownLanguages)
@@ -155,7 +156,7 @@ class AutoHelp(
             if (!wasPaste && inputBlockMatch != null) inputBlockMatch!!.groupValues[2].trim() else inputString
 
         if (!wasPaste && guesser.isCode(cleanInput)) {
-            if (inputString.lines().size > MAX_LINES &&
+            if (inputString.lines().size > maxLines &&
                 !Constants.prefix.containsMatchIn(inputString)
             ) {
                 val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
@@ -173,7 +174,7 @@ class AutoHelp(
         return Embeds.warn(
             "Huch ist das viel?",
             """Bitte sende, lange Codeteile nicht über den Chat oder als File, benutze stattdessen, ein haste Tool. Mehr dazu findest du, bei `sudo tag haste`.
-                                        |Faustregel: Alles, was mehr als $MAX_LINES Zeilen hat.
+                                        |Faustregel: Alles, was mehr als $maxLines Zeilen hat.
                                         |Hier ich mache das schnell für dich: $url
                                     """.trimMargin()
         )
@@ -205,7 +206,5 @@ class AutoHelp(
 
         // https://regex101.com/r/N8NBDz/1
         private val PASTEBIN_PATTERN = "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.*)".toRegex()
-
-        private const val MAX_LINES = 15
     }
 }
