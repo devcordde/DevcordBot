@@ -59,6 +59,11 @@ class DatabaseUpdater {
     @SubscribeEvent
     fun onMessageSent(event: GuildMessageReceivedEvent) {
         val user = createUserIfNeeded(event.author.idLong) ?: return
+
+        if (user.blacklisted) {
+            return
+        }
+
         if (Duration.between(user.lastUpgrade, Instant.now()) < Duration.ofSeconds(15)) {
             return
         }
