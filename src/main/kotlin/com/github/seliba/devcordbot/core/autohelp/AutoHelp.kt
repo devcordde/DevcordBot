@@ -172,10 +172,10 @@ class AutoHelp(
 
     private fun buildTooLongEmbed(url: String): EmbedConvention {
         return Embeds.warn(
-            "Huch ist das viel?",
-            """Bitte sende, lange Codeteile nicht über den Chat oder als File, benutze stattdessen, ein haste Tool. Mehr dazu findest du, bei `sudo tag haste`.
+            "Huch, ist das viel?",
+            """Bitte sende lange Codeteile nicht über den Chat oder als Datei, sondern benutze stattdessen ein haste-Tool. Mehr dazu findest du bei `sudo tag haste`.
                                         |Faustregel: Alles, was mehr als $maxLines Zeilen hat.
-                                        |Hier ich mache das schnell für dich: $url
+                                        |Hier, ich mache das schnell für dich: $url
                                     """.trimMargin()
         )
     }
