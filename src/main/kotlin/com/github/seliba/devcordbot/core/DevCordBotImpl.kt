@@ -117,7 +117,7 @@ internal class DevCordBotImpl(
         RestAction.setDefaultFailure {
             restActionLogger.error(it) { "An error occurred while executing restaction" }
         }
-        registerCommands()
+        registerCommands(env)
         logger.info { "Establishing connection to the database …" }
         connectToDatabase(env)
     }
@@ -186,7 +186,7 @@ internal class DevCordBotImpl(
         dataSource.close()
     }
 
-    private fun registerCommands() {
+    private fun registerCommands(env: Dotenv) {
         commandClient.registerCommands(
             HelpCommand(),
             MockCommand(),
@@ -199,6 +199,7 @@ internal class DevCordBotImpl(
             RankCommand(),
             BlacklistCommand(),
             InfoCommand()
+            //GoogleCommand(env["CSE_KEY"] ?: "", env["CSE_ID"] ?: "")
         )
     }
 }
