@@ -98,7 +98,8 @@ internal class DevCordBotImpl(
                 this,
                 env["AUTO_HELP_WHITELIST"]!!.split(','),
                 env["AUTO_HELP_BLACKLIST"]!!.split(','),
-                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(',')
+                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(','),
+                env["AUTO_HELP_BYPASS"]!!
             )
         )
         .build()

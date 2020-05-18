@@ -22,13 +22,19 @@ import com.codewaves.codehighlight.core.StyleRendererFactory
 
 private const val MAX_LINES = 15
 
+/**
+ * LanguageGusser
+ */
 class LanguageGusser(knownLanguages: List<String>) {
     private val languageGuesser = Highlighter(UselessRendererFactoryThing())
     private val knownLanguages = knownLanguages.toTypedArray()
 
     private fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, knownLanguages)
 
-    fun isCode(potentialCode: String) = guessLanguage(potentialCode).language != null
+    /**
+     * Check if the given text is Code.
+     */
+    fun isCode(potentialCode: String): Boolean = guessLanguage(potentialCode).language != null
 }
 
 // We don't want to highlight anything
