@@ -51,5 +51,4 @@ private class NOOPRenderer : StyleRenderer {
     override fun onAbort(code: CharSequence?) = Unit
 
     override fun onStart() = Unit
-
 }
