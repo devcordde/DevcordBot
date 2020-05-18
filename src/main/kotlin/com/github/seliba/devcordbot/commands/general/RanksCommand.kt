@@ -27,7 +27,7 @@ import com.github.seliba.devcordbot.listeners.Level
  * RanksCommand.
  */
 class RanksCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("ranks")
+    override val aliases: List<String> = listOf("ranks", "levels")
     override val displayName: String = "ranks"
     override val description: String = "Zeigt die verfügbaren Ränge an."
     override val usage: String = ""
