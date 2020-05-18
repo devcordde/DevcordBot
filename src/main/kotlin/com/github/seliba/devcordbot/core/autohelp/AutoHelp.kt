@@ -47,7 +47,7 @@ class AutoHelp(
     knownLanguages: List<String>
 ) {
 
-    private val gussr = LanguageGusser(knownLanguages)
+    private val guesser = LanguageGusser(knownLanguages)
     private val fetcher = ContentFetcher(bot.httpClient)
     private val executor = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
 
@@ -147,7 +147,7 @@ class AutoHelp(
         val cleanInput =
             if (!wasPaste && inputBlockMatch != null) inputBlockMatch!!.groupValues[2].trim() else inputString
 
-        if (!wasPaste && gussr.isCode(cleanInput)) {
+        if (!wasPaste && guesser.isCode(cleanInput)) {
             if (inputString.lines().size > MAX_LINES &&
                 !Constants.prefix.containsMatchIn(inputString)
             ) {
