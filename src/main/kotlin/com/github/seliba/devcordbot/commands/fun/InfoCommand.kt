@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.seliba.devcordbot.commands.`fun`
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
@@ -26,12 +26,12 @@ import com.github.seliba.devcordbot.listeners.SelfMentionListener
  * InfoCommand
  */
 class InfoCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("info", "i")
+    override val aliases: List<String> = listOf("info")
     override val displayName: String = "info"
     override val description: String = "Zeigt Bot-Informationen an."
     override val usage: String = ""
     override val permission: Permission = Permission.ANY
-    override val category: CommandCategory = CommandCategory.GENERAL
+    override val category: CommandCategory = CommandCategory.FUN
 
     override suspend fun execute(context: Context) {
         SelfMentionListener.sendInfo(context.channel, context.jda.users.size)
