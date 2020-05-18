@@ -47,5 +47,4 @@ class RanksCommand : AbstractCommand() {
             }
         ).queue()
     }
-
 }
