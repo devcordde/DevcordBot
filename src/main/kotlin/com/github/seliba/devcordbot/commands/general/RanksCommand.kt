@@ -20,20 +20,31 @@ import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.listeners.SelfMentionListener
+import com.github.seliba.devcordbot.constants.Embeds
+import com.github.seliba.devcordbot.listeners.Level
 
 /**
- * InfoCommand
+ * RanksCommand.
  */
-class InfoCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("info")
-    override val displayName: String = "info"
-    override val description: String = "Zeigt Bot-Informationen an."
+class RanksCommand : AbstractCommand() {
+    override val aliases: List<String> = listOf("ranks", "levels")
+    override val displayName: String = "ranks"
+    override val description: String = "Zeigt die verfügbaren Ränge an."
     override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
     override suspend fun execute(context: Context) {
-        SelfMentionListener.sendInfo(context.channel, context.jda.users.size)
+        context.respond(
+            Embeds.info("Rollen") {
+                Level.values().forEach {
+                    val roleName = context.guild.getRoleById(it.roleId)?.name ?: "Rolle nicht gefunden"
+                    addField(
+                        "Level ${it.level}",
+                        roleName
+                    )
+                }
+            }
+        ).queue()
     }
 }

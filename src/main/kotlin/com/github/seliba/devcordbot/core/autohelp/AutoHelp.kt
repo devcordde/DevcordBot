@@ -14,14 +14,12 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
+package com.github.seliba.devcordbot.core.autohelp
 
-import com.codewaves.codehighlight.core.Highlighter
-import com.codewaves.codehighlight.core.StyleRendererFactory
-import com.codewaves.codehighlight.renderer.HtmlRenderer
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.constants.Emotes
+import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.database.Tag
 import com.github.seliba.devcordbot.database.Tags
 import com.github.seliba.devcordbot.dsl.EmbedConvention
@@ -30,33 +28,36 @@ import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.event.EventSubscriber
 import com.github.seliba.devcordbot.util.HastebinUtil
 import com.github.seliba.devcordbot.util.await
-import com.github.seliba.devcordbot.util.executeAsync
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.future.future
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import okhttp3.Request
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
-
-private const val MAX_LINES = 15
+import java.util.concurrent.Executors
 
 /**
- * Automatic analzyer for common pitfalls.
+ * AutoHelp.
  */
-class CommonPitfallListener(
+class AutoHelp(
     private val bot: DevCordBot,
     private val whitelist: List<String>,
     private val blacklist: List<String>,
-    knownLanguages: List<String>
+    knownLanguages: List<String>,
+    private val bypassWord: String,
+    private val maxLines: Int
 ) {
-    private val languageGuesser = Highlighter(UselessRendererFactoryThing())
-    private val knownLanguages = knownLanguages.toTypedArray()
+
+    private val guesser = LanguageGusser(knownLanguages)
+    private val fetcher = ContentFetcher(bot.httpClient)
+    private val executor = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
 
     /**
-     * Listens for new messages.
+     * Trigger AutoHelp on Message.
      */
     @EventSubscriber
     suspend fun onMessage(event: GuildMessageReceivedEvent) {
@@ -64,50 +65,58 @@ class CommonPitfallListener(
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
                     event.channel.id in blacklist)) ||
-            Constants.prefix.containsMatchIn(
-                input
-            )
+            bypassWord in input
         ) return
 
-        // Search for all kinds of sources that show common pitfalls (except github gist since I also need to do stuff for my job to earn money lol)
-        val hastebinMatches = HASTEBIN_PATTERN.findAll(input)
-        val pastebinMatches = PASTEBIN_PATTERN.findAll(input)
-        val attachments = event.message.attachments
+        // Asynchronously fetch potential content
+        val hastebinMatches = findInput(HASTEBIN_PATTERN, input, ::fetchHastebin)
+        val pastebinMatches = findInput(PASTEBIN_PATTERN, input, ::fetchPastebin)
+        val attachments = fetchAttachments(event.message)
 
-        // Fetch value of sources
-        val hastebinInputs = hastebinMatches.map {
-            runBlocking {
-                fetchHastebin(it)
-            }
-        }
-        val pastebinInputs = pastebinMatches.map {
-            runBlocking {
-                fetchPastebin(it)
-            }
-        }
-
-        // Collect remote sources (BEST PRACTICE!)
-        val remoteInputs = (hastebinInputs + pastebinInputs).toList()
-        val attachmentInputs = attachments.map {
-            fetchAttachment(it)
-        }
-
-        // If there is no paste source analyze the input directly
-        if (remoteInputs.isEmpty() and attachmentInputs.isEmpty()) {
-            analyzeInput(input, false, event)
+        // Quit on first match
+        if (analyzeInputs(hastebinMatches, event)) {
+            pastebinMatches.cancel(true)
+            attachments.cancel(true)
             return
         }
-
-        // ragequit on first match
-        val remotePassed = remoteInputs.any {
-            analyzeInput(it, true, event)
+        if (analyzeInputs(pastebinMatches, event)) {
+            attachments.cancel(true)
+            return
         }
+        // Also send too long message
 
-        // fallback to attachments
-        if (!remotePassed) {
-            // ragequit on first match
-            attachmentInputs.firstOrNull {
-                analyzeInput(it, false, event)
+        if (analyzeInputs(attachments, event, false)) return
+        analyzeInput(input, false, event)
+    }
+
+    private suspend fun analyzeInputs(
+        matches: CompletableFuture<List<String?>>,
+        event: GuildMessageReceivedEvent,
+        paste: Boolean = true
+    ): Boolean {
+        return matches.await().any {
+            analyzeInput(it, paste, event)
+        }
+    }
+
+    private fun findInput(
+        pattern: Regex,
+        input: String,
+        fetcher: (MatchResult) -> CompletableFuture<String?>
+    ): CompletableFuture<List<String?>> {
+        return GlobalScope.future(executor) {
+            pattern.findAll(input).toList().map {
+                fetcher(it).await()
+            }.also {
+                println("DONE")
+            }
+        }
+    }
+
+    private suspend fun fetchAttachments(message: Message): CompletableFuture<List<String?>> {
+        return GlobalScope.future(executor) {
+            message.attachments.map {
+                fetchAttachment(it)
             }
         }
     }
@@ -117,20 +126,21 @@ class CommonPitfallListener(
         return BufferedReader(InputStreamReader(stream)).use { reader ->
             reader.lineSequence().joinToString(System.lineSeparator())
         }
+
     }
 
-    private suspend fun fetchHastebin(match: MatchResult): String? {
+    private fun fetchHastebin(match: MatchResult): CompletableFuture<String?> {
         val hastebinSite = match.groupValues[1]
         val pasteId = match.groupValues[2]
         val domain = if (hastebinSite == ".com") "hastebin.com" else "hasteb.in"
         val rawPaste = "https://$domain/raw/$pasteId"
-        return fetchContent(rawPaste).await()
+        return fetcher.fetchContent(rawPaste)
     }
 
-    private suspend fun fetchPastebin(match: MatchResult): String? {
+    private fun fetchPastebin(match: MatchResult): CompletableFuture<String?> {
         val pasteId = match.groupValues[1]
         val rawPaste = "https://pastebin.com/raw/$pasteId"
-        return fetchContent(rawPaste).await()
+        return fetcher.fetchContent(rawPaste)
     }
 
     private suspend fun analyzeInput(
@@ -139,10 +149,16 @@ class CommonPitfallListener(
         event: GuildMessageReceivedEvent
     ): Boolean {
         require(inputString != null)
-        val inputBlockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(inputString)
-        val cleanInput = if (inputBlockMatch != null) inputBlockMatch.groupValues[2].trim() else inputString
-        if (!wasPaste && isCode(cleanInput)) {
-            if (inputString.lines().size > MAX_LINES) {
+
+        // It's kind of unlikely to paste code blocks on hastebin so only check for codeblocks if it's not pasted
+        val inputBlockMatch by lazy { Constants.CODE_BLOCK_REGEX.matchEntire(inputString) }
+        val cleanInput =
+            if (!wasPaste && inputBlockMatch != null) inputBlockMatch!!.groupValues[2].trim() else inputString
+
+        if (!wasPaste && guesser.isCode(cleanInput)) {
+            if (inputString.lines().size > maxLines &&
+                !Constants.prefix.containsMatchIn(inputString)
+            ) {
                 val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
                 val hastebinUrl = HastebinUtil.postErrorToHastebin(cleanInput, bot.httpClient).await()
                 message.editMessage(buildTooLongEmbed(hastebinUrl)).queue()
@@ -158,13 +174,11 @@ class CommonPitfallListener(
         return Embeds.warn(
             "Huch, ist das viel?",
             """Bitte sende lange Codeteile nicht über den Chat oder als Datei, sondern benutze stattdessen ein haste-Tool. Mehr dazu findest du bei `sudo tag haste`.
-                                        |Faustregel: Alles, was mehr als $MAX_LINES Zeilen hat.
+                                        |Faustregel: Alles, was mehr als $maxLines Zeilen hat.
                                         |Hier, ich mache das schnell für dich: $url
                                     """.trimMargin()
         )
     }
-
-    private fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, knownLanguages)
 
     private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent): Boolean {
         val exception = with(match.groupValues[1]) { substring(lastIndexOf('.') + 1) }
@@ -181,20 +195,6 @@ class CommonPitfallListener(
         return true
     }
 
-    private fun isCode(potentialCode: String) = guessLanguage(potentialCode).language != null
-
-    private fun fetchContent(url: String): CompletableFuture<String?> {
-        val request = Request.Builder()
-            .url(url)
-            .get()
-            .build()
-        return bot.httpClient.newCall(request).executeAsync().thenApply { response ->
-            response.body.use {
-                it?.string()
-            }
-        }
-    }
-
     companion object {
         // https://regex101.com/r/vgz86r/8
         private val JVM_EXCEPTION_PATTERN =
@@ -208,7 +208,3 @@ class CommonPitfallListener(
         private val PASTEBIN_PATTERN = "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.*)".toRegex()
     }
 }
-
-// We don't want to highlight anything
-@Suppress("FunctionName") // It should act like a class
-private fun UselessRendererFactoryThing() = StyleRendererFactory { HtmlRenderer("") }
