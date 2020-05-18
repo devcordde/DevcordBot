@@ -40,24 +40,31 @@ import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
+/**
+ * AutoHelp.
+ */
 class AutoHelp(
     private val bot: DevCordBot,
     private val whitelist: List<String>,
     private val blacklist: List<String>,
-    knownLanguages: List<String>
+    knownLanguages: List<String>,
+    private val bypassWord: String
 ) {
 
     private val guesser = LanguageGusser(knownLanguages)
     private val fetcher = ContentFetcher(bot.httpClient)
     private val executor = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
 
+    /**
+     * Trigger AutoHelp on Message.
+     */
     @EventSubscriber
     suspend fun onMessage(event: GuildMessageReceivedEvent) {
         val input = event.message.contentRaw
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
                     event.channel.id in blacklist)) ||
-            BYPASS_WORD in input
+            bypassWord in input
         ) return
 
         // Asynchronously fetch potential content
@@ -198,8 +205,6 @@ class AutoHelp(
 
         // https://regex101.com/r/N8NBDz/1
         private val PASTEBIN_PATTERN = "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.*)".toRegex()
-
-        private const val BYPASS_WORD = "_Ü?"
 
         private const val MAX_LINES = 15
     }

@@ -21,8 +21,14 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.CompletableFuture
 
+/**
+ * ContentFetcher
+ */
 class ContentFetcher(private val httpClient: OkHttpClient) {
 
+    /**
+     * Fetch content from given Url.
+     */
     fun fetchContent(url: String): CompletableFuture<String?> {
         val request = Request.Builder()
             .url(url)
