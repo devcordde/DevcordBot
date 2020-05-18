@@ -25,6 +25,7 @@ import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
 import com.github.seliba.devcordbot.commands.moderation.BlacklistCommand
 import com.github.seliba.devcordbot.commands.moderation.StarboardCommand
 import com.github.seliba.devcordbot.constants.Constants
+import com.github.seliba.devcordbot.core.autohelp.AutoHelp
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
 import com.github.seliba.devcordbot.event.EventSubscriber
@@ -93,11 +94,13 @@ internal class DevCordBotImpl(
             DatabaseUpdater(),
             commandClient,
             starboard,
-            CommonPitfallListener(
+            AutoHelp(
                 this,
                 env["AUTO_HELP_WHITELIST"]!!.split(','),
                 env["AUTO_HELP_BLACKLIST"]!!.split(','),
-                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(',')
+                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(','),
+                env["AUTO_HELP_BYPASS"]!!,
+                Integer.parseInt(env["AUTO_HELP_MAX_LINES"])
             )
         )
         .build()
