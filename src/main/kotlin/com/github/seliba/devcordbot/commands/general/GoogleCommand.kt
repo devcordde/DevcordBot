@@ -70,7 +70,7 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
             )
         } else {
             val displayResults = results.map {
-                "**${it.title}**\n\"${it.snippet}\"\n[${it.displayLink}](${it.link})"
+                "**${it.title}**\n\"${it.snippet.replace("\n", "")}\"\n[${it.displayLink}](${it.link})"
             }
             Paginator(
                 items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
