@@ -63,20 +63,20 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
         }.items
 
         if (results == null || results.isEmpty()) {
-            context.respond(
+            return context.respond(
                 Embeds.error(
                     title = "Keine Suchergebnisse gefunden",
                     description = "Für die Anfrage `$query` konnten keine Ergebnisse gefunden werden."
                 )
-            )
-        } else {
-            val displayResults = results.map {
-                "**${it.title}**\n\"${it.snippet.replace("\n", "")}\"\n[${it.displayLink}](${it.link})"
-            }
-            Paginator(
-                items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
-                context = context, user = context.author, timeoutMillis = 25 * 1000
-            )
+            ).queue()
         }
+
+        val displayResults = results.map {
+            "**${it.title}**\n\"${it.snippet.replace("\n", "")}\"\n[${it.displayLink}](${it.link})"
+        }
+        Paginator(
+            items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
+            context = context, user = context.author, timeoutMillis = 25 * 1000
+        )
     }
 }
