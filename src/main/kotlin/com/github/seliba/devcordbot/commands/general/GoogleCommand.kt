@@ -38,7 +38,8 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
 
     override val aliases: List<String> = listOf("google", "search", "g")
     override val displayName: String = "google"
-    override val description: String = "Sucht nach der angegebenen Query bei Google und zeigt das erste Ergebnis."
+    override val description: String =
+        "Sucht nach der angegebenen Query bei Google und zeigt die ersten 10 Ergebnisse an."
     override val usage: String = "<query>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
