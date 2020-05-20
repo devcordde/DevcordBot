@@ -24,6 +24,7 @@ import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
 import com.github.seliba.devcordbot.commands.moderation.BlacklistCommand
 import com.github.seliba.devcordbot.commands.moderation.StarboardCommand
+import com.github.seliba.devcordbot.commands.owners.RedeployCommand
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.core.autohelp.AutoHelp
 import com.github.seliba.devcordbot.database.*
@@ -202,10 +203,16 @@ internal class DevCordBotImpl(
             InfoCommand()
         )
 
-        if (env["CSE_KEY"] != null && env["CSE_ID"] != null) {
-            commandClient.registerCommands(
-                GoogleCommand(env["CSE_KEY"] ?: "", env["CSE_ID"] ?: "")
-            )
+        val cseKey = env["CSE_KEY"]
+        val cseId = env["CSE_ID"]
+        if (cseKey != null && cseId != null) {
+            commandClient.registerCommands(GoogleCommand(cseKey, cseId))
+        }
+
+        val redeployHost = env["REDEPLOY_HOST"]
+        val redeployToken = env["REDEPLOY_TOKEN"]
+        if (redeployHost != null && redeployToken != null) {
+            commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
         }
     }
 }
