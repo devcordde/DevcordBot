@@ -35,7 +35,7 @@ dependencies {
     implementation(kotlin("reflect"))
 
     // Scripting Support (For bot owner eval)
-    runtimeOnly(kotlin("scripting-jsr223"))
+    runtimeOnly(kotlin("scripting-jsr223-embeddable"))
 
     // Coroutines
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.3.4")
