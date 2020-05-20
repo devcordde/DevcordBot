@@ -62,7 +62,7 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
             execute()
         }.items
 
-        if (results.isEmpty()) {
+        if (results == null || results.isEmpty()) {
             context.respond(
                 Embeds.error(
                     title = "Keine Suchergebnisse gefunden",
