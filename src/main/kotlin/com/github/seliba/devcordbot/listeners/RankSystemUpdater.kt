@@ -58,6 +58,10 @@ class DatabaseUpdater {
      */
     @SubscribeEvent
     fun onMessageSent(event: GuildMessageReceivedEvent) {
+        if (event.author.isBot) {
+            return
+        }
+
         val user = createUserIfNeeded(event.author.idLong) ?: return
 
         if (user.blacklisted) {
