@@ -107,8 +107,6 @@ class AutoHelp(
         return GlobalScope.future(executor) {
             pattern.findAll(input).toList().map {
                 fetcher(it).await()
-            }.also {
-                println("DONE")
             }
         }
     }
