@@ -41,7 +41,7 @@ object Constants {
     /**
      * URL that is used for pasting text.
      */
-    val hastebinUrl: HttpUrl = "https://hasteb.in".toHttpUrl()
+    lateinit var hastebinUrl: HttpUrl
 
     /**
      * Dateformat used in the bot.
