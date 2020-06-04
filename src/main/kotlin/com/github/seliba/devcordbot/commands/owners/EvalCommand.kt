@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ class EvalCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.BOT_OWNER
 
     @Suppress("KDocMissingDocumentation")
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         context.respond(
             Embeds.loading(
                 "Code wird kompiliert und ausgeführt",
@@ -68,10 +68,10 @@ class EvalCommand : AbstractCommand() {
             scriptEngine.put("context", context)
             val result = try {
                 val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
-                if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebniss: ``````".length) {
+                if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
                     val result = Embeds.info(
-                        "Zu langes Ergebniss!",
-                        "Ergebniss: ${Emotes.LOADING}"
+                        "Erfolgreich ausgeführt!",
+                        "Ergebnis: ${Emotes.LOADING}"
                     )
                     HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient).thenAccept { hasteUrl ->
                         it.editMessage(result.apply {
@@ -81,7 +81,7 @@ class EvalCommand : AbstractCommand() {
                     }
                     result
                 } else {
-                    Embeds.info("Erfolgreich ausgeführt!", "Ergebniss: ```$evaluation```")
+                    Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$evaluation```")
                 }
             } catch (e: ScriptException) {
                 val result = Embeds.error(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,14 +28,14 @@ import java.net.URLEncoder
  * Lmgtfy command.
  */
 class LmgtfyCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("lmgtfy", "google", "g")
+    override val aliases: List<String> = listOf("lmgtfy")
     override val displayName: String = "lmgtfy"
     override val description: String = "Gibt einen lmgtfy-Link aus."
     override val usage: String = "<text>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
 
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         val arguments = context.args
 
         if (arguments.isEmpty()) {

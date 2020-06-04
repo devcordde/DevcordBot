@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,7 +27,9 @@ import mu.KotlinLogging
 import org.slf4j.event.Level as SLF4JLevel
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.github.seliba.devcordbot.constants.Constants
 import net.dv8tion.jda.api.entities.Activity
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.LoggerFactory
 import com.github.seliba.devcordbot.core.DevCordBotImpl as DevCordBot
 
@@ -82,6 +84,8 @@ fun main(args: Array<String>) {
         logger.warn { "Games could not be found, returning to fallback status..." }
         games = listOf(GameAnimator.AnimatedGame("with errors"))
     }
+
+    Constants.hastebinUrl = env["HASTE_HOST"]?.toHttpUrl() ?: "https://hasteb.in".toHttpUrl()
 
     logger.info { "Launching DevCordBot..." }
     DevCordBot(token, games, env, debugMode)
