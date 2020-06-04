@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -156,6 +156,11 @@ class AnnotatedEventManager(
             require(function.visibility == KVisibility.PUBLIC) { "Listener function cannot be private" }
         }
 
-        fun call(vararg parameters: Any?) = function.call(instance, *parameters)
+        suspend fun call(vararg parameters: Any?) =
+            function.callSuspend(
+                instance,
+                *parameters
+            ) // thankfully callSuspend checks if it's actuall a suspend function or not
+
     }
 }

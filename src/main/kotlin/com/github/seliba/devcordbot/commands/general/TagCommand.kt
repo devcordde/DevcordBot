@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ class TagCommand : AbstractCommand() {
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
 
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         val args = context.args
         if (args.isEmpty()) {
             return context.sendHelp().queue()
@@ -82,7 +82,7 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Erstellt einen neuen Tag"
         override val usage: String = "<name> \n <text>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val (name, content) = parseTag(context) ?: return
             if (transaction { checkTagExists(name, context) }) return
             val tag = transaction {
@@ -106,7 +106,7 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Erstellt einen neuen Tag Alias"
         override val usage: String = """<alias> <tag> / "<alias>" "<tag>""""
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val args = context.args
             val multiWordMatcher = multiWordAliasRegex.matchEntire(args.join())
             val (aliasName, tagName) = if (multiWordMatcher == null) {
@@ -140,7 +140,7 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Editiert einen existierenden Tag"
         override val usage: String = "<tagname> \n <newcontent>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val (name, content) = parseTag(context) ?: return
             val tag = transaction { checkNotTagExists(name, context) } ?: return
             if (checkPermission(tag, context)) return
@@ -162,7 +162,7 @@ class TagCommand : AbstractCommand() {
         override val displayName: String = "Info"
         override val description: String = "Zeigt Informationen über einen Tag an"
         override val usage: String = "<tag>"
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val args = context.args
             if (args.isEmpty()) {
                 return context.sendHelp().queue()
@@ -211,7 +211,7 @@ class TagCommand : AbstractCommand() {
         override val displayName: String = "delete"
         override val description: String = "Löscht einen Tag"
         override val usage: String = "<tag>"
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             if (context.args.isEmpty()) {
                 return context.sendHelp().queue()
             }
@@ -238,7 +238,7 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Gibt eine Liste aller Tags aus"
         override val usage: String = ""
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val tags = transaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
             if (tags.isEmpty()) {
                 return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags.")).queue()
@@ -253,7 +253,7 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Gibt eine Liste aller Tags eines bestimmten Benutzers aus"
         override val usage: String = "<@user>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val user = context.args.optionalUser(0, jda = context.jda) ?: context.author
             val tags = transaction { Tag.find { Tags.author eq user.idLong }.map(Tag::name) }
             if (tags.isEmpty()) {
@@ -270,7 +270,7 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
         override val usage: String = "<query>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             if (context.args.isEmpty()) {
                 return context.sendHelp().queue()
             }
@@ -293,7 +293,7 @@ class TagCommand : AbstractCommand() {
         override val description: String = "Zeigt dir einen Tag ohne Markdown an"
         override val usage: String = "<tagname>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             if (context.args.isEmpty()) {
                 return context.sendHelp().queue()
             }

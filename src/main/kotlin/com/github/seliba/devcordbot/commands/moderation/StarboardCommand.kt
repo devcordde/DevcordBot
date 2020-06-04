@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.seliba.devcordbot.commands.moderation
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
@@ -35,12 +35,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
  * Command providing moderation tools to interact with [Starboard].
  */
 class StarboardCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("starboard", "sb", "stars", "tothestars", "amejonah", "eclipse")
+    override val aliases: List<String> = listOf("starboard", "sb", "stars")
     override val displayName: String = "Starboard"
-    override val description: String = "Starboard halt erklärt sich hoffentlich selbst"
+    override val description: String = "Moderationsmöglichkeiten für das Starboard."
     override val usage: String = ""
     override val permission: Permission = Permission.MODERATOR
-    override val category: CommandCategory = CommandCategory.GENERAL
+    override val category: CommandCategory = CommandCategory.MODERATION
 
     init {
         registerCommands(
@@ -50,15 +50,16 @@ class StarboardCommand : AbstractCommand() {
         )
     }
 
-    override fun execute(context: Context): Unit = context.sendHelp().queue() // You're supposed to use sub commands
+    override suspend fun execute(context: Context): Unit =
+        context.sendHelp().queue() // You're supposed to use sub commands
 
     private inner class StarCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("iamquitesurethisisimportant", "star")
+        override val aliases: List<String> = listOf("star")
         override val displayName: String = "Star"
         override val description: String = "Lässt den bot eine message starren"
         override val usage: String = "<messageId>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val id = validateId(context) ?: return
             context.channel.retrieveMessageById(id).queue(fun(it: Message) {
                 if (checkEntryNotExists(it.idLong, context)) return
@@ -81,7 +82,7 @@ class StarboardCommand : AbstractCommand() {
         override val description: String = "Entfernt eine Nachricht aus dem Starboard"
         override val usage: String = "<messageId>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val id = validateId(context) ?: return
             val entry = checkEntryExists(id, context) ?: return
             context.bot.starboard.deleteStarboardEntry(entry.messageId, context.guild)
@@ -91,13 +92,13 @@ class StarboardCommand : AbstractCommand() {
     }
 
     private inner class StarrersCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("starrers", "stargazors", "lovers", "eclipse-users")
+        override val aliases: List<String> = listOf("starrers", "stargazors", "lovers")
         override val displayName: String = "Starrers"
         override val description: String = """Zeigt eine Liste aller "Starrer" an """
 
         override val usage: String = "<messageId>"
 
-        override fun execute(context: Context) {
+        override suspend fun execute(context: Context) {
             val id = validateId(context) ?: return
             val entry = checkEntryExists(id, context) ?: return
             val starrers = transaction {

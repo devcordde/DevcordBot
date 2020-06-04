@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,8 +17,11 @@
 package com.github.seliba.devcordbot.util
 
 import com.github.seliba.devcordbot.command.AbstractCommand
+import kotlinx.coroutines.future.await
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.requests.RestAction
+import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
@@ -49,7 +52,13 @@ fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()
 /**
  * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
  */
-fun Member.asMention(): String = "<@!$id>"
+fun Member.asMention(): String = "<@$id>"
+
+
+/**
+ * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
+ */
+fun Member.asNickedMention(): String = "<@!$id>"
 
 /**
  * Executes a [Call] asynchronously.
@@ -93,3 +102,14 @@ fun Throwable.stringify(): String {
  */
 fun String.limit(amount: Int, contraction: String = "..."): String =
     if (length < amount) this else "${substring(0, amount - contraction.length)}$contraction"
+
+/**
+ * Public map constructor of [DataObject].
+ */
+class MapJsonObject(map: Map<String, Any>) : DataObject(map)
+
+/**
+ * **Only use in coroutines**
+ * Awaits the [RestAction] to finish
+ */
+suspend fun <T> RestAction<T>.await(): T = submit().await()

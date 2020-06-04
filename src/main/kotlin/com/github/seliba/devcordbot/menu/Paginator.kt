@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ class Paginator(
         title(title)
         val rowBuilder = StringBuilder()
         rows.indices.forEach {
-            rowBuilder.append('`').append(it + 1).append("`. ").appendln(rows[it])
+            rowBuilder.append('`').append(it + (itemsPerPage * (currentPage - 1)) + 1).append("`. ").appendln(rows[it])
         }
         description = rowBuilder
         footer("Seite $currentPage/$pages (${rows.size} Einträge)")

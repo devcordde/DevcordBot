@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,26 +18,40 @@ package com.github.seliba.devcordbot.command.impl
 
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Constants
+import com.github.seliba.devcordbot.command.permission.PermissionState
+import com.github.seliba.devcordbot.database.DevCordUser
 import net.dv8tion.jda.api.entities.Member
+import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Implementation of [PermissionHandler] that checks the users roles,
+ *
+ *
  */
-class RolePermissionHandler : PermissionHandler {
+class RolePermissionHandler(
+    private val botOwners: List<String>
+) : PermissionHandler {
     private val moderatorPattern = "(?i)moderator|admin(istrator)?".toRegex()
     private val adminPattern = "(?i)admin(istrator)?".toRegex()
 
     override fun isCovered(
         permission: Permission,
         executor: Member
-    ): Boolean {
-        if (executor.idLong in Constants.BOT_OWNERS) return true
+    ): PermissionState {
+        if (executor.id in botOwners) return PermissionState.ACCEPTED
+        if (isBlacklisted(executor.idLong)) return PermissionState.IGNORED
         return when (permission) {
-            Permission.ANY -> true
-            Permission.MODERATOR -> executor.roles.any { it.name.matches(moderatorPattern) }
-            Permission.ADMIN -> executor.roles.any { it.name.matches(adminPattern) }
-            Permission.BOT_OWNER -> false
+            Permission.ANY -> PermissionState.ACCEPTED
+            Permission.MODERATOR -> if (executor.roles.any { it.name.matches(moderatorPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
+            Permission.ADMIN -> if (executor.roles.any { it.name.matches(adminPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
+            Permission.BOT_OWNER -> PermissionState.DECLINED
+        }
+    }
+
+    private fun isBlacklisted(executorId: Long): Boolean {
+        return transaction {
+            val user = DevCordUser.findById(executorId) ?: DevCordUser.new(executorId) {}
+            user.blacklisted
         }
     }
 }

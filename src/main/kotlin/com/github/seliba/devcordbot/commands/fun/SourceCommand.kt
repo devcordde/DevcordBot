@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,6 +25,9 @@ import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.util.hasSubCommands
 
+/**
+ * Source command.
+ */
 class SourceCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("source", "skid", "code")
     override val displayName: String = "source"
@@ -33,7 +36,7 @@ class SourceCommand : AbstractCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.FUN
 
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         val command = findCommand(context) ?: return context.respond(
             Embeds.info(
                 "Quellcode:", "Den code vom Bot findest du [hier]($GITHUB_BASE)"

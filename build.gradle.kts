@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,10 +35,10 @@ dependencies {
     implementation(kotlin("reflect"))
 
     // Scripting Support (For bot owner eval)
-    runtimeOnly(kotlin("scripting-jsr223"))
+    runtimeOnly(kotlin("scripting-jsr223-embeddable"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.4")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.3.4")
 
     // Logging
     implementation("io.github.microutils", "kotlin-logging", "1.7.8")
@@ -65,6 +65,7 @@ dependencies {
     implementation("com.squareup.okhttp3", "okhttp", "4.4.0")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
     implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
+    implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
 
 
     // Testing
