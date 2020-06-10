@@ -196,9 +196,7 @@ internal class DevCordBotImpl(
     private fun registerCommands(env: Dotenv) {
         commandClient.registerCommands(
             HelpCommand(),
-            MockCommand(),
             TagCommand(),
-            LmgtfyCommand(),
             EvalCommand(),
             OwnerEvalCommand(),
             StarboardCommand(),
