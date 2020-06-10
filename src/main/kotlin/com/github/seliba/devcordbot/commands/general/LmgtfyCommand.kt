@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.commands.general
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
+import com.github.seliba.devcordbot.command.CommandPlace
 import com.github.seliba.devcordbot.command.context.Arguments
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
@@ -34,6 +35,7 @@ class LmgtfyCommand : AbstractCommand() {
     override val usage: String = "<text>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.GM
 
     override suspend fun execute(context: Context) {
         val arguments = context.args

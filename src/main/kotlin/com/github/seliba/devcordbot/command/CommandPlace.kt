@@ -16,21 +16,18 @@
 
 package com.github.seliba.devcordbot.command
 
-import com.github.seliba.devcordbot.command.permission.Permission
+import net.dv8tion.jda.api.entities.ChannelType
+import net.dv8tion.jda.api.entities.Message
 
-/**
- * Skeleton of a sub command.
- * @property parent the parent of the command
- * @property callback an [Exception] that is supposed to highlight class defention line
- * @see AbstractCommand
- */
-@Suppress("MemberVisibilityCanBePrivate")
-abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
-    override val callback: Exception = Exception()
-    override val category: CommandCategory
-        get() = parent.category
-    override val permission: Permission
-        get() = parent.permission
-    override val commandPlace: CommandPlace
-        get() = parent.commandPlace
+@Suppress("KDocMissingDocumentation")
+enum class CommandPlace {
+    PM, GM, ALL;
+
+    fun matches(message: Message): Boolean {
+        return when (this) {
+            ALL -> true
+            PM -> message.channelType == ChannelType.PRIVATE
+            GM -> message.channelType == ChannelType.TEXT
+        }
+    }
 }

@@ -21,7 +21,7 @@ import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.util.asMention
 import com.github.seliba.devcordbot.util.asNickedMention
-import net.dv8tion.jda.api.entities.TextChannel
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 
@@ -46,7 +46,7 @@ class SelfMentionListener {
         /**
          * Send Bot-Information to given channel
          */
-        fun sendInfo(textChannel: TextChannel, userCount: Int) {
+        fun sendInfo(textChannel: MessageChannel, userCount: Int) {
             textChannel.sendMessage(Embeds.info("DevCordBot") {
                 addField("Programmiersprache", "[Kotlin](https://kotlinlang.org)", inline = true)
                 addField("Entwickler", "das_#9677 & Schlaubi#0001 & kobold#1524", inline = true)

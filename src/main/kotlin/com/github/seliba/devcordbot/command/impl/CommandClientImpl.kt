@@ -37,11 +37,13 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.TextChannel
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -69,6 +71,21 @@ class CommandClientImpl(
 
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
+
+    /**
+     * Listens for new private messages
+     */
+    @EventSubscriber
+    fun onPrivateMessage(event: PrivateMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message)
+
+    private fun dispatchPrivateMessageCommand(message: Message) {
+        if (!bot.isInitialized) return
+
+        val author = message.author
+        if (message.isWebhookMessage or author.isBot or author.isFake) return
+
+        return parseCommand(message)
+    }
 
     /**
      * Listens for message updates.
@@ -101,24 +118,24 @@ class CommandClientImpl(
     }
 
     private fun parseCommand(message: Message) {
-        val rawInput = message.contentRaw
-        val prefix = resolvePrefix(message.guild, rawInput) ?: return
-
-        val nonPrefixedInput = rawInput.substring(prefix).trim()
+        val nonPrefixedInput = stripPrefix(message) ?: return
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
+        val member =
+            if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(message.author.id)
         val permissionState = permissionHandler.isCovered(
             command.permission,
-            message.member!!
+            member
         )
 
         when (permissionState) {
             PermissionState.IGNORED -> return
-            PermissionState.DECLINED -> handleNoPermission(command.permission, message.textChannel)
+            PermissionState.DECLINED -> return handleNoPermission(command.permission, message.channel)
             PermissionState.ACCEPTED -> {
-                message.textChannel.sendTyping()
+                if (!command.commandPlace.matches(message)) return handleWrongContext(message.channel)
+                message.channel.sendTyping()
                     .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
                         val context = Context(bot, command, arguments, message, this)
                         processCommand(command, context)
@@ -160,6 +177,24 @@ class CommandClientImpl(
         return findCommand(Arguments(input.trim().split(delimiter), raw = input), commandAssociations)
     }
 
+    private fun stripPrefix(message: Message): String? {
+        val rawInput = message.contentRaw
+
+        when (message.channelType) {
+            ChannelType.TEXT -> {
+                val prefixLength = resolvePrefix(message.guild, rawInput) ?: return null
+                return rawInput.substring(prefixLength).trim()
+            }
+            ChannelType.PRIVATE -> {
+                val prefix = prefix.find(rawInput) ?: return null
+                return rawInput.substring(prefix.range.last + 1).trim()
+            }
+            else -> {
+                return null
+            }
+        }
+    }
+
     private fun resolvePrefix(guild: Guild, content: String): Int? {
         val mention = guild.selfMember.asMention()
         val nickedMention = guild.selfMember.asNickedMention()
@@ -173,7 +208,16 @@ class CommandClientImpl(
         }
     }
 
-    private fun handleNoPermission(permission: Permission, channel: TextChannel) {
+    private fun handleWrongContext(channel: MessageChannel) {
+        channel.sendMessage(
+            Embeds.error(
+                "Falscher Context!",
+                "Der Command ist in diesem Channel nicht ausführbar."
+            )
+        ).queue()
+    }
+
+    private fun handleNoPermission(permission: Permission, channel: MessageChannel) {
         channel.sendMessage(
             Embeds.error(
                 "Keine Berechtigung!",
