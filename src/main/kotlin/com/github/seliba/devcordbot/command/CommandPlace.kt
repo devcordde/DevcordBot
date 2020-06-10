@@ -19,10 +19,29 @@ package com.github.seliba.devcordbot.command
 import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.entities.Message
 
-@Suppress("KDocMissingDocumentation")
+/**
+ * CommandPlace defines the places where the command may be executed.
+ */
 enum class CommandPlace {
-    PM, GM, ALL;
+    /**
+     * Private Messages
+     */
+    PM,
 
+    /**
+     * Guild Messages
+     */
+    GM,
+
+    /**
+     * Guild and Private Messages
+     */
+    ALL;
+
+
+    /**
+     * Check if the message matches the CommandPlace.
+     */
     fun matches(message: Message): Boolean {
         return when (this) {
             ALL -> true
