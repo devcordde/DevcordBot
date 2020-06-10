@@ -39,6 +39,7 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
@@ -60,7 +61,7 @@ import com.github.seliba.devcordbot.commands.owners.EvalCommand as OwnerEvalComm
 internal class DevCordBotImpl(
     token: String,
     games: List<GameAnimator.AnimatedGame>,
-    env: Dotenv,
+    var env: Dotenv,
     override val debugMode: Boolean
 ) : DevCordBot {
 
@@ -107,6 +108,8 @@ internal class DevCordBotImpl(
         .build()
     override val gameAnimator = GameAnimator(jda, games)
 
+    override lateinit var guild: Guild
+
     /**
      * Whether the bot received the [ReadyEvent] or not.
      */
@@ -132,6 +135,9 @@ internal class DevCordBotImpl(
         isInitialized = true
         event.jda.presence.setStatus(OnlineStatus.ONLINE)
         gameAnimator.start()
+
+        @Suppress("ReplaceNotNullAssertionWithElvisReturn")
+        guild = event.jda.getGuildById(env["GUILD_ID"]!!)!!
     }
 
     /**

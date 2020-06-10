@@ -80,19 +80,21 @@ class CommandClientImpl(
                 ChronoUnit.SECONDS
             )
         ) return
-        dispatchCommand(event.message)
+        dispatchGuildCommand(event.message)
     }
 
     /**
      * Listens for new messages.
      */
     @EventSubscriber
-    fun onMessage(event: GuildMessageReceivedEvent): Unit = dispatchCommand(event.message)
+    fun onMessage(event: GuildMessageReceivedEvent): Unit = dispatchGuildCommand(event.message)
 
-    private fun dispatchCommand(message: Message) {
+    private fun dispatchGuildCommand(message: Message) {
         if (!bot.isInitialized) return
-        val author = message.author
 
+        if (message.guild.id != bot.guild.id) return
+
+        val author = message.author
         if (message.isWebhookMessage or author.isBot or author.isFake) return
 
         return parseCommand(message)
