@@ -42,7 +42,7 @@ import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
-private val levelLimit = dotenv()["AUTOHELP_LEVEL_LIMIT"]?.let { it.toInt() } ?: 50
+private val levelLimit = dotenv()["AUTOHELP_LEVEL_LIMIT"]?.toInt() ?: 50
 
 /**
  * AutoHelp.
@@ -52,6 +52,7 @@ class AutoHelp(
     private val whitelist: List<String>,
     private val blacklist: List<String>,
     knownLanguages: List<String>,
+    private val bypassWord: String,
     private val maxLines: Int
 ) {
 
@@ -69,7 +70,7 @@ class AutoHelp(
 
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
-                    event.channel.id in blacklist) && userLevel < levelLimit)
+                    event.channel.id in blacklist) && userLevel < levelLimit && bypassWord !in input)
         ) return
 
         // Asynchronously fetch potential content
