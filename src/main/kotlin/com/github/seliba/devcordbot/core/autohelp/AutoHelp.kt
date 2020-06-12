@@ -52,7 +52,6 @@ class AutoHelp(
     private val whitelist: List<String>,
     private val blacklist: List<String>,
     knownLanguages: List<String>,
-    private val bypassWord: String,
     private val maxLines: Int
 ) {
 
@@ -100,7 +99,6 @@ class AutoHelp(
         paste: Boolean = true
     ): Boolean {
         return matches.await().any {
-            println("Analyzing: $it")
             analyzeInput(it, paste, event)
         }
     }
