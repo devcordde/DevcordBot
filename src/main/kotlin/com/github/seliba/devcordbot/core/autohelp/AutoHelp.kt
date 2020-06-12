@@ -20,6 +20,7 @@ import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.constants.Emotes
 import com.github.seliba.devcordbot.core.DevCordBot
+import com.github.seliba.devcordbot.database.DevCordUser
 import com.github.seliba.devcordbot.database.Tag
 import com.github.seliba.devcordbot.database.Tags
 import com.github.seliba.devcordbot.dsl.EmbedConvention
@@ -62,10 +63,11 @@ class AutoHelp(
     @EventSubscriber
     suspend fun onMessage(event: GuildMessageReceivedEvent) {
         val input = event.message.contentRaw
+        val userLevel by lazy { transaction { DevCordUser.findById(event.author.idLong)?.level ?: 1000 } }
+
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
-                    event.channel.id in blacklist)) ||
-            bypassWord in input
+                    event.channel.id in blacklist) && userLevel < 50)
         ) return
 
         // Asynchronously fetch potential content
@@ -83,8 +85,8 @@ class AutoHelp(
             attachments.cancel(true)
             return
         }
-        // Also send too long message
 
+        // Also send too long message
         if (analyzeInputs(attachments, event, false)) return
         analyzeInput(input, false, event)
     }
@@ -95,6 +97,7 @@ class AutoHelp(
         paste: Boolean = true
     ): Boolean {
         return matches.await().any {
+            println("Analyzing: $it")
             analyzeInput(it, paste, event)
         }
     }
@@ -113,7 +116,7 @@ class AutoHelp(
 
     private suspend fun fetchAttachments(message: Message): CompletableFuture<List<String?>> {
         return GlobalScope.future(executor) {
-            message.attachments.map {
+            message.attachments.filter { !it.isVideo }.map {
                 fetchAttachment(it)
             }
         }
@@ -121,10 +124,15 @@ class AutoHelp(
 
     private suspend fun fetchAttachment(attachment: Message.Attachment): String {
         val stream = attachment.retrieveInputStream().await()
-        return BufferedReader(InputStreamReader(stream)).use { reader ->
-            reader.lineSequence().joinToString(System.lineSeparator())
+        return if (attachment.isImage) {
+            if (ImageRecognizer.ready) {
+                ImageRecognizer.readImageText(stream).replace("%3D", "")
+            } else "" // This should not trigger any auto-help
+        } else {
+            BufferedReader(InputStreamReader(stream)).use { reader ->
+                reader.readText()
+            }
         }
-
     }
 
     private fun fetchHastebin(match: MatchResult): CompletableFuture<String?> {
@@ -179,13 +187,29 @@ class AutoHelp(
     }
 
     private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent): Boolean {
-        val exception = with(match.groupValues[1]) { substring(lastIndexOf('.') + 1) }
-        val exceptionName = exception.toLowerCase()
+        val exceptionName = match.groupValues[1]
+        val message = match.groupValues[2]
+        if (!handleCommonException(exceptionName, message, event)) {
+            val exceptionInMessage = JVM_EXCEPTION_NAME_PATTERN.matchEntire(message) ?: return false
+            val newName = exceptionInMessage.groupValues[1]
+            val newMessage = exceptionInMessage.groupValues[2]
+            return handleCommonException(newName, newMessage, event)
+        }
+        return false
+    }
+
+    private fun handleCommonException(
+        exception: String,
+        message: String,
+        event: GuildMessageReceivedEvent
+    ): Boolean {
+        val exceptionName = exception.substring(exception.lastIndexOf('.') + 1).toLowerCase().trim()
         val tag = when {
             exceptionName == "nullpointerexception" -> "nullpointerexception"
             exceptionName == "unsupportedclassversionerror" -> "class-version"
-            match.groupValues[2] == "Plugin already initialized!" -> "plugin-already-initialized"
+            message == "Plugin already initialized!" -> "plugin-already-initialized"
             exceptionName == "invaliddescriptionexception" -> "plugin.yml"
+            exceptionName == "invalidpluginexception" && "cannot find main class" in message.toLowerCase() -> "main-class-not-found"
             else -> null
         } ?: return false
         val tagContent = transaction { Tag.find { Tags.name eq tag }.firstOrNull() } ?: return false
@@ -194,9 +218,13 @@ class AutoHelp(
     }
 
     companion object {
-        // https://regex101.com/r/vgz86r/8
+        // https://regex101.com/r/vgz86r/9
         private val JVM_EXCEPTION_PATTERN =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.*)(?:\R+^\s*.*)?(?:\R+^\s*at .*)+""".toRegex()
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^\s*at .*)+""".toRegex()
+
+        // https://regex101.com/r/HtaGF8/1
+        private val JVM_EXCEPTION_NAME_PATTERN =
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.*)(?:\R+^\s*.*)?""".toRegex()
 
         // https://regex101.com/r/u0QAR6/2
         private val HASTEBIN_PATTERN =

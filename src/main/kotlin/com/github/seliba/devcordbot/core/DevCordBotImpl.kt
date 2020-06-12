@@ -19,6 +19,7 @@ package com.github.seliba.devcordbot.core
 import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.command.impl.RolePermissionHandler
+import com.github.seliba.devcordbot.commands.`fun`.ImageCommand
 import com.github.seliba.devcordbot.commands.`fun`.SourceCommand
 import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
@@ -27,6 +28,7 @@ import com.github.seliba.devcordbot.commands.moderation.StarboardCommand
 import com.github.seliba.devcordbot.commands.owners.RedeployCommand
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.core.autohelp.AutoHelp
+import com.github.seliba.devcordbot.core.autohelp.ImageRecognizer
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
 import com.github.seliba.devcordbot.event.EventSubscriber
@@ -84,7 +86,7 @@ internal class DevCordBotImpl(
         )
     )
         .setEventManager(AnnotatedEventManager())
-        .setDisabledCacheFlags(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
+        .disableCache(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
         .setMemberCachePolicy(MemberCachePolicy.ALL)
         .setActivity(Activity.playing("Starting ..."))
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
@@ -115,6 +117,7 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
+        logger.info { "Image API ready: ${ImageRecognizer.ready}" }
         RestAction.setDefaultFailure {
             restActionLogger.error(it) { "An error occurred while executing restaction" }
         }
@@ -185,6 +188,7 @@ internal class DevCordBotImpl(
     private fun shutdown() {
         gameAnimator.close()
         dataSource.close()
+        ImageRecognizer.close()
     }
 
     private fun registerCommands(env: Dotenv) {
@@ -200,7 +204,8 @@ internal class DevCordBotImpl(
             RankCommand(),
             RanksCommand(),
             BlacklistCommand(),
-            InfoCommand()
+            InfoCommand(),
+            ImageCommand()
         )
 
         val cseKey = env["CSE_KEY"]

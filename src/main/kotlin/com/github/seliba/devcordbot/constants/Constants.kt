@@ -56,4 +56,9 @@ object Constants {
      */
     val CODE_BLOCK_REGEX: Regex = "```(.*)?(?s)(.*)```".toRegex()
 
+    /**
+     * True GOD of bot.
+     */
+    const val SCHLAUBI: Long = 416902379598774273L
+
 }
