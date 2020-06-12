@@ -34,6 +34,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
+import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -43,6 +44,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 private val levelLimit = dotenv()["AUTOHELP_LEVEL_LIMIT"]?.toInt() ?: 50
+private val logger = KotlinLogging.logger {}
 
 /**
  * AutoHelp.
@@ -173,6 +175,8 @@ class AutoHelp(
             }
         }
 
+        logger.debug {"Trying to analyze $cleanInput"}
+
         return JVM_EXCEPTION_PATTERN.findAll(cleanInput).any {
             handleCommonException(it, event)
         }
@@ -220,9 +224,9 @@ class AutoHelp(
     }
 
     companion object {
-        // https://regex101.com/r/vgz86r/9
+        // https://regex101.com/r/vgz86r/10
         private val JVM_EXCEPTION_PATTERN =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^\s*at .*)+""".toRegex()
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^\s*at .*)+""".toRegex()
 
         // https://regex101.com/r/HtaGF8/1
         private val JVM_EXCEPTION_NAME_PATTERN =
