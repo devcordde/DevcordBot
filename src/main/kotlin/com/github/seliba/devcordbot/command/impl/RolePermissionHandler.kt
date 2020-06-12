@@ -19,6 +19,7 @@ package com.github.seliba.devcordbot.command.impl
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.command.permission.PermissionState
+import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.database.DevCordUser
 import net.dv8tion.jda.api.entities.Member
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -45,6 +46,7 @@ class RolePermissionHandler(
             Permission.MODERATOR -> if (executor.roles.any { it.name.matches(moderatorPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
             Permission.ADMIN -> if (executor.roles.any { it.name.matches(adminPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
             Permission.BOT_OWNER -> PermissionState.DECLINED
+            Permission.SCHLAUBI -> if (executor.idLong == Constants.SCHLAUBI) PermissionState.ACCEPTED else PermissionState.DECLINED
         }
     }
 

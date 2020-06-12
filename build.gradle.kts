@@ -17,7 +17,7 @@
 plugins {
     id("com.github.johnrengelman.shadow") version "5.2.0"
     application
-    kotlin("jvm") version "1.3.70"
+    kotlin("jvm") version "1.3.72"
 }
 
 group = "com.github.seliba"
@@ -56,7 +56,7 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "3.4.2")
 
     // Discord
-    implementation("net.dv8tion", "JDA", "4.1.1_113") {
+    implementation("net.dv8tion", "JDA", "4.1.1_162") {
         exclude(module = "opus-java")
     }
 
@@ -66,6 +66,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
     implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
+    implementation("com.google.cloud", "google-cloud-vision", "1.99.3")
+    implementation("com.google.googlejavaformat", "google-java-format", "1.8")
 
 
     // Testing
