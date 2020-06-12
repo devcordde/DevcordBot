@@ -29,6 +29,7 @@ import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.event.EventSubscriber
 import com.github.seliba.devcordbot.util.HastebinUtil
 import com.github.seliba.devcordbot.util.await
+import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
@@ -40,6 +41,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+
+private val levelLimit = dotenv()["AUTOHELP_LEVEL_LIMIT"]?.let { it.toInt() } ?: 50
 
 /**
  * AutoHelp.
@@ -67,7 +70,7 @@ class AutoHelp(
 
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
-                    event.channel.id in blacklist) && userLevel < 50)
+                    event.channel.id in blacklist) && userLevel < levelLimit)
         ) return
 
         // Asynchronously fetch potential content
