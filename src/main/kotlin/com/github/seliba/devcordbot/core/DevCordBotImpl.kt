@@ -135,7 +135,7 @@ internal class DevCordBotImpl(
     }
 
     /**
-     * Fired when the Discord connection geht's interrupted
+     * Fired when the Discord connection gets interrupted
      */
     @EventSubscriber
     fun whenDisconnected(event: DisconnectEvent) {
