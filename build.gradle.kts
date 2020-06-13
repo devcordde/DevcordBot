@@ -67,6 +67,8 @@ dependencies {
     implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
     implementation("com.google.cloud", "google-cloud-vision", "1.99.3")
+    implementation("com.google.googlejavaformat", "google-java-format", "1.8")
+
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.3.3")

@@ -60,6 +60,7 @@ class AutoHelp(
 
     private val guesser = LanguageGusser(knownLanguages)
     private val fetcher = ContentFetcher(bot.httpClient)
+    private val beautifier = CodeBeautifier(bot.httpClient)
     private val executor = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
 
     /**
@@ -76,24 +77,24 @@ class AutoHelp(
         ) return
 
         // Asynchronously fetch potential content
-        val hastebinMatches = findInput(HASTEBIN_PATTERN, input, ::fetchHastebin)
-        val pastebinMatches = findInput(PASTEBIN_PATTERN, input, ::fetchPastebin)
         val attachments = fetchAttachments(event.message)
+        if (input.isNotBlank()) {
+            val hastebinMatches = findInput(HASTEBIN_PATTERN, input, ::fetchHastebin)
+            val pastebinMatches = findInput(PASTEBIN_PATTERN, input, ::fetchPastebin)
+            // Quit on first match
+            if (analyzeInputs(hastebinMatches, event)) {
+                pastebinMatches.cancel(true)
+                attachments.cancel(true)
+                return
+            }
+            if (analyzeInputs(pastebinMatches, event)) {
+                attachments.cancel(true)
+                return
+            }
 
-        // Quit on first match
-        if (analyzeInputs(hastebinMatches, event)) {
-            pastebinMatches.cancel(true)
-            attachments.cancel(true)
-            return
+            analyzeInput(input, false, event)
         }
-        if (analyzeInputs(pastebinMatches, event)) {
-            attachments.cancel(true)
-            return
-        }
-
-        // Also send too long message
-        if (analyzeInputs(attachments, event, false)) return
-        analyzeInput(input, false, event)
+        analyzeInputs(attachments, event, false)
     }
 
     private suspend fun analyzeInputs(
@@ -165,17 +166,21 @@ class AutoHelp(
         val cleanInput =
             if (!wasPaste && inputBlockMatch != null) inputBlockMatch!!.groupValues[2].trim() else inputString
 
-        if (!wasPaste && guesser.isCode(cleanInput)) {
+        val language = guesser.guessLanguage(cleanInput)
+        if (!wasPaste && language != null) {
+            val code = if (language.language.equals("java", ignoreCase = true)) {
+                beautifier.formatCode(cleanInput).await()
+            } else cleanInput
             if (inputString.lines().size > maxLines &&
                 !Constants.prefix.containsMatchIn(inputString)
             ) {
                 val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
-                val hastebinUrl = HastebinUtil.postErrorToHastebin(cleanInput, bot.httpClient).await()
+                val hastebinUrl = HastebinUtil.postErrorToHastebin(code, bot.httpClient).await()
                 message.editMessage(buildTooLongEmbed(hastebinUrl)).queue()
             }
         }
 
-        logger.debug {"Trying to analyze $cleanInput"}
+        logger.debug { "Trying to analyze $cleanInput" }
 
         return JVM_EXCEPTION_PATTERN.findAll(cleanInput).any {
             handleCommonException(it, event)
