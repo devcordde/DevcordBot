@@ -121,7 +121,7 @@ class AutoHelp(
 
     private suspend fun fetchAttachments(message: Message): CompletableFuture<List<String?>> {
         return GlobalScope.future(executor) {
-            message.attachments.filter { !it.isVideo }.map {
+            message.attachments.filter { !it.isVideo && !it.isImage }.map {
                 fetchAttachment(it)
             }
         }
@@ -129,14 +129,8 @@ class AutoHelp(
 
     private suspend fun fetchAttachment(attachment: Message.Attachment): String {
         val stream = attachment.retrieveInputStream().await()
-        return if (attachment.isImage) {
-            if (ImageRecognizer.ready) {
-                ImageRecognizer.readImageText(stream).replace("%3D", "")
-            } else "" // This should not trigger any auto-help
-        } else {
-            BufferedReader(InputStreamReader(stream)).use { reader ->
-                reader.readText()
-            }
+        return BufferedReader(InputStreamReader(stream)).use { reader ->
+            reader.readText()
         }
     }
 

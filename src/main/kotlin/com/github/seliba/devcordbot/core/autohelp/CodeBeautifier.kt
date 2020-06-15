@@ -22,14 +22,13 @@ import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.CompletableFuture
-import javax.annotation.Nonnull
 
 /**
  * Helper class to format java code.
  */
 class CodeBeautifier(private val httpClient: OkHttpClient) {
 
-    private val API_URL =
+    private val apiUrl =
         "https://tools.tutorialspoint.com/format_javascript.php" // IDK why it's called JS it's literally from https://www.tutorialspoint.com/online_java_formatter.htm
 
     /**
@@ -40,7 +39,7 @@ class CodeBeautifier(private val httpClient: OkHttpClient) {
             .add("code", input)
             .build()
         val request = Request.Builder()
-            .url(API_URL)
+            .url(apiUrl)
             .post(body)
             .build()
         return httpClient.newCall(request).executeAsync()
