@@ -17,7 +17,6 @@
 package com.github.seliba.devcordbot.constants
 
 import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -55,10 +54,5 @@ object Constants {
      * Regex that matches discord code blocks.
      */
     val CODE_BLOCK_REGEX: Regex = "```(.*)?(?s)(.*)```".toRegex()
-
-    /**
-     * True GOD of bot.
-     */
-    const val SCHLAUBI: Long = 416902379598774273L
 
 }

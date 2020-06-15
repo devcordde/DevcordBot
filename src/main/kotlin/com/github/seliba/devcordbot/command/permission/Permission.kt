@@ -38,10 +38,5 @@ enum class Permission {
     /**
      * Commands only executable by bot owners.
      */
-    BOT_OWNER,
-
-    /**
-     * "Some commands should not be exposed to public due to API limits but I need to test them" ~ Schlahibibi 2k20
-     */
-    SCHLAUBI
+    BOT_OWNER
 }

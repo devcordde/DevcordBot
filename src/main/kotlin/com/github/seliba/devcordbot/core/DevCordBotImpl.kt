@@ -19,7 +19,6 @@ package com.github.seliba.devcordbot.core
 import com.github.seliba.devcordbot.command.CommandClient
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.command.impl.RolePermissionHandler
-import com.github.seliba.devcordbot.commands.`fun`.ImageCommand
 import com.github.seliba.devcordbot.commands.`fun`.SourceCommand
 import com.github.seliba.devcordbot.commands.general.*
 import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
@@ -204,8 +203,7 @@ internal class DevCordBotImpl(
             RankCommand(),
             RanksCommand(),
             BlacklistCommand(),
-            InfoCommand(),
-            ImageCommand()
+            InfoCommand()
         )
 
         val cseKey = env["CSE_KEY"]
