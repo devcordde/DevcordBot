@@ -411,7 +411,7 @@ class TagCommand : AbstractCommand() {
     }
 
     private fun checkReservedName(name: String, context: Context): Boolean {
-        if (name in reservedNames) {
+        if (name.split(" ").first() in reservedNames) {
             context.respond(
                 Embeds.error(
                     "Reservierter Name!",
