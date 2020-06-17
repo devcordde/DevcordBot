@@ -30,6 +30,7 @@ import com.github.seliba.devcordbot.core.autohelp.AutoHelp
 import com.github.seliba.devcordbot.database.*
 import com.github.seliba.devcordbot.event.AnnotatedEventManager
 import com.github.seliba.devcordbot.event.EventSubscriber
+import com.github.seliba.devcordbot.event.MessageListener
 import com.github.seliba.devcordbot.listeners.DatabaseUpdater
 import com.github.seliba.devcordbot.listeners.SelfMentionListener
 import com.zaxxer.hikari.HikariDataSource
@@ -91,6 +92,7 @@ internal class DevCordBotImpl(
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
         .setHttpClient(httpClient)
         .addEventListeners(
+            MessageListener(),
             this@DevCordBotImpl,
             SelfMentionListener(),
             DatabaseUpdater(),

@@ -27,27 +27,24 @@ import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.core.DevCordBot
 import com.github.seliba.devcordbot.dsl.sendMessage
-import com.github.seliba.devcordbot.event.EventSubscriber
+import com.github.seliba.devcordbot.event.*
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
 import com.github.seliba.devcordbot.util.asMention
 import com.github.seliba.devcordbot.util.asNickedMention
 import com.github.seliba.devcordbot.util.hasSubCommands
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
-import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
+import net.dv8tion.jda.api.events.Event
+import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
+import javax.annotation.Nonnull
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -68,45 +65,64 @@ class CommandClientImpl(
 
     private val logger = KotlinLogging.logger { }
     private val delimiter = "\\s+".toRegex()
+    private val messageStorage = mutableMapOf<Long, Pair<Long, Long>>()
+    private val responsePool = Executors.newSingleThreadExecutor(
+        DefaultThreadFactory("CommandResponseWatcher")
+    ).asCoroutineDispatcher()
+    private val editThreshold = Duration.of(
+        30,
+        ChronoUnit.SECONDS
+    )
 
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
+
+    internal fun acknowledgeResponse(key: Long, channelId: Long, messageId: Long) {
+        messageStorage[key] = channelId to messageId
+        GlobalScope.launch(responsePool) {
+            delay(editThreshold.toMillis())
+            messageStorage.remove(key)
+        }
+    }
+
+
+    // Delete old message
+    @EventSubscriber
+    fun onMessageDelete(event: GuildMessageDeleteEvent) = deleteOldMessage(event.messageIdLong, event.guild)
 
     /**
      * Listens for new private messages
      */
     @EventSubscriber
-    fun onPrivateMessage(event: PrivateMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message)
+    fun onPrivateMessage(event: DevCordMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message, event)
 
-    private fun dispatchPrivateMessageCommand(message: Message) {
+    private fun dispatchPrivateMessageCommand(message: Message, event: Event) {
         if (!bot.isInitialized) return
 
         val author = message.author
         if (message.isWebhookMessage or author.isBot or author.isFake) return
 
-        return parseCommand(message)
+        return parseCommand(message, event)
     }
 
     /**
      * Listens for message updates.
      */
     @EventSubscriber
-    fun onMessageEdit(event: GuildMessageUpdateEvent) {
-        if (Duration.between(event.message.timeCreated, OffsetDateTime.now()) > Duration.of(
-                30,
-                ChronoUnit.SECONDS
-            )
+    fun onMessageEdit(event: DevCordGuildMessageEditEvent) {
+        if (Duration.between(event.message.timeCreated, OffsetDateTime.now()) > editThreshold
         ) return
-        dispatchGuildCommand(event.message)
+        dispatchGuildCommand(event.message, event)
+        deleteOldMessage(event.messageIdLong, event.guild)
     }
 
     /**
      * Listens for new messages.
      */
     @EventSubscriber
-    fun onMessage(event: GuildMessageReceivedEvent): Unit = dispatchGuildCommand(event.message)
+    fun onMessage(event: DevCordGuildMessageReceivedEvent): Unit = dispatchGuildCommand(event.message, event)
 
-    private fun dispatchGuildCommand(message: Message) {
+    private fun dispatchGuildCommand(message: Message, event: Event) {
         if (!bot.isInitialized) return
 
         if (message.guild.id != bot.guild.id) return
@@ -114,10 +130,10 @@ class CommandClientImpl(
         val author = message.author
         if (message.isWebhookMessage or author.isBot or author.isFake) return
 
-        return parseCommand(message)
+        return parseCommand(message, event)
     }
 
-    private fun parseCommand(message: Message) {
+    private fun parseCommand(message: Message, event: Event) {
         val nonPrefixedInput = stripPrefix(message) ?: return
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
@@ -125,10 +141,15 @@ class CommandClientImpl(
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
         val member =
             if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(message.author.id)
+
+        val user = event.devCordUser
+
         val permissionState = permissionHandler.isCovered(
             command.permission,
-            member
+            member,
+            user
         )
+
 
         when (permissionState) {
             PermissionState.IGNORED -> return
@@ -137,7 +158,7 @@ class CommandClientImpl(
                 if (!command.commandPlace.matches(message)) return handleWrongContext(message.channel)
                 message.channel.sendTyping()
                     .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
-                        val context = Context(bot, command, arguments, message, this)
+                        val context = Context(bot, command, arguments, message, this, user)
                         processCommand(command, context)
                     })
             }
@@ -227,4 +248,13 @@ class CommandClientImpl(
     }
 
     private data class CommandContainer(val command: AbstractCommand, val args: Arguments)
+
+    private fun deleteOldMessage(
+        messageIdLong: Long,
+        guild: @Nonnull Guild
+    ): Boolean {
+        val (channel, message) = messageStorage[messageIdLong] ?: return true
+        guild.getTextChannelById(channel)?.retrieveMessageById(message)?.flatMap(Message::delete)?.queue()
+        return false
+    }
 }
