@@ -20,7 +20,6 @@ import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.constants.Embeds
 import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.util.asMention
-import com.github.seliba.devcordbot.util.asNickedMention
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
@@ -35,9 +34,7 @@ class SelfMentionListener {
      */
     @SubscribeEvent
     fun onMessageReceive(event: GuildMessageReceivedEvent) {
-        if (event.message.contentRaw == event.guild.selfMember.asMention() ||
-            event.message.contentRaw == event.guild.selfMember.asNickedMention()
-        ) {
+        if (event.guild.selfMember.asMention().matchEntire(event.message.contentRaw) != null) {
             sendInfo(event.channel, event.jda.users.size)
         }
     }

@@ -30,7 +30,6 @@ import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.event.EventSubscriber
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
 import com.github.seliba.devcordbot.util.asMention
-import com.github.seliba.devcordbot.util.asNickedMention
 import com.github.seliba.devcordbot.util.hasSubCommands
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
@@ -118,7 +117,11 @@ class CommandClientImpl(
     }
 
     private fun parseCommand(message: Message) {
-        val nonPrefixedInput = stripPrefix(message) ?: return
+        val content = message.contentRaw
+        val prefixLength =
+            resolvePrefix(if (message.isFromType(ChannelType.TEXT)) message.guild else null, content)
+                ?: return
+        val nonPrefixedInput = content.substring(prefixLength)
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
@@ -177,32 +180,13 @@ class CommandClientImpl(
         return findCommand(Arguments(input.trim().split(delimiter), raw = input), commandAssociations)
     }
 
-    private fun stripPrefix(message: Message): String? {
-        val rawInput = message.contentRaw
+    private fun resolvePrefix(guild: Guild?, content: String): Int? {
+        val mention = guild?.selfMember?.asMention()
 
-        when (message.channelType) {
-            ChannelType.TEXT -> {
-                val prefixLength = resolvePrefix(message.guild, rawInput) ?: return null
-                return rawInput.substring(prefixLength).trim()
-            }
-            ChannelType.PRIVATE -> {
-                val prefix = prefix.find(rawInput) ?: return null
-                return rawInput.substring(prefix.range.last + 1).trim()
-            }
-            else -> {
-                return null
-            }
-        }
-    }
-
-    private fun resolvePrefix(guild: Guild, content: String): Int? {
-        val mention = guild.selfMember.asMention()
-        val nickedMention = guild.selfMember.asNickedMention()
-
+        val mentionPrefix = mention?.find(content)
         val prefix = prefix.find(content)
         return when {
-            content.startsWith(mention) -> mention.length
-            content.startsWith(nickedMention) -> nickedMention.length
+            mentionPrefix?.range?.first == 0 -> mentionPrefix.range.last
             prefix != null -> prefix.range.last + 1
             else -> null
         }
