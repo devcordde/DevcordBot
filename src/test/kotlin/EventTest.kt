@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-import com.github.seliba.devcordbot.event.AnnotatedEventManager
-import com.github.seliba.devcordbot.event.EventSubscriber
+import com.github.devcordde.devcordbot.event.AnnotatedEventManager
+import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import kotlinx.coroutines.Dispatchers
