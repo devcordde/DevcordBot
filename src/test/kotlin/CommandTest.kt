@@ -128,6 +128,7 @@ class CommandTest {
         stubbing: KStubbing<AbstractCommand>.() -> Unit
     ) = mock<AbstractCommand> {
         on { permission }.thenReturn(Permission.ANY)
+        on { commandPlace }.thenReturn(CommandPlace.ALL)
         stubbing(this)
     }
 
