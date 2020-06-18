@@ -61,7 +61,7 @@ import com.github.seliba.devcordbot.commands.owners.EvalCommand as OwnerEvalComm
 internal class DevCordBotImpl(
     token: String,
     games: List<GameAnimator.AnimatedGame>,
-    var env: Dotenv,
+    env: Dotenv,
     override val debugMode: Boolean
 ) : DevCordBot {
 
@@ -108,7 +108,8 @@ internal class DevCordBotImpl(
         .build()
     override val gameAnimator = GameAnimator(jda, games)
 
-    override lateinit var guild: Guild
+    private val guildId = env["GUILD_ID"]!!
+    override val guild: Guild get() = jda.getGuildById(guildId)!!
 
     /**
      * Whether the bot received the [ReadyEvent] or not.
@@ -135,9 +136,6 @@ internal class DevCordBotImpl(
         isInitialized = true
         event.jda.presence.setStatus(OnlineStatus.ONLINE)
         gameAnimator.start()
-
-        @Suppress("ReplaceNotNullAssertionWithElvisReturn")
-        guild = event.jda.getGuildById(env["GUILD_ID"]!!)!!
     }
 
     /**
