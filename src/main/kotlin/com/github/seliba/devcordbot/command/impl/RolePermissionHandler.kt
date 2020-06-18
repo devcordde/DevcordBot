@@ -36,8 +36,9 @@ class RolePermissionHandler(
 
     override fun isCovered(
         permission: Permission,
-        executor: Member
+        executor: Member?
     ): PermissionState {
+        executor ?: return PermissionState.DECLINED
         if (executor.id in botOwners) return PermissionState.ACCEPTED
         if (isBlacklisted(executor.idLong)) return PermissionState.IGNORED
         return when (permission) {

@@ -52,7 +52,7 @@ fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()
 /**
  * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
  */
-fun Member.asMention(): String = "<@$id>"
+fun Member.asMention(): Regex = "<@!?$id>\\s?".toRegex()
 
 
 /**

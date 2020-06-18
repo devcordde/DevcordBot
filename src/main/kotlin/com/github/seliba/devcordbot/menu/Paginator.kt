@@ -74,8 +74,8 @@ class Paginator(
             message = context.respond(Embeds.loading(loadingTitle, loadingDescription)).complete()
             context.jda.addEventListener(this)
             CompletableFuture.allOf(*listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).map {
-                    message.addReaction(it).submit()
-                }.toTypedArray())
+                message.addReaction(it).submit()
+            }.toTypedArray())
                 .thenAccept {
                     paginate(currentPage)
                 }

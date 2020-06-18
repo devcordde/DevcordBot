@@ -183,7 +183,7 @@ private class EmptyRestAction<T> : RestAction<T> {
 }
 
 private class TestPermissionHandler : PermissionHandler {
-    override fun isCovered(permission: Permission, executor: Member): PermissionState {
+    override fun isCovered(permission: Permission, executor: Member?): PermissionState {
         return PermissionState.ACCEPTED
     }
 }
