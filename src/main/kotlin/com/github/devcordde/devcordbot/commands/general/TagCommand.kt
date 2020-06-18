@@ -64,8 +64,7 @@ class TagCommand : AbstractCommand() {
             ListCommand(),
             FromCommand(),
             SearchCommand(),
-            RawCommand(),
-            CleanupCommand()
+            RawCommand()
         )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
@@ -312,27 +311,6 @@ class TagCommand : AbstractCommand() {
             val content =
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
             context.respond(content).queue()
-        }
-    }
-
-    private inner class CleanupCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("cleanup")
-        override val displayName = "Cleanup"
-        override val description = "Entfernt die Level von ungültigen Accounts"
-        override val usage = "<tagname>"
-        override val permission = Permission.BOT_OWNER
-        override val commandPlace = CommandPlace.ALL
-
-        override suspend fun execute(context: Context) {
-            DevCordUser.all().forEach {
-                val member =
-                    context.jda.getGuildById(dotenv()["GUILD_ID"] ?: return@forEach)?.retrieveMemberById(it.userID)
-                        ?.complete(true)
-                if (member == null) {
-                    KotlinLogging.logger{}.info { "User gelöscht: ID ${it.userID} Level: $it.level XP: ${it.experience}" }
-                    it.delete()
-                }
-            }
         }
     }
 
