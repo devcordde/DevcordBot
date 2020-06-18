@@ -83,6 +83,8 @@ class CommandClientImpl(
         val author = message.author
         if (message.isWebhookMessage or author.isBot or author.isFake) return
 
+        bot.guild.getMemberById(author.id) ?: return
+
         return parseCommand(message)
     }
 
