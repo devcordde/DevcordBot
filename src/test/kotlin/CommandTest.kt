@@ -16,13 +16,13 @@
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
+import com.github.seliba.devcordbot.command.CommandPlace
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.core.DevCordBot
-import com.github.seliba.devcordbot.util.asMention
 import com.nhaarman.mockitokotlin2.KStubbing
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock
@@ -49,6 +49,7 @@ class CommandTest {
 
         val command = mockCommand {
             on { aliases }.thenReturn(listOf("test"))
+            on { commandPlace }.thenReturn(CommandPlace.ALL)
         }
 
         ensureCommandCall(message, command, arguments)
@@ -56,13 +57,14 @@ class CommandTest {
 
     @Test
     fun `check mentioned normal command`() {
-        val mention = selfMember.asMention()
+        val mention = "<@${selfMember.id}>"
         val message = mockMessage {
             on { contentRaw }.thenReturn("$mention test ${arguments.joinToString(" ")}")
         }
 
         val command = mockCommand {
             on { aliases }.thenReturn(listOf("test"))
+            on { commandPlace }.thenReturn(CommandPlace.ALL)
         }
 
         ensureCommandCall(message, command, arguments)
@@ -76,11 +78,13 @@ class CommandTest {
 
         val subCommand = mock<AbstractSubCommand> {
             on { permission }.thenReturn(Permission.ANY)
+            on { commandPlace }.thenReturn(CommandPlace.ALL)
         }
 
         val command = mockCommand {
             on { aliases }.thenReturn(listOf("test"))
             on { commandAssociations }.thenReturn(mutableMapOf("sub" to subCommand))
+            on { commandPlace }.thenReturn(CommandPlace.ALL)
         }
 
         ensureCommandCall(message, command, arguments.subList(1, arguments.size), subCommand)
@@ -110,21 +114,25 @@ class CommandTest {
 
     private fun mockMessage(
         stubbing: KStubbing<Message>.() -> Unit
-    ) =
-        mock<Message> {
+    ): Message {
+        return mock {
             on { this.author }.thenReturn(author)
+            on { this.channel }.thenReturn(channel)
             on { textChannel }.thenReturn(channel)
             on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
             on { isWebhookMessage }.thenReturn(false)
             on { member }.thenReturn(selfMember)
             on { this.guild }.thenReturn(guild)
+            on { channelType }.thenReturn(ChannelType.TEXT)
             stubbing(this)
         }
+    }
 
     private fun mockCommand(
         stubbing: KStubbing<AbstractCommand>.() -> Unit
     ) = mock<AbstractCommand> {
         on { permission }.thenReturn(Permission.ANY)
+        on { commandPlace }.thenReturn(CommandPlace.ALL)
         stubbing(this)
     }
 
@@ -141,19 +149,27 @@ class CommandTest {
         @BeforeAll
         @JvmStatic
         fun `setup mock objects`() {
+            val botGuild = mock<Guild> {
+                on { id }.thenReturn("")
+            }
             bot = mock {
                 on { isInitialized }.thenReturn(true)
+                on { guild }.thenReturn(
+                    botGuild
+                )
             }
             client = CommandClientImpl(bot, Constants.prefix, TestPermissionHandler(), Dispatchers.Unconfined)
             jda = mock()
             channel = mock {
                 on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
+                on { type }.thenReturn(ChannelType.TEXT)
             }
             selfMember = mock {
                 on { id }.thenReturn("123456789")
             }
             guild = mock {
                 on { this.selfMember }.thenReturn(selfMember)
+                on { id }.thenReturn("")
             }
             author = mock {
                 on { isBot }.thenReturn(false)
