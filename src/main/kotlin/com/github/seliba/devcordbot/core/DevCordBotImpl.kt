@@ -39,6 +39,7 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
@@ -106,6 +107,9 @@ internal class DevCordBotImpl(
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
+
+    private val guildId = env["GUILD_ID"]!!
+    override val guild: Guild get() = jda.getGuildById(guildId)!!
 
     /**
      * Whether the bot received the [ReadyEvent] or not.
@@ -190,9 +194,7 @@ internal class DevCordBotImpl(
     private fun registerCommands(env: Dotenv) {
         commandClient.registerCommands(
             HelpCommand(),
-            MockCommand(),
             TagCommand(),
-            LmgtfyCommand(),
             EvalCommand(),
             OwnerEvalCommand(),
             StarboardCommand(),

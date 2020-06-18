@@ -60,8 +60,8 @@ data class Context(
     /**
      * The [TextChannel] of [message].
      */
-    val channel: TextChannel
-        get() = message.textChannel
+    val channel: MessageChannel
+        get() = message.channel
 
     /**
      * The author of the [message].
@@ -72,14 +72,14 @@ data class Context(
     /**
      * The member of the [author].
      */
-    val member: Member
-        get() = message.member!! //CommandClient ignores webhook messages, so this cannot be null
+    val member: Member?
+        get() = if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(author.id)
 
     /**
      * The guild of the [channel].
      */
     val guild: Guild
-        get() = message.guild
+        get() = if (message.channelType == ChannelType.TEXT) message.guild else bot.guild
 
     /**
      * The [self member][Member] of the bot.

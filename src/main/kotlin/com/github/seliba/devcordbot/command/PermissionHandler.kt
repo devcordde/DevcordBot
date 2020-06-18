@@ -30,6 +30,6 @@ interface PermissionHandler {
      */
     fun isCovered(
         permission: Permission,
-        executor: Member
+        executor: Member?
     ): PermissionState
 }
