@@ -19,6 +19,7 @@ package com.github.seliba.devcordbot.commands.general
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
+import com.github.seliba.devcordbot.command.CommandPlace
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
@@ -39,6 +40,7 @@ class RankCommand : AbstractCommand() {
     override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     init {
         registerCommands(TopCommand())

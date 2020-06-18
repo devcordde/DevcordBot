@@ -30,18 +30,19 @@ import com.github.seliba.devcordbot.dsl.sendMessage
 import com.github.seliba.devcordbot.event.EventSubscriber
 import com.github.seliba.devcordbot.util.DefaultThreadFactory
 import com.github.seliba.devcordbot.util.asMention
-import com.github.seliba.devcordbot.util.asNickedMention
 import com.github.seliba.devcordbot.util.hasSubCommands
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.TextChannel
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -71,6 +72,23 @@ class CommandClientImpl(
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
 
     /**
+     * Listens for new private messages
+     */
+    @EventSubscriber
+    fun onPrivateMessage(event: PrivateMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message)
+
+    private fun dispatchPrivateMessageCommand(message: Message) {
+        if (!bot.isInitialized) return
+
+        val author = message.author
+        if (message.isWebhookMessage or author.isBot or author.isFake) return
+
+        bot.guild.getMemberById(author.id) ?: return
+
+        return parseCommand(message)
+    }
+
+    /**
      * Listens for message updates.
      */
     @EventSubscriber
@@ -80,43 +98,49 @@ class CommandClientImpl(
                 ChronoUnit.SECONDS
             )
         ) return
-        dispatchCommand(event.message)
+        dispatchGuildCommand(event.message)
     }
 
     /**
      * Listens for new messages.
      */
     @EventSubscriber
-    fun onMessage(event: GuildMessageReceivedEvent): Unit = dispatchCommand(event.message)
+    fun onMessage(event: GuildMessageReceivedEvent): Unit = dispatchGuildCommand(event.message)
 
-    private fun dispatchCommand(message: Message) {
+    private fun dispatchGuildCommand(message: Message) {
         if (!bot.isInitialized) return
-        val author = message.author
 
+        if (message.guild.id != bot.guild.id) return
+
+        val author = message.author
         if (message.isWebhookMessage or author.isBot or author.isFake) return
 
         return parseCommand(message)
     }
 
     private fun parseCommand(message: Message) {
-        val rawInput = message.contentRaw
-        val prefix = resolvePrefix(message.guild, rawInput) ?: return
-
-        val nonPrefixedInput = rawInput.substring(prefix).trim()
+        val content = message.contentRaw
+        val prefixLength =
+            resolvePrefix(if (message.isFromType(ChannelType.TEXT)) message.guild else null, content)
+                ?: return
+        val nonPrefixedInput = content.substring(prefixLength)
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
+        val member =
+            if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(message.author.id)
         val permissionState = permissionHandler.isCovered(
             command.permission,
-            message.member!!
+            member
         )
 
         when (permissionState) {
             PermissionState.IGNORED -> return
-            PermissionState.DECLINED -> handleNoPermission(command.permission, message.textChannel)
+            PermissionState.DECLINED -> return handleNoPermission(command.permission, message.channel)
             PermissionState.ACCEPTED -> {
-                message.textChannel.sendTyping()
+                if (!command.commandPlace.matches(message)) return handleWrongContext(message.channel)
+                message.channel.sendTyping()
                     .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
                         val context = Context(bot, command, arguments, message, this)
                         processCommand(command, context)
@@ -158,20 +182,28 @@ class CommandClientImpl(
         return findCommand(Arguments(input.trim().split(delimiter), raw = input), commandAssociations)
     }
 
-    private fun resolvePrefix(guild: Guild, content: String): Int? {
-        val mention = guild.selfMember.asMention()
-        val nickedMention = guild.selfMember.asNickedMention()
+    private fun resolvePrefix(guild: Guild?, content: String): Int? {
+        val mention = guild?.selfMember?.asMention()
 
+        val mentionPrefix = mention?.find(content)
         val prefix = prefix.find(content)
         return when {
-            content.startsWith(mention) -> mention.length
-            content.startsWith(nickedMention) -> nickedMention.length
+            mentionPrefix?.range?.first == 0 -> mentionPrefix.range.last
             prefix != null -> prefix.range.last + 1
             else -> null
         }
     }
 
-    private fun handleNoPermission(permission: Permission, channel: TextChannel) {
+    private fun handleWrongContext(channel: MessageChannel) {
+        channel.sendMessage(
+            Embeds.error(
+                "Falscher Context!",
+                "Der Command ist in diesem Channel nicht ausführbar."
+            )
+        ).queue()
+    }
+
+    private fun handleNoPermission(permission: Permission, channel: MessageChannel) {
         channel.sendMessage(
             Embeds.error(
                 "Keine Berechtigung!",

@@ -16,21 +16,37 @@
 
 package com.github.seliba.devcordbot.command
 
-import com.github.seliba.devcordbot.command.permission.Permission
+import net.dv8tion.jda.api.entities.ChannelType
+import net.dv8tion.jda.api.entities.Message
 
 /**
- * Skeleton of a sub command.
- * @property parent the parent of the command
- * @property callback an [Exception] that is supposed to highlight class defention line
- * @see AbstractCommand
+ * CommandPlace defines the places where the command may be executed.
  */
-@Suppress("MemberVisibilityCanBePrivate")
-abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
-    override val callback: Exception = Exception()
-    override val category: CommandCategory
-        get() = parent.category
-    override val permission: Permission
-        get() = parent.permission
-    override val commandPlace: CommandPlace
-        get() = parent.commandPlace
+enum class CommandPlace {
+    /**
+     * Private Messages
+     */
+    PM,
+
+    /**
+     * Guild Messages
+     */
+    GM,
+
+    /**
+     * Guild and Private Messages
+     */
+    ALL;
+
+
+    /**
+     * Check if the message matches the CommandPlace.
+     */
+    fun matches(message: Message): Boolean {
+        return when (this) {
+            ALL -> true
+            PM -> message.channelType == ChannelType.PRIVATE
+            GM -> message.channelType == ChannelType.TEXT
+        }
+    }
 }
