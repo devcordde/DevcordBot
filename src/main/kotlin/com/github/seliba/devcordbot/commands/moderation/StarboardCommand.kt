@@ -19,6 +19,7 @@ package com.github.seliba.devcordbot.commands.moderation
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
 import com.github.seliba.devcordbot.command.CommandCategory
+import com.github.seliba.devcordbot.command.CommandPlace
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
@@ -41,6 +42,7 @@ class StarboardCommand : AbstractCommand() {
     override val usage: String = ""
     override val permission: Permission = Permission.MODERATOR
     override val category: CommandCategory = CommandCategory.MODERATION
+    override val commandPlace: CommandPlace = CommandPlace.GM
 
     init {
         registerCommands(

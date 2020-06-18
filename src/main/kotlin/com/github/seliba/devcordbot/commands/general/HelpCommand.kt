@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.commands.general
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
+import com.github.seliba.devcordbot.command.CommandPlace
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.command.permission.PermissionState
@@ -33,6 +34,7 @@ class HelpCommand : AbstractCommand() {
     override val usage: String = "[command]"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
         val commandName = context.args.optionalArgument(0)
@@ -59,6 +61,15 @@ class HelpCommand : AbstractCommand() {
             ).queue()
         }
 
+        if (!command.commandPlace.matches(context.message)) {
+            return context.respond(
+                Embeds.error(
+                    "Falscher Context!",
+                    "Der Command ist in diesem Channel nicht ausführbar."
+                )
+            ).queue()
+        }
+
         context.respond(Embeds.command(command)).queue()
     }
 
@@ -73,7 +84,7 @@ class HelpCommand : AbstractCommand() {
                     context.commandClient.permissionHandler.isCovered(
                         it.permission,
                         context.member
-                    ) == PermissionState.ACCEPTED
+                    ) == PermissionState.ACCEPTED && it.commandPlace.matches(context.message)
                 }
                 CommandCategory.values().forEach { category ->
                     val categoryCommands = commands.filter { it.category == category }.map { it.name }

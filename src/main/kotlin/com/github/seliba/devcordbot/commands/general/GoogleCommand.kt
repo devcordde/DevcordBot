@@ -18,6 +18,7 @@ package com.github.seliba.devcordbot.commands.general
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.CommandCategory
+import com.github.seliba.devcordbot.command.CommandPlace
 import com.github.seliba.devcordbot.command.context.Context
 import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.constants.Embeds
@@ -43,6 +44,7 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
     override val usage: String = "<query>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.GM
 
     override suspend fun execute(context: Context) {
         if (apiKey.isEmpty() || engineId.isEmpty()) {
