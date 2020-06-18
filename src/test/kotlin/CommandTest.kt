@@ -16,6 +16,7 @@
 
 import com.github.seliba.devcordbot.command.AbstractCommand
 import com.github.seliba.devcordbot.command.AbstractSubCommand
+import com.github.seliba.devcordbot.command.CommandPlace
 import com.github.seliba.devcordbot.command.PermissionHandler
 import com.github.seliba.devcordbot.command.impl.CommandClientImpl
 import com.github.seliba.devcordbot.command.permission.Permission
@@ -45,10 +46,12 @@ class CommandTest {
     fun `check prefixed normal command`() {
         val message = mockMessage {
             on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
+            on { channel }.thenReturn(mock {})
         }
 
         val command = mockCommand {
             on { aliases }.thenReturn(listOf("test"))
+            on { commandPlace }.thenReturn(CommandPlace.ALL)
         }
 
         ensureCommandCall(message, command, arguments)
@@ -141,8 +144,14 @@ class CommandTest {
         @BeforeAll
         @JvmStatic
         fun `setup mock objects`() {
+            val botGuild = mock<Guild> {
+                on { id }.thenReturn("")
+            }
             bot = mock {
                 on { isInitialized }.thenReturn(true)
+                on { guild }.thenReturn(
+                    botGuild
+                )
             }
             client = CommandClientImpl(bot, Constants.prefix, TestPermissionHandler(), Dispatchers.Unconfined)
             jda = mock()
@@ -154,6 +163,7 @@ class CommandTest {
             }
             guild = mock {
                 on { this.selfMember }.thenReturn(selfMember)
+                on { id }.thenReturn("")
             }
             author = mock {
                 on { isBot }.thenReturn(false)
