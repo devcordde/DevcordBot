@@ -23,7 +23,6 @@ import com.github.seliba.devcordbot.command.permission.Permission
 import com.github.seliba.devcordbot.command.permission.PermissionState
 import com.github.seliba.devcordbot.constants.Constants
 import com.github.seliba.devcordbot.core.DevCordBot
-import com.github.seliba.devcordbot.util.asMention
 import com.nhaarman.mockitokotlin2.KStubbing
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock
@@ -46,7 +45,6 @@ class CommandTest {
     fun `check prefixed normal command`() {
         val message = mockMessage {
             on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
-            on { channel }.thenReturn(mock {})
         }
 
         val command = mockCommand {
@@ -59,13 +57,14 @@ class CommandTest {
 
     @Test
     fun `check mentioned normal command`() {
-        val mention = selfMember.asMention()
+        val mention = "<@${selfMember.id}>"
         val message = mockMessage {
             on { contentRaw }.thenReturn("$mention test ${arguments.joinToString(" ")}")
         }
 
         val command = mockCommand {
             on { aliases }.thenReturn(listOf("test"))
+            on { commandPlace }.thenReturn(CommandPlace.ALL)
         }
 
         ensureCommandCall(message, command, arguments)
@@ -79,11 +78,13 @@ class CommandTest {
 
         val subCommand = mock<AbstractSubCommand> {
             on { permission }.thenReturn(Permission.ANY)
+            on { commandPlace }.thenReturn(CommandPlace.ALL)
         }
 
         val command = mockCommand {
             on { aliases }.thenReturn(listOf("test"))
             on { commandAssociations }.thenReturn(mutableMapOf("sub" to subCommand))
+            on { commandPlace }.thenReturn(CommandPlace.ALL)
         }
 
         ensureCommandCall(message, command, arguments.subList(1, arguments.size), subCommand)
@@ -113,16 +114,19 @@ class CommandTest {
 
     private fun mockMessage(
         stubbing: KStubbing<Message>.() -> Unit
-    ) =
-        mock<Message> {
+    ): Message {
+        return mock {
             on { this.author }.thenReturn(author)
+            on { this.channel }.thenReturn(channel)
             on { textChannel }.thenReturn(channel)
             on { contentRaw }.thenReturn("!test ${arguments.joinToString(" ")}")
             on { isWebhookMessage }.thenReturn(false)
             on { member }.thenReturn(selfMember)
             on { this.guild }.thenReturn(guild)
+            on { channelType }.thenReturn(ChannelType.TEXT)
             stubbing(this)
         }
+    }
 
     private fun mockCommand(
         stubbing: KStubbing<AbstractCommand>.() -> Unit
@@ -158,6 +162,7 @@ class CommandTest {
             jda = mock()
             channel = mock {
                 on { sendTyping() }.thenReturn(EmptyRestAction<Void>())
+                on { type }.thenReturn(ChannelType.TEXT)
             }
             selfMember = mock {
                 on { id }.thenReturn("123456789")
