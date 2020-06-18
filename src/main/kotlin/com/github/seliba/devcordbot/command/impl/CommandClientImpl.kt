@@ -121,7 +121,7 @@ class CommandClientImpl(
     private fun parseCommand(message: Message) {
         val content = message.contentRaw
         val prefixLength =
-            resolvePrefix(if (message.isFromType(ChannelType.TEXT)) message.guild else null, content)
+            resolvePrefix(if (message.channelType == ChannelType.TEXT) message.guild else null, content)
                 ?: return
         val nonPrefixedInput = content.substring(prefixLength)
 
