@@ -25,21 +25,17 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Colors
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.core.DevCordBot
-import com.github.devcordde.devcordbot.core.DevCordBotImpl
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.menu.Paginator
-import io.github.cdimascio.dotenv.Dotenv
-import io.github.cdimascio.dotenv.dotenv
-import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.Logger
 
 /**
  * Tag command.
