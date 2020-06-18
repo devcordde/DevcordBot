@@ -25,17 +25,21 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Colors
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.core.DevCordBotImpl
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.menu.Paginator
+import io.github.cdimascio.dotenv.Dotenv
+import io.github.cdimascio.dotenv.dotenv
+import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.Logger
 
 /**
  * Tag command.
@@ -60,7 +64,8 @@ class TagCommand : AbstractCommand() {
             ListCommand(),
             FromCommand(),
             SearchCommand(),
-            RawCommand()
+            RawCommand(),
+            CleanupCommand()
         )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
@@ -307,6 +312,27 @@ class TagCommand : AbstractCommand() {
             val content =
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
             context.respond(content).queue()
+        }
+    }
+
+    private inner class CleanupCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("cleanup")
+        override val displayName = "Cleanup"
+        override val description = "Entfernt die Level von ungültigen Accounts"
+        override val usage = "<tagname>"
+        override val permission = Permission.BOT_OWNER
+        override val commandPlace = CommandPlace.ALL
+
+        override suspend fun execute(context: Context) {
+            DevCordUser.all().forEach {
+                val member =
+                    context.jda.getGuildById(dotenv()["GUILD_ID"] ?: return@forEach)?.retrieveMemberById(it.userID)
+                        ?.complete(true)
+                if (member == null) {
+                    KotlinLogging.logger{}.info { "User gelöscht: ID ${it.userID} Level: $it.level XP: ${it.experience}" }
+                    it.delete()
+                }
+            }
         }
     }
 
