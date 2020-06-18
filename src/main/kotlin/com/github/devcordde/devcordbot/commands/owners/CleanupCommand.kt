@@ -25,6 +25,8 @@ import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.database.Tag
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.User
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class CleanupCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("cleanup")
@@ -40,23 +42,27 @@ class CleanupCommand : AbstractCommand() {
     override suspend fun execute(context: Context) {
         val guild = context.bot.guild
         cleanupRanks(guild)
-        cleanupTags(guild)
+        cleanupTags(guild, context.bot.jda.selfUser)
     }
 
     private fun cleanupRanks(guild: Guild) {
-        DevCordUser.all().forEach {
-            if (!isMemberOfGuild(guild, it.userID)) {
-                logger.info { "User gelöscht: ID ${it.userID}, Level: ${it.level}, XP: ${it.experience}" }
-                it.delete()
+        transaction {
+            DevCordUser.all().forEach {
+                if (!isMemberOfGuild(guild, it.userID)) {
+                    logger.info { "User gelöscht: ID ${it.userID}, Level: ${it.level}, XP: ${it.experience}" }
+                    it.delete()
+                }
             }
         }
     }
 
-    private fun cleanupTags(guild: Guild) {
-        Tag.all().forEach {
-            if (!isMemberOfGuild(guild, it.author)) {
-                logger.info { "Tag gelöscht: Author ${it.author}, Name: ${it.name}, Inhalt: ${it.content}" }
-                it.delete()
+    private fun cleanupTags(guild: Guild, selfUser: User) {
+        transaction {
+            Tag.all().forEach {
+                if (!isMemberOfGuild(guild, it.author)) {
+                    logger.info { "Autor geändert: Alter Author: ${it.author}, Name: ${it.name}" }
+                    it.author = selfUser.idLong
+                }
             }
         }
     }
