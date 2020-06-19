@@ -20,7 +20,7 @@ plugins {
     kotlin("jvm") version "1.3.70"
 }
 
-group = "com.github.seliba"
+group = "com.github.devcordde"
 version = "2.0-SNAPSHOT"
 
 repositories {
@@ -77,7 +77,7 @@ dependencies {
 }
 
 application {
-    mainClassName = "com.github.seliba.devcordbot.LauncherKt"
+    mainClassName = "com.github.devcordde.devcordbot.LauncherKt"
 }
 
 tasks {

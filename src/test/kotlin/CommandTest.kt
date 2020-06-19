@@ -14,17 +14,17 @@
  *    limitations under the License.
  */
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.AbstractSubCommand
-import com.github.seliba.devcordbot.command.PermissionHandler
-import com.github.seliba.devcordbot.command.impl.CommandClientImpl
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.command.permission.PermissionState
-import com.github.seliba.devcordbot.constants.Constants
-import com.github.seliba.devcordbot.core.DevCordBot
-import com.github.seliba.devcordbot.database.DevCordUser
-import com.github.seliba.devcordbot.event.DevCordGuildMessageReceivedEvent
-import com.github.seliba.devcordbot.util.asMention
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.command.PermissionHandler
+import com.github.devcordde.devcordbot.command.impl.CommandClientImpl
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.permission.PermissionState
+import com.github.devcordde.devcordbot.constants.Constants
+import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
+import com.github.devcordde.devcordbot.util.asMention
 import com.nhaarman.mockitokotlin2.KStubbing
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock
