@@ -3,13 +3,18 @@
 ## setup dev environment
 - copy .env.example to .env
 - enter at minimum DISCORD_TOKEN and GUILD_ID (and all you want to test)
-- start the dev database `> docker-compose up -d -f docker-compose.develop.yml`
+- change the POSTGRES_PASSWORD in the docker-compose.develop.yml to your new database password
+- start the dev database `> docker-compose -f docker-compose.develop.yml up -d`
 - enter the database information
   - DATABASE_HOST="localhost"
   - DATABASE="postgres"
   - DATABASE_USERNAME="postgres"
   - DATABASE_PASSWORD=""
-  
+- enter `docker exec -it test-db bash` to access the docker image's bash shell
+- switch the user to postgres with `su postgres`
+- enter `psql` to access the postgres database and run `CREATE EXTENSION pg_trgm;` to install the required postgres extension pg_trgm
+- exit the image's bash shell
+- the bot is now ready to start
 
 ## setup productive environment
 - copy .env.example to .env
