@@ -29,6 +29,9 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.User
 import org.jetbrains.exposed.sql.transactions.transaction
 
+/**
+ * Cleanup Command
+ */
 class CleanupCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("cleanup")
     override val displayName: String = "Cleanup"
@@ -45,13 +48,15 @@ class CleanupCommand : AbstractCommand() {
         val cleanedUsers = cleanupRanks(guild)
         val cleanedTags = cleanupTags(guild, context.bot.jda.selfUser)
 
-        Embeds.info(
-            "Erfolgreich ausgeführt!",
-            """
+        return context.respond(
+            Embeds.info(
+                "Erfolgreich ausgeführt!",
+                """
                 Entfernte User: $cleanedUsers
                 Veränderte Tags: $cleanedTags
                 """
-        )
+            )
+        ).queue()
     }
 
     private fun cleanupRanks(guild: Guild): Int {
