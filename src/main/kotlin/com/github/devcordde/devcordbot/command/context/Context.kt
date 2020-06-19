@@ -102,26 +102,26 @@ data class Context(
      * Sends [content] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(content: String): RestAction<Message> = notifyCommndHanler(channel.sendMessage(content))
+    fun respond(content: String): RestAction<Message> = notifyCommndHandler(channel.sendMessage(content))
 
     /**
      * Sends [embed] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(embed: MessageEmbed): RestAction<Message> = notifyCommndHanler(channel.sendMessage(embed))
+    fun respond(embed: MessageEmbed): RestAction<Message> = notifyCommndHandler(channel.sendMessage(embed))
 
     /**
      * Sends [embedBuilder] into [channel].
      * @return a [MessageAction] that sends the message
      */
     fun respond(embedBuilder: EmbedBuilder): RestAction<Message> =
-        notifyCommndHanler(channel.sendMessage(embedBuilder.build()))
+        notifyCommndHandler(channel.sendMessage(embedBuilder.build()))
 
     /**
      * Sends [embed] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(embed: EmbedConvention): RestAction<Message> = notifyCommndHanler(channel.sendMessage(embed))
+    fun respond(embed: EmbedConvention): RestAction<Message> = notifyCommndHandler(channel.sendMessage(embed))
 
     /**
      * Sends a help embed for [command].
@@ -145,7 +145,7 @@ data class Context(
     fun hasPermission(permission: Permission): Boolean =
         commandClient.permissionHandler.isCovered(permission, member, devCordUser) == PermissionState.ACCEPTED
 
-    private fun notifyCommndHanler(action: MessageAction) = action.map {
+    private fun notifyCommndHandler(action: MessageAction) = action.map {
         (commandClient as CommandClientImpl).acknowledgeResponse(message.idLong, it.channel.idLong, it.idLong); it
     }
 
