@@ -24,6 +24,7 @@ import com.github.devcordde.devcordbot.commands.general.*
 import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
 import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
 import com.github.devcordde.devcordbot.commands.moderation.StarboardCommand
+import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.core.autohelp.AutoHelp
@@ -202,7 +203,8 @@ internal class DevCordBotImpl(
             RankCommand(),
             RanksCommand(),
             BlacklistCommand(),
-            InfoCommand()
+            InfoCommand(),
+            CleanupCommand()
         )
 
         val cseKey = env["CSE_KEY"]
