@@ -48,6 +48,4 @@ class RolePermissionHandler(
             Permission.BOT_OWNER -> PermissionState.DECLINED
         }
     }
-
-
 }

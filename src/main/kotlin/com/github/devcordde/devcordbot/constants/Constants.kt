@@ -17,7 +17,6 @@
 package com.github.devcordde.devcordbot.constants
 
 import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle

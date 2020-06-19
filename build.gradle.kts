@@ -20,7 +20,7 @@ plugins {
     kotlin("jvm") version "1.3.70"
 }
 
-group = "com.github.devcordde"
+group = "com.github.devcord.devcordbot"
 version = "2.0-SNAPSHOT"
 
 repositories {

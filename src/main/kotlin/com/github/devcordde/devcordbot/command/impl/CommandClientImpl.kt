@@ -28,11 +28,16 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.event.*
-import com.github.devcordde.devcordbot.util.DefaultThreadFactory
 import com.github.devcordde.devcordbot.util.asMention
 import com.github.devcordde.devcordbot.util.asNickedMention
 import com.github.devcordde.devcordbot.util.hasSubCommands
 import kotlinx.coroutines.*
+import com.github.devcordde.devcordbot.event.EventSubscriber
+import com.github.devcordde.devcordbot.util.DefaultThreadFactory
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.entities.Guild
@@ -40,6 +45,9 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -98,11 +106,19 @@ class CommandClientImpl(
     @EventSubscriber
     fun onPrivateMessage(event: DevCordMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message, event)
 
+    /**
+     * Listens for new private messages
+     */
+    @EventSubscriber
+    fun onPrivateMessage(event: PrivateMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message, event)
+
     private fun dispatchPrivateMessageCommand(message: Message, event: Event) {
         if (!bot.isInitialized) return
 
         val author = message.author
         if (message.isWebhookMessage or author.isBot or author.isFake) return
+
+        bot.guild.getMemberById(author.id) ?: return
 
         return parseCommand(message, event)
     }
@@ -136,7 +152,11 @@ class CommandClientImpl(
     }
 
     private fun parseCommand(message: Message, event: Event) {
-        val nonPrefixedInput = stripPrefix(message) ?: return
+        val content = message.contentRaw
+        val prefixLength =
+            resolvePrefix(if (message.channelType == ChannelType.TEXT) message.guild else null, content)
+                ?: return
+        val nonPrefixedInput = content.substring(prefixLength)
 
         val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
 
@@ -149,8 +169,7 @@ class CommandClientImpl(
         val permissionState = permissionHandler.isCovered(
             command.permission,
             member,
-            user
-        )
+            user)
 
 
         when (permissionState) {
@@ -218,14 +237,13 @@ class CommandClientImpl(
         }
     }
 
-    private fun resolvePrefix(guild: Guild, content: String): Int? {
-        val mention = guild.selfMember.asMention()
-        val nickedMention = guild.selfMember.asNickedMention()
+    private fun resolvePrefix(guild: Guild?, content: String): Int? {
+        val mention = guild?.selfMember?.asMention()
 
+        val mentionPrefix = mention?.find(content)
         val prefix = prefix.find(content)
         return when {
-            content.startsWith(mention) -> mention.length
-            content.startsWith(nickedMention) -> nickedMention.length
+            mentionPrefix?.range?.first == 0 -> mentionPrefix.range.last
             prefix != null -> prefix.range.last + 1
             else -> null
         }
