@@ -59,6 +59,7 @@ class CleanupCommand : AbstractCommand() {
                 }
             }
         }
+        return clearedEntries
     }
 
     private fun cleanupTags(guild: Guild, selfUser: User): Int {
@@ -72,9 +73,10 @@ class CleanupCommand : AbstractCommand() {
                 }
             }
         }
+        return movedEntries
     }
 
     private fun isMemberOfGuild(guild: Guild, userID: Long): Boolean {
-        return guild.retrieveMemberById(userID).complete(true) != null
+        return guild.getMemberById(userID) != null
     }
 }
