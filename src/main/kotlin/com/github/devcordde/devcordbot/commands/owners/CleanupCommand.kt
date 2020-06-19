@@ -21,6 +21,7 @@ import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.database.Tag
 import mu.KotlinLogging
@@ -41,27 +42,33 @@ class CleanupCommand : AbstractCommand() {
 
     override suspend fun execute(context: Context) {
         val guild = context.bot.guild
-        cleanupRanks(guild)
-        cleanupTags(guild, context.bot.jda.selfUser)
+        val cleanedUsers = cleanupRanks(guild)
+        val cleanedTags = cleanupTags(guild, context.bot.jda.selfUser)
+
+        Embeds.info("Erfolgreich ausgeführt!", "Entfernte User: $cleanedUsers\nVeränderte Tags: $cleanedTags")
     }
 
-    private fun cleanupRanks(guild: Guild) {
+    private fun cleanupRanks(guild: Guild): Int {
+        var clearedEntries = 0
         transaction {
             DevCordUser.all().forEach {
                 if (!isMemberOfGuild(guild, it.userID)) {
                     logger.info { "User gelöscht: ID ${it.userID}, Level: ${it.level}, XP: ${it.experience}" }
                     it.delete()
+                    clearedEntries++
                 }
             }
         }
     }
 
-    private fun cleanupTags(guild: Guild, selfUser: User) {
+    private fun cleanupTags(guild: Guild, selfUser: User): Int {
+        var movedEntries = 0
         transaction {
             Tag.all().forEach {
                 if (!isMemberOfGuild(guild, it.author)) {
                     logger.info { "Autor geändert: Alter Author: ${it.author}, Name: ${it.name}" }
                     it.author = selfUser.idLong
+                    movedEntries++
                 }
             }
         }
