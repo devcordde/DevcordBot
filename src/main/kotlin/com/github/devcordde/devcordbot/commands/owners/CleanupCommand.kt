@@ -45,7 +45,13 @@ class CleanupCommand : AbstractCommand() {
         val cleanedUsers = cleanupRanks(guild)
         val cleanedTags = cleanupTags(guild, context.bot.jda.selfUser)
 
-        Embeds.info("Erfolgreich ausgeführt!", "Entfernte User: $cleanedUsers\nVeränderte Tags: $cleanedTags")
+        Embeds.info(
+            "Erfolgreich ausgeführt!",
+            """
+                Entfernte User: $cleanedUsers
+                Veränderte Tags: $cleanedTags
+                """
+        )
     }
 
     private fun cleanupRanks(guild: Guild): Int {
