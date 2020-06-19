@@ -184,7 +184,7 @@ class CommandClientImpl(
             command: AbstractCommand? = null
         ): CommandContainer? {
             // Get invoke
-            val invoke = arguments.first()
+            val invoke = arguments.first().toLowerCase()
             // Search command associated with invoke or return previously found command
             val foundCommand = associations[invoke] ?: return command?.let { CommandContainer(it, arguments) }
             // Cut off invoke
