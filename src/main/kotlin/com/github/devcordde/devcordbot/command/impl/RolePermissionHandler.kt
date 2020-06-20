@@ -21,7 +21,6 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.database.DevCordUser
 import net.dv8tion.jda.api.entities.Member
-import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Implementation of [PermissionHandler] that checks the users roles.
