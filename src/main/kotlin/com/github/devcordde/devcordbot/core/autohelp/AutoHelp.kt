@@ -20,7 +20,7 @@ import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.core.DevCordBot
-import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Tag
 import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
@@ -44,7 +44,7 @@ import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
-private val levelLimit = dotenv()["AUTOHELP_LEVEL_LIMIT"]?.toInt() ?: 50
+private val levelLimit = dotenv()["AUTO_HELP_LEVEL_LIMIT"]?.toInt() ?: 75
 private val logger = KotlinLogging.logger {}
 
 /**
@@ -70,7 +70,7 @@ class AutoHelp(
     @EventSubscriber
     suspend fun onMessage(event: DevCordGuildMessageReceivedEvent) {
         val input = event.message.contentRaw
-        val userLevel by lazy { transaction { DevCordUser.findById(event.author.idLong)?.level ?: 1000 } }
+        val userLevel by lazy { transaction { DatabaseDevCordUser.findOrCreateById(event.author.idLong).level } }
 
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
