@@ -16,13 +16,19 @@
 
 package com.github.devcordde.devcordbot.listeners
 
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.Users
+import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.util.XPUtil
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import java.time.Duration
 import java.time.Instant
 
@@ -35,7 +41,8 @@ class DatabaseUpdater {
      * Adds a user to the database when a user joins the guild.
      */
     @SubscribeEvent
-    fun onMemberJoin(event: GuildMemberJoinEvent): DevCordUser? = createUserIfNeeded(event.member.idLong)
+    fun onMemberJoin(event: GuildMemberJoinEvent): DevCordUser? =
+        transaction { DatabaseDevCordUser.findOrCreateById(event.user.idLong) }
 
     /**
      * Removes a user from the database when the user leaves the guild.
@@ -43,26 +50,16 @@ class DatabaseUpdater {
     @SubscribeEvent
     fun onMemberLeave(event: GuildMemberRemoveEvent): Unit = deleteUser(event.member?.idLong)
 
-    private fun createUserIfNeeded(id: Long?): DevCordUser? {
-        if (id == null) {
-            return null
-        }
-
-        return transaction {
-            DevCordUser.findById(id) ?: DevCordUser.new(id) {}
-        }
-    }
-
     /**
      * Adds XP to a user
      */
     @SubscribeEvent
-    fun onMessageSent(event: GuildMessageReceivedEvent) {
+    fun onMessageSent(event: DevCordGuildMessageReceivedEvent) {
         if (event.author.isBot) {
             return
         }
 
-        val user = createUserIfNeeded(event.author.idLong) ?: return
+        val user = event.devCordUser
 
         if (user.blacklisted) {
             return
@@ -72,20 +69,29 @@ class DatabaseUpdater {
             return
         }
         val previousLevel = user.level
-        val level = transaction {
-            user.experience += 5
-            val xpToLevelup = XPUtil.getXpToLevelup(user.level)
-            user.lastUpgrade = Instant.now()
-            if (user.experience >= xpToLevelup) {
-                user.experience -= xpToLevelup
-                user.level++
+        var newLevel = previousLevel
+        transaction {
+            // For some bizarre reasons using the DAO update performs a useless SELECT query before the update query
+            Users.update(
+                {
+                    Users.id eq event.author.idLong
+                }
+            ) {
+                @Suppress("UNCHECKED_CAST") // Users.update will give you UpdateStatement<User> :smart:
+                (it as UpdateBuilder<Users>)[lastUpgrade] = Instant.now()
+                val xpToLevelup = XPUtil.getXpToLevelup(user.level)
+                if (user.experience >= xpToLevelup) {
+                    it[experience] = user.experience + 5 - xpToLevelup
+                    it[level] = user.level + 1
+                    newLevel++
+                } else {
+                    it[experience] = user.experience + 5
+                }
             }
-
-            user.level
         }
 
-        if (previousLevel != level) {
-            updateLevel(event, level)
+        if (previousLevel != newLevel) {
+            updateLevel(event, newLevel)
         }
     }
 
@@ -113,7 +119,7 @@ class DatabaseUpdater {
         }
 
         transaction {
-            DevCordUser.findById(id)?.delete() ?: Unit
+            Users.deleteWhere { Users.id eq id }
         }
     }
 }

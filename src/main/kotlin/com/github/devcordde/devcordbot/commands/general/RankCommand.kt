@@ -23,7 +23,7 @@ import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.XPUtil
 import net.dv8tion.jda.api.entities.User
@@ -48,13 +48,12 @@ class RankCommand : AbstractCommand() {
 
     override suspend fun execute(context: Context) {
         val user = context.args.optionalUser(0, jda = context.jda)
-            ?: return sendRankInformation(context.author, context)
+            ?: return sendRankInformation(context.author, context, true)
         sendRankInformation(user, context)
     }
 
-    private fun sendRankInformation(user: User, context: Context) {
-        val entry =
-            transaction { DevCordUser.findById(user.idLong) ?: DevCordUser.new(user.idLong) {} }
+    private fun sendRankInformation(user: User, context: Context, default: Boolean = false) {
+        val entry = if (default) context.devCordUser else transaction { DatabaseDevCordUser.findOrCreateById(user.idLong) }
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(
@@ -96,16 +95,20 @@ class RankCommand : AbstractCommand() {
             if (offset < 0) offset = 0
             if (offset != 0) {
                 transaction {
-                    maxOffset = DevCordUser.all().count()
-                    if (maxOffset < offset) {
+                    maxOffset = DatabaseDevCordUser.all().count()
+                    if (maxOffset <= offset) {
                         invalidOffset = true
-                        offset = maxOffset - 11
+                        offset = if (maxOffset < 10) {
+                            maxOffset - 1
+                        } else {
+                            maxOffset - 10
+                        }
                     }
                 }
             }
 
             val users = transaction {
-                DevCordUser.all().limit(10, offset)
+                DatabaseDevCordUser.all().limit(10, offset)
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
                     .mapIndexed { index, it ->
                         val name = context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"
@@ -116,7 +119,7 @@ class RankCommand : AbstractCommand() {
             if (invalidOffset) {
                 context.respond(
                     Embeds.warn(
-                        "Rangliste | Zu hoher Offset! (Maximum: ${maxOffset})",
+                        "Rangliste | Zu hoher Offset! (Maximum: ${maxOffset - 1})",
                         users.joinToString("\n")
                     )
                 ).queue()

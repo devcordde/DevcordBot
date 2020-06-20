@@ -26,6 +26,7 @@ import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.dsl.sendMessage
+import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.await
@@ -67,7 +68,7 @@ class AutoHelp(
      * Trigger AutoHelp on Message.
      */
     @EventSubscriber
-    suspend fun onMessage(event: GuildMessageReceivedEvent) {
+    suspend fun onMessage(event: DevCordGuildMessageReceivedEvent) {
         val input = event.message.contentRaw
         val userLevel by lazy { transaction { DevCordUser.findById(event.author.idLong)?.level ?: 1000 } }
 
@@ -223,9 +224,9 @@ class AutoHelp(
     }
 
     companion object {
-        // https://regex101.com/r/vgz86r/10
+        // https://regex101.com/r/vgz86r/11
         private val JVM_EXCEPTION_PATTERN =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^\s*at .*)+""".toRegex()
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^.*at .*)+""".toRegex()
 
         // https://regex101.com/r/HtaGF8/1
         private val JVM_EXCEPTION_NAME_PATTERN =

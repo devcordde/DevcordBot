@@ -31,6 +31,7 @@ import com.github.devcordde.devcordbot.core.autohelp.AutoHelp
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.event.AnnotatedEventManager
 import com.github.devcordde.devcordbot.event.EventSubscriber
+import com.github.devcordde.devcordbot.event.MessageListener
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 import com.zaxxer.hikari.HikariDataSource
@@ -92,6 +93,7 @@ internal class DevCordBotImpl(
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
         .setHttpClient(httpClient)
         .addEventListeners(
+            MessageListener(),
             this@DevCordBotImpl,
             SelfMentionListener(),
             DatabaseUpdater(),
@@ -110,7 +112,8 @@ internal class DevCordBotImpl(
     override val gameAnimator = GameAnimator(jda, games)
 
     private val guildId = env["GUILD_ID"]!!
-    override val guild: Guild get() = jda.getGuildById(guildId)!!
+    override val guild: Guild
+        get() = jda.getGuildById(guildId)!!
 
     /**
      * Whether the bot received the [ReadyEvent] or not.

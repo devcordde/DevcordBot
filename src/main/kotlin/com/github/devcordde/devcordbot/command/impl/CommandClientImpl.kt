@@ -27,27 +27,25 @@ import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.dsl.sendMessage
-import com.github.devcordde.devcordbot.event.EventSubscriber
+import com.github.devcordde.devcordbot.event.*
 import com.github.devcordde.devcordbot.util.DefaultThreadFactory
 import com.github.devcordde.devcordbot.util.asMention
 import com.github.devcordde.devcordbot.util.asNickedMention
 import com.github.devcordde.devcordbot.util.hasSubCommands
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
+import net.dv8tion.jda.api.events.Event
+import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
+import javax.annotation.Nonnull
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -68,17 +66,46 @@ class CommandClientImpl(
 
     private val logger = KotlinLogging.logger { }
     private val delimiter = "\\s+".toRegex()
+    private val messageStorage = mutableMapOf<Long, Pair<Long, Long>>()
+    private val responsePool = Executors.newSingleThreadExecutor(
+        DefaultThreadFactory("CommandResponseWatcher")
+    ).asCoroutineDispatcher()
+    private val editThreshold = Duration.of(
+        30,
+        ChronoUnit.SECONDS
+    )
 
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
+
+    internal fun acknowledgeResponse(key: Long, channelId: Long, messageId: Long) {
+        messageStorage[key] = channelId to messageId
+        GlobalScope.launch(responsePool) {
+            delay(editThreshold.toMillis())
+            messageStorage.remove(key)
+        }
+    }
+
+
+    /**
+     * Deletes old command response
+     */
+    @EventSubscriber
+    fun onMessageDelete(event: GuildMessageDeleteEvent): Boolean = deleteOldMessage(event.messageIdLong, event.guild)
 
     /**
      * Listens for new private messages
      */
     @EventSubscriber
-    fun onPrivateMessage(event: PrivateMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message)
+    fun onPrivateMessage(event: DevCordMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message, event)
 
-    private fun dispatchPrivateMessageCommand(message: Message) {
+    /**
+     * Listens for new private messages
+     */
+    @EventSubscriber
+    fun onPrivateMessage(event: PrivateMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message, event)
+
+    private fun dispatchPrivateMessageCommand(message: Message, event: Event) {
         if (!bot.isInitialized) return
 
         val author = message.author
@@ -86,29 +113,27 @@ class CommandClientImpl(
 
         bot.guild.getMemberById(author.id) ?: return
 
-        return parseCommand(message)
+        return parseCommand(message, event)
     }
 
     /**
      * Listens for message updates.
      */
     @EventSubscriber
-    fun onMessageEdit(event: GuildMessageUpdateEvent) {
-        if (Duration.between(event.message.timeCreated, OffsetDateTime.now()) > Duration.of(
-                30,
-                ChronoUnit.SECONDS
-            )
+    fun onMessageEdit(event: DevCordGuildMessageEditEvent) {
+        if (Duration.between(event.message.timeCreated, OffsetDateTime.now()) > editThreshold
         ) return
-        dispatchGuildCommand(event.message)
+        dispatchGuildCommand(event.message, event)
+        deleteOldMessage(event.messageIdLong, event.guild)
     }
 
     /**
      * Listens for new messages.
      */
     @EventSubscriber
-    fun onMessage(event: GuildMessageReceivedEvent): Unit = dispatchGuildCommand(event.message)
+    fun onMessage(event: DevCordGuildMessageReceivedEvent): Unit = dispatchGuildCommand(event.message, event)
 
-    private fun dispatchGuildCommand(message: Message) {
+    private fun dispatchGuildCommand(message: Message, event: Event) {
         if (!bot.isInitialized) return
 
         if (message.guild.id != bot.guild.id) return
@@ -116,10 +141,10 @@ class CommandClientImpl(
         val author = message.author
         if (message.isWebhookMessage or author.isBot or author.isFake) return
 
-        return parseCommand(message)
+        return parseCommand(message, event)
     }
 
-    private fun parseCommand(message: Message) {
+    private fun parseCommand(message: Message, event: Event) {
         val content = message.contentRaw
         val prefixLength =
             resolvePrefix(if (message.channelType == ChannelType.TEXT) message.guild else null, content)
@@ -131,10 +156,14 @@ class CommandClientImpl(
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
         val member =
             if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(message.author.id)
+
+        val user = event.devCordUser
+
         val permissionState = permissionHandler.isCovered(
             command.permission,
-            member
-        )
+            member,
+            user)
+
 
         when (permissionState) {
             PermissionState.IGNORED -> return
@@ -143,7 +172,7 @@ class CommandClientImpl(
                 if (!command.commandPlace.matches(message)) return handleWrongContext(message.channel)
                 message.channel.sendTyping()
                     .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
-                        val context = Context(bot, command, arguments, message, this)
+                        val context = Context(bot, command, arguments, message, this, user)
                         processCommand(command, context)
                     })
             }
@@ -167,7 +196,7 @@ class CommandClientImpl(
             command: AbstractCommand? = null
         ): CommandContainer? {
             // Get invoke
-            val invoke = arguments.first()
+            val invoke = arguments.first().toLowerCase()
             // Search command associated with invoke or return previously found command
             val foundCommand = associations[invoke] ?: return command?.let { CommandContainer(it, arguments) }
             // Cut off invoke
@@ -181,6 +210,24 @@ class CommandClientImpl(
         }
 
         return findCommand(Arguments(input.trim().split(delimiter), raw = input), commandAssociations)
+    }
+
+    private fun stripPrefix(message: Message): String? {
+        val rawInput = message.contentRaw
+
+        when (message.channelType) {
+            ChannelType.TEXT -> {
+                val prefixLength = resolvePrefix(message.guild, rawInput) ?: return null
+                return rawInput.substring(prefixLength).trim()
+            }
+            ChannelType.PRIVATE -> {
+                val prefix = prefix.find(rawInput) ?: return null
+                return rawInput.substring(prefix.range.last + 1).trim()
+            }
+            else -> {
+                return null
+            }
+        }
     }
 
     private fun resolvePrefix(guild: Guild?, content: String): Int? {
@@ -214,4 +261,13 @@ class CommandClientImpl(
     }
 
     private data class CommandContainer(val command: AbstractCommand, val args: Arguments)
+
+    private fun deleteOldMessage(
+        messageIdLong: Long,
+        guild: @Nonnull Guild
+    ): Boolean {
+        val (channel, message) = messageStorage[messageIdLong] ?: return true
+        guild.getTextChannelById(channel)?.retrieveMessageById(message)?.flatMap(Message::delete)?.queue()
+        return false
+    }
 }

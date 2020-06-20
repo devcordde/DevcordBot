@@ -23,6 +23,8 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.util.asMention
 import com.nhaarman.mockitokotlin2.KStubbing
 import com.nhaarman.mockitokotlin2.argThat
@@ -32,7 +34,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.requests.RestAction
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -97,7 +98,11 @@ class CommandTest {
         arguments: List<String>,
         subCommand: AbstractSubCommand? = null
     ) {
-        val event = GuildMessageReceivedEvent(jda, 200, message)
+        val devCordUser = mock<DevCordUser> {
+            on { blacklisted }.thenReturn(false)
+        }
+
+        val event = DevCordGuildMessageReceivedEvent(jda, 200, message, devCordUser)
         client.registerCommands(command)
         client.onMessage(event)
         val actualCommand = subCommand ?: command
@@ -200,7 +205,12 @@ private class EmptyRestAction<T> : RestAction<T> {
 }
 
 private class TestPermissionHandler : PermissionHandler {
-    override fun isCovered(permission: Permission, executor: Member?): PermissionState {
+    override fun isCovered(
+        permission: Permission,
+        executor: Member?,
+        devCordUser: DevCordUser,
+        acknowledgeBlacklist: Boolean
+    ): PermissionState {
         return PermissionState.ACCEPTED
     }
 }
