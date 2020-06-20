@@ -23,9 +23,9 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
-import com.github.devcordde.devcordbot.util.asMention
 import com.nhaarman.mockitokotlin2.KStubbing
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.mock

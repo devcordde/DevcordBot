@@ -23,6 +23,7 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.sendMessage
@@ -39,7 +40,7 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction
  * @property commandClient the [CommandClient] which executed this command
  * @property bot instance of the [DevCordBot]
  * @property message the message that triggered the command
- * @property devCordUser User storing database settings. See [DevCordUser]
+ * @property devCordUser User storing database settings. See [DatabaseDevCordUser]
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Context(

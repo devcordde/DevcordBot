@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot.event
 
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import net.dv8tion.jda.api.JDA
@@ -30,17 +31,17 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Extension of [MessageReceivedEvent] containing [devCordUser].
- * @property devCordUser [DevCordUser] corresponding to [Message.getAuthor]
+ * @property devCordUser [DatabaseDevCordUser] corresponding to [Message.getAuthor]
  */
 @EventDescriber(callParents = false)
 class DevCordMessageReceivedEvent(
     api: JDA, responseNumber: Long, message: Message,
-    val devCordUser: DevCordUser
+    val devCordUser: DatabaseDevCordUser
 ) : MessageReceivedEvent(api, responseNumber, message)
 
 /**
  * Extension of [GuildMessageReceivedEvent] containing [devCordUser].
- * @property devCordUser [DevCordUser] corresponding to [Message.getAuthor]
+ * @property devCordUser [DatabaseDevCordUser] corresponding to [Message.getAuthor]
  */
 @EventDescriber(callParents = false)
 class DevCordGuildMessageReceivedEvent(api: JDA, responseNumber: Long, message: Message, val devCordUser: DevCordUser) :
@@ -48,10 +49,15 @@ class DevCordGuildMessageReceivedEvent(api: JDA, responseNumber: Long, message: 
 
 /**
  * Extension of [GuildMessageReceivedEvent] containing [devCordUser].
- * @property devCordUser [DevCordUser] corresponding to [Message.getAuthor]
+ * @property devCordUser [DatabaseDevCordUser] corresponding to [Message.getAuthor]
  */
 @EventDescriber(callParents = false)
-class DevCordGuildMessageEditEvent(api: JDA, responseNumber: Long, message: Message, val devCordUser: DevCordUser) :
+class DevCordGuildMessageEditEvent(
+    api: JDA,
+    responseNumber: Long,
+    message: Message,
+    val devCordUser: DatabaseDevCordUser
+) :
     GuildMessageUpdateEvent(api, responseNumber, message)
 
 /**
@@ -73,7 +79,7 @@ internal class MessageListener {
         if (event.author.isBot) return
         val devCordUser = transaction {
             val userId = event.author.idLong
-            entityCache.data[Users]?.get(userId) as? DevCordUser ?: DevCordUser.findById(userId)!!
+            entityCache.data[Users]?.get(userId) as? DatabaseDevCordUser ?: DatabaseDevCordUser.findById(userId)!!
         }
         event.jda.eventManager.handle(
             DevCordGuildMessageEditEvent(
@@ -89,7 +95,7 @@ internal class MessageListener {
     fun onMessage(event: MessageReceivedEvent) {
         if (event.author.isBot) return
 
-        val devCordUser = transaction { DevCordUser.findOrCreateById(event.author.idLong) }
+        val devCordUser = transaction { DatabaseDevCordUser.findOrCreateById(event.author.idLong) }
         if (event.isFromType(ChannelType.PRIVATE)) {
             event.jda.eventManager.handle(
                 DevCordMessageReceivedEvent(
