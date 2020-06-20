@@ -24,7 +24,6 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
-import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 
