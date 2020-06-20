@@ -25,6 +25,7 @@ import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.dsl.sendMessage
+import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.await
@@ -33,6 +34,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.BufferedReader
@@ -60,7 +62,7 @@ class AutoHelp(
      * Trigger AutoHelp on Message.
      */
     @EventSubscriber
-    suspend fun onMessage(event: GuildMessageReceivedEvent) {
+    suspend fun onMessage(event: DevCordGuildMessageReceivedEvent) {
         val input = event.message.contentRaw
         if (event.author.isBot ||
             (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
@@ -84,7 +86,6 @@ class AutoHelp(
             return
         }
         // Also send too long message
-
         if (analyzeInputs(attachments, event, false)) return
         analyzeInput(input, false, event)
     }
@@ -194,9 +195,9 @@ class AutoHelp(
     }
 
     companion object {
-        // https://regex101.com/r/vgz86r/8
+        // https://regex101.com/r/vgz86r/11
         private val JVM_EXCEPTION_PATTERN =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.*)(?:\R+^\s*.*)?(?:\R+^\s*at .*)+""".toRegex()
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^.*at .*)+""".toRegex()
 
         // https://regex101.com/r/u0QAR6/2
         private val HASTEBIN_PATTERN =

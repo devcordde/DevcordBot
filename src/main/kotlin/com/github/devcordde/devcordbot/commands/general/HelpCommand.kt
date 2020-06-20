@@ -50,7 +50,9 @@ class HelpCommand : AbstractCommand() {
 
         if (command == null || context.commandClient.permissionHandler.isCovered(
                 command.permission,
-                context.member
+                context.member,
+                context.devCordUser,
+                acknowledgeBlacklist = false
             ) != PermissionState.ACCEPTED
         ) {
             return context.respond(
@@ -83,7 +85,9 @@ class HelpCommand : AbstractCommand() {
                 val commands = context.commandClient.registeredCommands.filter {
                     context.commandClient.permissionHandler.isCovered(
                         it.permission,
-                        context.member
+                        context.member,
+                        context.devCordUser,
+                        acknowledgeBlacklist = false // Ignore BL to save DB Query since BLed users cannot execute help anyways
                     ) == PermissionState.ACCEPTED && it.commandPlace.matches(context.message)
                 }
                 CommandCategory.values().forEach { category ->

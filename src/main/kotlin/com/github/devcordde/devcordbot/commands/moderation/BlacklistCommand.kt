@@ -48,7 +48,7 @@ class BlacklistCommand : AbstractCommand() {
             ?: return context.sendHelp().queue()
 
         val blacklisted = transaction {
-            val dcUser = DevCordUser.findById(user.idLong) ?: DevCordUser.new(user.idLong) {}
+            val dcUser = DevCordUser.findOrCreateById(user.idLong)
 
             dcUser.blacklisted = !dcUser.blacklisted
             dcUser.blacklisted
