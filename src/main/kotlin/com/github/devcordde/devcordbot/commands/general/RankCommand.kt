@@ -23,7 +23,7 @@ import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.XPUtil
 import net.dv8tion.jda.api.entities.User
@@ -53,7 +53,7 @@ class RankCommand : AbstractCommand() {
     }
 
     private fun sendRankInformation(user: User, context: Context, default: Boolean = false) {
-        val entry = if (default) context.devCordUser else transaction { DevCordUser.findOrCreateById(user.idLong) }
+        val entry = if (default) context.devCordUser else transaction { DatabaseDevCordUser.findOrCreateById(user.idLong) }
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(
@@ -95,20 +95,20 @@ class RankCommand : AbstractCommand() {
             if (offset < 0) offset = 0
             if (offset != 0) {
                 transaction {
-                    maxOffset = DevCordUser.all().count()
+                    maxOffset = DatabaseDevCordUser.all().count()
                     if (maxOffset <= offset) {
                         invalidOffset = true
-                        if (maxOffset < 10) {
-                            offset = maxOffset - 1
+                        offset = if (maxOffset < 10) {
+                            maxOffset - 1
                         } else {
-                            offset = maxOffset - 10
+                            maxOffset - 10
                         }
                     }
                 }
             }
 
             val users = transaction {
-                DevCordUser.all().limit(10, offset)
+                DatabaseDevCordUser.all().limit(10, offset)
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
                     .mapIndexed { index, it ->
                         val name = context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"
