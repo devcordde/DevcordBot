@@ -23,7 +23,7 @@ import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -48,7 +48,7 @@ class BlacklistCommand : AbstractCommand() {
             ?: return context.sendHelp().queue()
 
         val blacklisted = transaction {
-            val dcUser = DevCordUser.findOrCreateById(user.idLong)
+            val dcUser = DatabaseDevCordUser.findOrCreateById(user.idLong)
 
             dcUser.blacklisted = !dcUser.blacklisted
             dcUser.blacklisted
@@ -66,7 +66,7 @@ class BlacklistCommand : AbstractCommand() {
 
         override suspend fun execute(context: Context) {
             val userNames = transaction {
-                DevCordUser.find {
+                DatabaseDevCordUser.find {
                     Users.blacklisted eq true
                 }.map {
                     "`${context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"}`"

@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot.listeners
 
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
@@ -41,7 +42,7 @@ class DatabaseUpdater {
      */
     @SubscribeEvent
     fun onMemberJoin(event: GuildMemberJoinEvent): DevCordUser? =
-        transaction { DevCordUser.findOrCreateById(event.user.idLong) }
+        transaction { DatabaseDevCordUser.findOrCreateById(event.user.idLong) }
 
     /**
      * Removes a user from the database when the user leaves the guild.
