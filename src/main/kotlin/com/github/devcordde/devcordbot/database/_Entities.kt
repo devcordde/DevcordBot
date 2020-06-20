@@ -36,8 +36,13 @@ import java.time.Instant
  * @property lastUpgrade the last time the user gained XP
  * @property blacklisted user is blacklisted for commands
  */
-class DevCordUser(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<DevCordUser>(Users)
+open class DevCordUser(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<DevCordUser>(Users) {
+        /**
+         * Returns the [DevCordUser] corresponding to [id] and created one if needed.
+         */
+        fun findOrCreateById(id: Long): DevCordUser = findById(id) ?: new(id) { }
+    }
 
     val userID: Long
         get() = id.value
