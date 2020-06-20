@@ -20,6 +20,7 @@ import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Tag
 import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
@@ -29,6 +30,7 @@ import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.await
+import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
@@ -40,6 +42,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+
+private val levelLimit = dotenv()["AUTO_HELP_LEVEL_LIMIT"]?.toInt() ?: 75
 
 /**
  * AutoHelp.
@@ -55,6 +59,7 @@ class AutoHelp(
 
     private val guesser = LanguageGusser(knownLanguages)
     private val fetcher = ContentFetcher(bot.httpClient)
+    private val beautifier = CodeBeautifier(bot.httpClient)
     private val executor = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
 
     /**
@@ -63,30 +68,35 @@ class AutoHelp(
     @EventSubscriber
     suspend fun onMessage(event: DevCordGuildMessageReceivedEvent) {
         val input = event.message.contentRaw
-        if (event.author.isBot ||
-            (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
-                    event.channel.id in blacklist)) ||
-            bypassWord in input
+        val userLevel by lazy { transaction { DatabaseDevCordUser.findOrCreateById(event.author.idLong).level } }
+
+        if (
+            event.author.isBot
+            || bot.debugMode
+            || (event.channel.parent?.id !in whitelist || event.channel.id in blacklist)
+            || userLevel < levelLimit
+            || bypassWord !in input
         ) return
 
         // Asynchronously fetch potential content
-        val hastebinMatches = findInput(HASTEBIN_PATTERN, input, ::fetchHastebin)
-        val pastebinMatches = findInput(PASTEBIN_PATTERN, input, ::fetchPastebin)
         val attachments = fetchAttachments(event.message)
+        if (input.isNotBlank()) {
+            val hastebinMatches = findInput(HASTEBIN_PATTERN, input, ::fetchHastebin)
+            val pastebinMatches = findInput(PASTEBIN_PATTERN, input, ::fetchPastebin)
+            // Quit on first match
+            if (analyzeInputs(hastebinMatches, event)) {
+                pastebinMatches.cancel(true)
+                attachments.cancel(true)
+                return
+            }
+            if (analyzeInputs(pastebinMatches, event)) {
+                attachments.cancel(true)
+                return
+            }
 
-        // Quit on first match
-        if (analyzeInputs(hastebinMatches, event)) {
-            pastebinMatches.cancel(true)
-            attachments.cancel(true)
-            return
+            analyzeInput(input, false, event)
         }
-        if (analyzeInputs(pastebinMatches, event)) {
-            attachments.cancel(true)
-            return
-        }
-        // Also send too long message
-        if (analyzeInputs(attachments, event, false)) return
-        analyzeInput(input, false, event)
+        analyzeInputs(attachments, event, false)
     }
 
     private suspend fun analyzeInputs(
@@ -113,7 +123,7 @@ class AutoHelp(
 
     private suspend fun fetchAttachments(message: Message): CompletableFuture<List<String?>> {
         return GlobalScope.future(executor) {
-            message.attachments.map {
+            message.attachments.filter { !it.isVideo && !it.isImage }.map {
                 fetchAttachment(it)
             }
         }
@@ -122,9 +132,8 @@ class AutoHelp(
     private suspend fun fetchAttachment(attachment: Message.Attachment): String {
         val stream = attachment.retrieveInputStream().await()
         return BufferedReader(InputStreamReader(stream)).use { reader ->
-            reader.lineSequence().joinToString(System.lineSeparator())
+            reader.readText()
         }
-
     }
 
     private fun fetchHastebin(match: MatchResult): CompletableFuture<String?> {
@@ -153,12 +162,16 @@ class AutoHelp(
         val cleanInput =
             if (!wasPaste && inputBlockMatch != null) inputBlockMatch!!.groupValues[2].trim() else inputString
 
-        if (!wasPaste && guesser.isCode(cleanInput)) {
+        val language = guesser.guessLanguage(cleanInput)
+        if (!wasPaste && language != null) {
+            val code = if (language.language.equals("java", ignoreCase = true)) {
+                beautifier.formatCode(cleanInput).await()
+            } else cleanInput
             if (inputString.lines().size > maxLines &&
                 !Constants.prefix.containsMatchIn(inputString)
             ) {
                 val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
-                val hastebinUrl = HastebinUtil.postErrorToHastebin(cleanInput, bot.httpClient).await()
+                val hastebinUrl = HastebinUtil.postErrorToHastebin(code, bot.httpClient).await()
                 message.editMessage(buildTooLongEmbed(hastebinUrl)).queue()
             }
         }
@@ -179,13 +192,29 @@ class AutoHelp(
     }
 
     private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent): Boolean {
-        val exception = with(match.groupValues[1]) { substring(lastIndexOf('.') + 1) }
-        val exceptionName = exception.toLowerCase()
+        val exceptionName = match.groupValues[1]
+        val message = match.groupValues[2]
+        if (!handleCommonException(exceptionName, message, event)) {
+            val exceptionInMessage = JVM_EXCEPTION_NAME_PATTERN.matchEntire(message) ?: return false
+            val newName = exceptionInMessage.groupValues[1]
+            val newMessage = exceptionInMessage.groupValues[2]
+            return handleCommonException(newName, newMessage, event)
+        }
+        return false
+    }
+
+    private fun handleCommonException(
+        exception: String,
+        message: String,
+        event: GuildMessageReceivedEvent
+    ): Boolean {
+        val exceptionName = exception.substring(exception.lastIndexOf('.') + 1).toLowerCase().trim()
         val tag = when {
             exceptionName == "nullpointerexception" -> "nullpointerexception"
             exceptionName == "unsupportedclassversionerror" -> "class-version"
-            match.groupValues[2] == "Plugin already initialized!" -> "plugin-already-initialized"
+            message == "Plugin already initialized!" -> "plugin-already-initialized"
             exceptionName == "invaliddescriptionexception" -> "plugin.yml"
+            exceptionName == "invalidpluginexception" && "cannot find main class" in message.toLowerCase() -> "main-class-not-found"
             else -> null
         } ?: return false
         val tagContent = transaction { Tag.find { Tags.name eq tag }.firstOrNull() } ?: return false
@@ -197,6 +226,10 @@ class AutoHelp(
         // https://regex101.com/r/vgz86r/11
         private val JVM_EXCEPTION_PATTERN =
             """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^.*at .*)+""".toRegex()
+
+        // https://regex101.com/r/HtaGF8/1
+        private val JVM_EXCEPTION_NAME_PATTERN =
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.*)(?:\R+^\s*.*)?""".toRegex()
 
         // https://regex101.com/r/u0QAR6/2
         private val HASTEBIN_PATTERN =
