@@ -35,7 +35,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
-import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -45,7 +44,6 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 private val levelLimit = dotenv()["AUTO_HELP_LEVEL_LIMIT"]?.toInt() ?: 75
-private val logger = KotlinLogging.logger {}
 
 /**
  * AutoHelp.
@@ -177,8 +175,6 @@ class AutoHelp(
                 message.editMessage(buildTooLongEmbed(hastebinUrl)).queue()
             }
         }
-
-        logger.debug { "Trying to analyze $cleanInput" }
 
         return JVM_EXCEPTION_PATTERN.findAll(cleanInput).any {
             handleCommonException(it, event)
