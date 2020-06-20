@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot.event
 
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import net.dv8tion.jda.api.JDA
@@ -73,7 +74,7 @@ internal class MessageListener {
         if (event.author.isBot) return
         val devCordUser = transaction {
             val userId = event.author.idLong
-            entityCache.data[Users]?.get(userId) as? DevCordUser ?: DevCordUser.findById(userId)!!
+            entityCache.data[Users]?.get(userId) as? DevCordUser ?: DatabaseDevCordUser.findById(userId)!!
         }
         event.jda.eventManager.handle(
             DevCordGuildMessageEditEvent(
@@ -89,7 +90,7 @@ internal class MessageListener {
     fun onMessage(event: MessageReceivedEvent) {
         if (event.author.isBot) return
 
-        val devCordUser = transaction { DevCordUser.findOrCreateById(event.author.idLong) }
+        val devCordUser = transaction { DatabaseDevCordUser.findOrCreateById(event.author.idLong) }
         if (event.isFromType(ChannelType.PRIVATE)) {
             event.jda.eventManager.handle(
                 DevCordMessageReceivedEvent(
