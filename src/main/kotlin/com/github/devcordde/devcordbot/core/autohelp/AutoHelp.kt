@@ -59,7 +59,6 @@ class AutoHelp(
 
     private val guesser = LanguageGusser(knownLanguages)
     private val fetcher = ContentFetcher(bot.httpClient)
-    private val github = GithubUtil(bot.httpClient)
     private val beautifier = CodeBeautifier(bot.httpClient)
     private val executor = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
 
@@ -193,7 +192,7 @@ class AutoHelp(
         if (host == "gist.githubusercontent.com") {
             return fetcher.fetchContent(url).thenApply { listOf(it) }
         }
-        return github.retrieveGistFiles(gistId).thenApplyAsync { fileUrls ->
+        return bot.github.retrieveGistFiles(gistId).thenApplyAsync { fileUrls ->
             fileUrls.map { fetcher.fetchContent(it).join() }
         }
     }

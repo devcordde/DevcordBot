@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.core.autohelp
+package com.github.devcordde.devcordbot.util
 
-import com.github.devcordde.devcordbot.util.executeAsync
+import net.dv8tion.jda.api.utils.data.DataArray
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -47,8 +47,42 @@ class GithubUtil(private val client: OkHttpClient) {
         }
     }
 
+    /**
+     * Retrieves a list of [GitHubContributor]s, that have contributed to the bot project on GitHub.
+     */
+    fun retrieveContributors(): CompletableFuture<List<GitHubContributor>> {
+        val request = Request.Builder()
+            .url(GET_CONTRIBUTORS_ENDPOINT)
+            .get()
+            .build()
+        val call = client.newCall(request)
+        return call.executeAsync().thenApply { response ->
+            val json =
+                response.body?.string()?.let { it1 -> DataArray.fromJson(it1) }
+                    ?: return@thenApply emptyList<GitHubContributor>()
+            (0 until json.length()).map {
+                val contributor = json.getObject(it)
+                GitHubContributor(
+                    contributor.getString("login"),
+                    contributor.getString("html_url")
+                )
+            }
+        }
+    }
+
     companion object {
         private val API_BASE = "https://api.github.com".toHttpUrl()
         private val GET_GIST_ENDPOINT = API_BASE.newBuilder().addPathSegment("gists").build()
+        private val GET_CONTRIBUTORS_ENDPOINT = API_BASE.newBuilder()
+            .addPathSegments("repos/devcordde/devcordbot/contributors")
+            .build()
     }
 }
+
+/**
+ * Representation of a Bot contributor on github.
+ *
+ * @property name the GitHub username of the contributer
+ * @property url the url to the contributors GitHub profile
+ */
+data class GitHubContributor(val name: String, val url: String)

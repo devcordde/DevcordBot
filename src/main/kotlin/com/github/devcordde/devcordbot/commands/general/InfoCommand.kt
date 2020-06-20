@@ -24,7 +24,7 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 
 /**
- * InfoCommand
+ * InfoCommand.
  */
 class InfoCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("info")
@@ -36,6 +36,6 @@ class InfoCommand : AbstractCommand() {
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
-        SelfMentionListener.sendInfo(context.channel, context.jda.users.size)
+        SelfMentionListener.sendInfo(context.channel, context.jda.users.size, context.bot)
     }
 }
