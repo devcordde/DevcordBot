@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.commands.general
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
@@ -39,6 +40,7 @@ class RankCommand : AbstractCommand() {
     override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     init {
         registerCommands(TopCommand())
@@ -95,7 +97,7 @@ class RankCommand : AbstractCommand() {
             if (offset != 0) {
                 transaction {
                     maxOffset = DevCordUser.all().count()
-                    if (maxOffset <= offset) {
+                    if (maxOffset < offset) {
                         invalidOffset = true
                         offset = maxOffset - 11
                     }
@@ -114,7 +116,7 @@ class RankCommand : AbstractCommand() {
             if (invalidOffset) {
                 context.respond(
                     Embeds.warn(
-                        "Rangliste | Zu hoher Offset! (Maximum: ${maxOffset - 1})",
+                        "Rangliste | Zu hoher Offset! (Maximum: ${maxOffset})",
                         users.joinToString("\n")
                     )
                 ).queue()

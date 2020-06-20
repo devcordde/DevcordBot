@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.commands.owners
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
@@ -33,6 +34,7 @@ class RedeployCommand(private val host: String, private val token: String) : Abs
     override val usage: String = ""
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
         val request = Request.Builder().url(host).addHeader("Redeploy-Token", token).build()

@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.commands.general.jdoodle
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Constants
@@ -42,6 +43,7 @@ class EvalCommand : AbstractCommand() {
     override val usage: String = MarkdownSanitizer.escape("\n```<language>\n<code>\n```")
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.GM
 
     init {
         registerCommands(ListCommand())

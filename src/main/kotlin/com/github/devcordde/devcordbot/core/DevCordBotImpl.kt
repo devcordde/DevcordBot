@@ -24,6 +24,7 @@ import com.github.devcordde.devcordbot.commands.general.*
 import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
 import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
 import com.github.devcordde.devcordbot.commands.moderation.StarboardCommand
+import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.core.autohelp.AutoHelp
@@ -39,6 +40,7 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
@@ -106,6 +108,9 @@ internal class DevCordBotImpl(
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
+
+    private val guildId = env["GUILD_ID"]!!
+    override val guild: Guild get() = jda.getGuildById(guildId)!!
 
     /**
      * Whether the bot received the [ReadyEvent] or not.
@@ -190,9 +195,7 @@ internal class DevCordBotImpl(
     private fun registerCommands(env: Dotenv) {
         commandClient.registerCommands(
             HelpCommand(),
-            MockCommand(),
             TagCommand(),
-            LmgtfyCommand(),
             EvalCommand(),
             OwnerEvalCommand(),
             StarboardCommand(),
@@ -200,7 +203,8 @@ internal class DevCordBotImpl(
             RankCommand(),
             RanksCommand(),
             BlacklistCommand(),
-            InfoCommand()
+            InfoCommand(),
+            CleanupCommand()
         )
 
         val cseKey = env["CSE_KEY"]

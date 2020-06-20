@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.commands.general
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
@@ -33,6 +34,7 @@ class RanksCommand : AbstractCommand() {
     override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
         context.respond(

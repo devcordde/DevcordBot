@@ -24,6 +24,7 @@ import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.stringify
 import mu.KotlinLogging
+import net.dv8tion.jda.api.entities.ChannelType
 import java.time.LocalDateTime
 import kotlin.coroutines.CoroutineContext
 
@@ -79,7 +80,11 @@ class HastebinErrorHandler : ErrorHandler {
             .append(executor.discriminator).append('(').append(executor.id).appendln(')')
         val selfMember = guild.selfMember
         information.append("Permissions: ").appendln(selfMember.permissions)
-        information.append("Channel permissions: ").appendln(selfMember.getPermissions(channel))
+
+        if (context.message.channelType == ChannelType.TEXT) {
+            information.append("Channel permissions: ").appendln(selfMember.getPermissions(context.message.textChannel))
+        }
+
         information.append("Timestamp: ").appendln(LocalDateTime.now())
         information.append("Thread: ").appendln(thread)
         information.append("Coroutine: ").appendln(coroutineContext)
