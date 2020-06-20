@@ -34,7 +34,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.BufferedReader

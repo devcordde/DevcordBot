@@ -22,7 +22,7 @@ import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Tag
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Guild
@@ -62,7 +62,7 @@ class CleanupCommand : AbstractCommand() {
     private fun cleanupRanks(guild: Guild): Int {
         var clearedEntries = 0
         transaction {
-            DevCordUser.all().forEach {
+            DatabaseDevCordUser.all().forEach {
                 if (!isMemberOfGuild(guild, it.userID)) {
                     logger.info { "User gelöscht: ID ${it.userID}, Level: ${it.level}, XP: ${it.experience}" }
                     it.delete()

@@ -28,16 +28,10 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.event.*
+import com.github.devcordde.devcordbot.util.DefaultThreadFactory
 import com.github.devcordde.devcordbot.util.asMention
-import com.github.devcordde.devcordbot.util.asNickedMention
 import com.github.devcordde.devcordbot.util.hasSubCommands
 import kotlinx.coroutines.*
-import com.github.devcordde.devcordbot.event.EventSubscriber
-import com.github.devcordde.devcordbot.util.DefaultThreadFactory
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.entities.Guild
@@ -45,8 +39,6 @@ import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import java.time.Duration
 import java.time.OffsetDateTime
