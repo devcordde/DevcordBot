@@ -212,7 +212,7 @@ internal class DevCordBotImpl(
 
         val cseKey = env["CSE_KEY"]
         val cseId = env["CSE_ID"]
-        if (cseKey != null && cseId != null && cseKey.isNotBlank() && !cseId.isNotBlank()) {
+        if (cseKey != null && cseId != null && cseKey.isNotBlank() && cseId.isNotBlank()) {
             commandClient.registerCommands(GoogleCommand(cseKey, cseId))
         }
 
