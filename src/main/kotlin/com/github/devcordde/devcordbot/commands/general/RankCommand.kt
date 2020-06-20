@@ -48,13 +48,12 @@ class RankCommand : AbstractCommand() {
 
     override suspend fun execute(context: Context) {
         val user = context.args.optionalUser(0, jda = context.jda)
-            ?: return sendRankInformation(context.author, context)
+            ?: return sendRankInformation(context.author, context, true)
         sendRankInformation(user, context)
     }
 
-    private fun sendRankInformation(user: User, context: Context) {
-        val entry =
-            transaction { DevCordUser.findById(user.idLong) ?: DevCordUser.new(user.idLong) {} }
+    private fun sendRankInformation(user: User, context: Context, default: Boolean = false) {
+        val entry = if (default) context.devCordUser else transaction { DevCordUser.findOrCreateById(user.idLong) }
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(

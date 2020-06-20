@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
+import com.github.devcordde.devcordbot.database.DevCordUser
 import net.dv8tion.jda.api.entities.Member
 
 /**
@@ -30,6 +31,8 @@ interface PermissionHandler {
      */
     fun isCovered(
         permission: Permission,
-        executor: Member?
+        executor: Member?,
+        devCordUser: DevCordUser,
+        acknowledgeBlacklist: Boolean = true
     ): PermissionState
 }
