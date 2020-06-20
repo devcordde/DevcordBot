@@ -20,8 +20,6 @@ import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.util.asMention
-import com.github.devcordde.devcordbot.util.asNickedMention
-import net.dv8tion.jda.api.entities.TextChannel
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent

@@ -30,7 +30,6 @@ import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.event.*
 import com.github.devcordde.devcordbot.util.DefaultThreadFactory
 import com.github.devcordde.devcordbot.util.asMention
-import com.github.devcordde.devcordbot.util.asNickedMention
 import com.github.devcordde.devcordbot.util.hasSubCommands
 import kotlinx.coroutines.*
 import mu.KotlinLogging
