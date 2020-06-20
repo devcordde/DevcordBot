@@ -97,9 +97,13 @@ class RankCommand : AbstractCommand() {
             if (offset != 0) {
                 transaction {
                     maxOffset = DevCordUser.all().count()
-                    if (maxOffset < offset) {
+                    if (maxOffset <= offset) {
                         invalidOffset = true
-                        offset = maxOffset - 11
+                        if (maxOffset < 10) {
+                            offset = maxOffset - 1
+                        } else {
+                            offset = maxOffset - 10
+                        }
                     }
                 }
             }
@@ -116,7 +120,7 @@ class RankCommand : AbstractCommand() {
             if (invalidOffset) {
                 context.respond(
                     Embeds.warn(
-                        "Rangliste | Zu hoher Offset! (Maximum: ${maxOffset})",
+                        "Rangliste | Zu hoher Offset! (Maximum: ${maxOffset - 1})",
                         users.joinToString("\n")
                     )
                 ).queue()
