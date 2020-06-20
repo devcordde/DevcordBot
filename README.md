@@ -9,10 +9,11 @@
   - DATABASE="postgres"
   - DATABASE_USERNAME="postgres"
   - DATABASE_PASSWORD="DevcordRoxx2020"
-- enter `docker exec -it test-db bash` to access the docker image's bash shell
-- switch the user to postgres with `su postgres`
-- enter `psql` to access the postgres database and run `CREATE EXTENSION pg_trgm;` to install the required postgres extension pg_trgm
-- exit the image's bash shell
+- enable `pg_trgm` for the database
+  - enter `docker exec -it test-db bash` to access the docker image's bash shell
+  - switch the user to postgres with `su postgres`
+  - enter `psql` to access the postgres database and run `CREATE EXTENSION pg_trgm;` to install the required postgres extension pg_trgm
+  - exit the image's bash shell
 - the bot is now ready to start
 
 ## setup productive environment
