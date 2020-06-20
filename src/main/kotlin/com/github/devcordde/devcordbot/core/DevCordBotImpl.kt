@@ -87,7 +87,7 @@ internal class DevCordBotImpl(
         )
     )
         .setEventManager(AnnotatedEventManager())
-        .setDisabledCacheFlags(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
+        .disableCache(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
         .setMemberCachePolicy(MemberCachePolicy.ALL)
         .setActivity(Activity.playing("Starting ..."))
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
@@ -212,13 +212,13 @@ internal class DevCordBotImpl(
 
         val cseKey = env["CSE_KEY"]
         val cseId = env["CSE_ID"]
-        if (cseKey != null && cseId != null) {
+        if (cseKey != null && cseId != null && cseKey.isNotBlank() && !cseId.isNotBlank()) {
             commandClient.registerCommands(GoogleCommand(cseKey, cseId))
         }
 
         val redeployHost = env["REDEPLOY_HOST"]
         val redeployToken = env["REDEPLOY_TOKEN"]
-        if (redeployHost != null && redeployToken != null) {
+        if (redeployHost != null && redeployToken != null && redeployHost.isNotBlank() && redeployToken.isNotBlank()) {
             commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
         }
     }
