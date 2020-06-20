@@ -49,12 +49,7 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
     override suspend fun execute(context: Context) {
         val query = context.args.join()
 
-        if (query.isBlank()) return context.respond(
-            Embeds.error(
-                title = "Leere Suchanfrage.",
-                description = "Bitte gebe einen Suchbegriff ein."
-            )
-        ).queue()
+        if (query.isBlank()) return context.sendHelp().queue()
 
         val results = with(search.cse().list(query)) {
             key = apiKey
