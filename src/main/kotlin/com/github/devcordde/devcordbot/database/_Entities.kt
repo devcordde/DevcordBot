@@ -27,6 +27,14 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SizedIterable
 import java.time.Instant
 
+/**
+ * Representation of a user in the database.
+ * @property userID the users id
+ * @property level the current level of the user
+ * @property experience the current amount of experience points of the user
+ * @property lastUpgrade the last time the user gained XP
+ * @property blacklisted user is blacklisted for commands
+ */
 interface DevCordUser {
     val userID: Long
     var level: Int
