@@ -72,9 +72,12 @@ class AutoHelp(
         val input = event.message.contentRaw
         val userLevel by lazy { transaction { DatabaseDevCordUser.findOrCreateById(event.author.idLong).level } }
 
-        if (event.author.isBot ||
-            (!bot.debugMode && (event.channel.parent?.id !in whitelist ||
-                    event.channel.id in blacklist) && userLevel < levelLimit && bypassWord !in input)
+        if (
+            event.author.isBot
+            || bot.debugMode
+            || (event.channel.parent?.id !in whitelist || event.channel.id in blacklist)
+            || userLevel < levelLimit
+            || bypassWord !in input
         ) return
 
         // Asynchronously fetch potential content
