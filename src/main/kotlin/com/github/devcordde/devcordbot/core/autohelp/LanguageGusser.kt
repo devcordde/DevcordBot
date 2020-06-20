@@ -29,13 +29,12 @@ class LanguageGusser(knownLanguages: List<String>) {
     private val languageGuesser = Highlighter(UselessRendererFactoryThing())
     private val knownLanguages = knownLanguages.toTypedArray()
 
-    private fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, knownLanguages)
-
     /**
-     * Check if the given text is Code.
+     * Guesses the programming language of [potentialCode].
      */
-    fun isCode(potentialCode: String): Boolean = guessLanguage(potentialCode).language != null
-}
+    fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, knownLanguages)
+
+ }
 
 // We don't want to highlight anything
 @Suppress("FunctionName") // It should act like a class
