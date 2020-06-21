@@ -18,6 +18,11 @@
 
 package com.github.devcordde.devcordbot.database
 
+import com.github.devcordde.devcordbot.database.Punishments.executionTime
+import com.github.devcordde.devcordbot.database.Punishments.id
+import com.github.devcordde.devcordbot.database.Punishments.kind
+import com.github.devcordde.devcordbot.database.Punishments.punishmentId
+import com.github.devcordde.devcordbot.database.Punishments.userId
 import com.github.devcordde.devcordbot.database.StarboardEntries.authorId
 import com.github.devcordde.devcordbot.database.StarboardEntries.botMessageId
 import com.github.devcordde.devcordbot.database.StarboardEntries.channelId
@@ -37,13 +42,20 @@ import com.github.devcordde.devcordbot.database.Users.experience
 import com.github.devcordde.devcordbot.database.Users.id
 import com.github.devcordde.devcordbot.database.Users.lastUpgrade
 import com.github.devcordde.devcordbot.database.Users.level
+import com.github.devcordde.devcordbot.database.Warns.id
+import com.github.devcordde.devcordbot.database.Warns.reason
+import com.github.devcordde.devcordbot.database.Warns.userId
+import com.github.devcordde.devcordbot.database.Warns.warnId
+import com.github.devcordde.devcordbot.database.Warns.warnTime
 import net.dv8tion.jda.api.entities.Message
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.`java-time`.timestamp
 import java.time.Instant
+import java.util.*
 
 /**
  * Representation of the user table in the database.
@@ -130,4 +142,42 @@ object Starrers : LongIdTable() {
     val authorId: Column<Long> = long("author_id")
     val entry: Column<EntityID<Long>> = reference("entry_id", StarboardEntries)
     val emojis: Column<Int> = integer("emojis").default(1)
+}
+
+
+/**
+ * Representation of warns table.
+ * @property id @see [warnId]
+ * @property warnId the id of the warn.
+ * @property userId the id of the warned user.
+ * @property reason the reason message.
+ * @property warnTime the time of the warn.
+ */
+object Warns : UUIDTable() {
+    override val id: Column<EntityID<UUID>> get() = warnId
+    val warnId: Column<EntityID<UUID>> = uuid("warn_id").autoGenerate().entityId()
+    val userId: Column<Long> = long("user_id")
+    val reason: Column<String> = varchar("reason", 120)
+    val warnTime: Column<Instant> = timestamp("warn_time").default(Instant.now())
+
+    override val primaryKey: PrimaryKey = PrimaryKey(warnId)
+}
+
+/**
+ * Representation of punishments table.
+ * @property id @see [punishmentId]
+ * @property punishmentId the id of the punishment.
+ * @property kind the kind of the punishment.
+ * @property userId the punished user.
+ * @property executionTime the time the punishment runs out.
+ */
+object Punishments : UUIDTable() {
+    override val id: Column<EntityID<UUID>> get() = punishmentId
+
+    val punishmentId: Column<EntityID<UUID>> = uuid("punishment_id").autoGenerate().entityId()
+    val kind: Column<String> = varchar("kind", 120)
+    val userId: Column<String> = varchar("user_id", 50)
+    val executionTime: Column<Instant> = timestamp("execution_time")
+
+    override val primaryKey: PrimaryKey = PrimaryKey(punishmentId)
 }

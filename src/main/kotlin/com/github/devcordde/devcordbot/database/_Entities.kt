@@ -19,13 +19,11 @@
 package com.github.devcordde.devcordbot.database
 
 import com.github.devcordde.devcordbot.database.Starrers.entry
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SizedIterable
 import java.time.Instant
+import java.util.*
 
 /**
  * Representation of a user in the database.
@@ -142,4 +140,36 @@ class Starrer(id: EntityID<Long>) : LongEntity(id) {
     var authorId: Long by Starrers.authorId
     var entry: StarboardEntry by StarboardEntry referencedOn Starrers.entry
     var emojis: Int by Starrers.emojis
+}
+
+/**
+ * Representation of warns table.
+ * @property warnId the id of the warn.
+ * @property userId the id of the warned user.
+ * @property reason the reason message.
+ * @property warnTime the time of the warn.
+ */
+class Warn(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Warn>(Warns)
+
+    val warnId: UUID get() = id.value
+    var userId: Long by Warns.userId
+    var reason: String by Warns.reason
+    var warnTime: Instant by Warns.warnTime
+}
+
+/**
+ * Representation of punishments table.
+ * @property punishmentId the id of the punishment.
+ * @property kind the kind of the punishment.
+ * @property userId the punished user.
+ * @property executionTime the time the punishment runs out.
+ */
+class Punishment(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Punishment>(Punishments)
+
+    val punishmentId: UUID get() = id.value
+    var kind: String by Punishments.kind
+    var userId: String by Punishments.userId
+    var executionTime: Instant by Punishments.executionTime
 }
