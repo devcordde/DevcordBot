@@ -54,12 +54,6 @@ fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()
  */
 fun Member.asMention(): Regex = "<@!?$id>\\s?".toRegex()
 
-
-/**
- * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
- */
-fun Member.asNickedMention(): String = "<@!$id>"
-
 /**
  * Executes a [Call] asynchronously.
  * @see Call.enqueue

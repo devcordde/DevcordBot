@@ -34,6 +34,7 @@ import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.event.MessageListener
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.util.GithubUtil
 import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.Dotenv
 import mu.KotlinLogging
@@ -74,6 +75,7 @@ internal class DevCordBotImpl(
     override val commandClient: CommandClient =
         CommandClientImpl(this, Constants.prefix, RolePermissionHandler(env["BOT_OWNERS"]!!.split(',')))
     override val httpClient: OkHttpClient = OkHttpClient()
+    override val github: GithubUtil = GithubUtil(httpClient)
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
 
@@ -95,7 +97,7 @@ internal class DevCordBotImpl(
         .addEventListeners(
             MessageListener(),
             this@DevCordBotImpl,
-            SelfMentionListener(),
+            SelfMentionListener(this),
             DatabaseUpdater(),
             commandClient,
             starboard,
