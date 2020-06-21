@@ -161,7 +161,8 @@ class CommandClientImpl(
         val permissionState = permissionHandler.isCovered(
             command.permission,
             member,
-            user)
+            user
+        )
 
 
         when (permissionState) {
@@ -209,24 +210,6 @@ class CommandClientImpl(
         }
 
         return findCommand(Arguments(input.trim().split(delimiter), raw = input), commandAssociations)
-    }
-
-    private fun stripPrefix(message: Message): String? {
-        val rawInput = message.contentRaw
-
-        when (message.channelType) {
-            ChannelType.TEXT -> {
-                val prefixLength = resolvePrefix(message.guild, rawInput) ?: return null
-                return rawInput.substring(prefixLength).trim()
-            }
-            ChannelType.PRIVATE -> {
-                val prefix = prefix.find(rawInput) ?: return null
-                return rawInput.substring(prefix.range.last + 1).trim()
-            }
-            else -> {
-                return null
-            }
-        }
     }
 
     private fun resolvePrefix(guild: Guild?, content: String): Int? {
