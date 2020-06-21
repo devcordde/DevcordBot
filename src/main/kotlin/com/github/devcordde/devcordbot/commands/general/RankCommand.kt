@@ -53,7 +53,8 @@ class RankCommand : AbstractCommand() {
     }
 
     private fun sendRankInformation(user: User, context: Context, default: Boolean = false) {
-        val entry = if (default) context.devCordUser else transaction { DatabaseDevCordUser.findOrCreateById(user.idLong) }
+        val entry =
+            if (default) context.devCordUser else transaction { DatabaseDevCordUser.findOrCreateById(user.idLong) }
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(
