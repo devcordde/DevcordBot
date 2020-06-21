@@ -17,6 +17,7 @@
 package com.github.devcordde.devcordbot.core
 
 import com.github.devcordde.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.util.Punisher
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
 import okhttp3.OkHttpClient
@@ -64,4 +65,9 @@ interface DevCordBot {
      * The guild that the bot is operating on.
      */
     val guild: Guild
+
+    /**
+     * The bots punisher, for punishing rude users.
+     */
+    val punisher: Punisher
 }

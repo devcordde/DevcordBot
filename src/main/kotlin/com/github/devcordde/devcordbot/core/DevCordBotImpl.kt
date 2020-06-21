@@ -22,8 +22,7 @@ import com.github.devcordde.devcordbot.command.impl.RolePermissionHandler
 import com.github.devcordde.devcordbot.commands.`fun`.SourceCommand
 import com.github.devcordde.devcordbot.commands.general.*
 import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
-import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
-import com.github.devcordde.devcordbot.commands.moderation.StarboardCommand
+import com.github.devcordde.devcordbot.commands.moderation.*
 import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
 import com.github.devcordde.devcordbot.constants.Constants
@@ -34,6 +33,7 @@ import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.event.MessageListener
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.util.Punisher
 import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.Dotenv
 import mu.KotlinLogging
@@ -115,6 +115,8 @@ internal class DevCordBotImpl(
     override val guild: Guild
         get() = jda.getGuildById(guildId)!!
 
+    override val punisher = Punisher(this, env["MUTE_ROLE_ID"] ?: "")
+
     /**
      * Whether the bot received the [ReadyEvent] or not.
      */
@@ -181,18 +183,29 @@ internal class DevCordBotImpl(
         }
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases, StarboardEntries, Starrers)
+            SchemaUtils.createMissingTablesAndColumns(
+                Users,
+                Tags,
+                TagAliases,
+                StarboardEntries,
+                Starrers,
+                Warns,
+                Punishments
+            )
             //language=PostgreSQL
             exec("SELECT * FROM pg_extension WHERE extname = 'pg_trgm'") { rs ->
                 //language=text
                 require(rs.next()) { "pg_tgrm extension must be available. See https://dba.stackexchange.com/a/165301" }
             }
         }
+
+        punisher.startOldPunishments()
     }
 
     private fun shutdown() {
         gameAnimator.close()
         dataSource.close()
+        punisher.shutdown()
     }
 
     private fun registerCommands(env: Dotenv) {
@@ -207,8 +220,17 @@ internal class DevCordBotImpl(
             RanksCommand(),
             BlacklistCommand(),
             InfoCommand(),
-            CleanupCommand()
+            CleanupCommand(),
+            WarnCommand(),
+            KickCommand(),
+            BanCommand(),
+            TempBanCommand()
         )
+
+        val muteRoleId = env["MUTE_ROLE_ID"]
+        if (muteRoleId != null && muteRoleId.isNotBlank()) {
+            commandClient.registerCommands(MuteCommand(muteRoleId), UnmuteCommand(muteRoleId))
+        }
 
         val cseKey = env["CSE_KEY"]
         val cseId = env["CSE_ID"]
