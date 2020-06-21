@@ -279,19 +279,20 @@ class AutoHelp(
         private val JVM_EXCEPTION_NAME_PATTERN =
             """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.*)(?:\R+^\s*.*)?""".toRegex()
 
-        // https://regex101.com/r/u0QAR6/2
+        // https://regex101.com/r/u0QAR6/6
         private val HASTEBIN_PATTERN =
-            "(?:https?:\\/\\/)?(?:(?:www\\.)?)?(hastebin\\.com|hasteb\\.in|paste\\.helpch\\.at)\\/(?:raw\\/)?(.+?(?=\\.|\$|\\/))".toRegex()
+            "(?:https?:\\/\\/)?(?:(?:www\\.)?)?(hastebin\\.com|hasteb\\.in|paste\\.helpch\\.at)\\/(?:raw\\/)?(.+?(?=\\.|\$|\\/|#))".toRegex()
 
-        // https://regex101.com/r/N8NBDz/1
-        private val PASTEBIN_PATTERN = "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.*)".toRegex()
+        // https://regex101.com/r/N8NBDz/2
+        private val PASTEBIN_PATTERN =
+            "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.+?(?=\\.|\$|\\/|#))".toRegex()
 
         // https://regex101.com/r/CyjiKt/2
         private val GHOSTBIN_PATTERN =
             "(?:https?:\\/\\/(?:www\\.)?)?(?:ghostbin\\.co)\\/(?:paste\\/)?(.+?(?=\\.|\$|\\/))(?:\\/raw)?".toRegex()
 
-        // https://regex101.com/r/AlVYjn/1
+        // https://regex101.com/r/AlVYjn/2
         private val GITHUB_GIST_PATTERN =
-            "(?:https?:\\/\\/)?(gist\\.github\\.com|gist.githubusercontent.com)\\/(.*)\\/(.*)\\/?".toRegex()
+            "(?:https?:\\/\\/)?(gist\\.github\\.com|gist.githubusercontent.com)\\/(.+?(?=\\.|\$|\\/))\\/(.+?(?=\\.|\$|\\/|#))".toRegex()
     }
 }
