@@ -224,7 +224,8 @@ internal class DevCordBotImpl(
             WarnCommand(),
             KickCommand(),
             BanCommand(),
-            TempBanCommand()
+            TempBanCommand(),
+            UserinfoCommand()
         )
 
         val muteRoleId = env["MUTE_ROLE_ID"]
