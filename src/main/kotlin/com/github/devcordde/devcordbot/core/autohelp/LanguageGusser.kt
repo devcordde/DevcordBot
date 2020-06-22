@@ -30,7 +30,7 @@ class LanguageGusser(knownLanguages: List<String>) {
     /**
      * Guesses the programming language of [potentialCode].
      */
-    fun guessLanguage(potentialCode: String): Highlighter.HighlightResult =
+    fun guessLanguage(potentialCode: String): Highlighter.HighlightResult? =
         languageGuesser.highlightAuto(potentialCode, knownLanguages)
 
 }
