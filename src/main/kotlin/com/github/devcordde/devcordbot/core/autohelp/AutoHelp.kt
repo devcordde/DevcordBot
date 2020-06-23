@@ -74,7 +74,7 @@ class AutoHelp(
             !bot.debugMode &&
             (event.author.isBot
                     || (event.channel.parent?.id !in whitelist || event.channel.id in blacklist)
-                    || userLevel < levelLimit
+                    || userLevel > levelLimit
                     || bypassWord !in input)
         ) return
 
