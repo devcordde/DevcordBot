@@ -75,7 +75,7 @@ class AutoHelp(
             (event.author.isBot
                     || (event.channel.parent?.id !in whitelist || event.channel.id in blacklist)
                     || userLevel > levelLimit
-                    || bypassWord !in input)
+                    || bypassWord in input)
         ) return
 
         // Asynchronously fetch potential content
