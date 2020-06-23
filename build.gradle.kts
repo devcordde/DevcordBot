@@ -17,7 +17,7 @@
 plugins {
     id("com.github.johnrengelman.shadow") version "5.2.0"
     application
-    kotlin("jvm") version "1.3.71"
+    kotlin("jvm") version "1.3.72"
 }
 
 group = "com.github.devcord.devcordbot"
