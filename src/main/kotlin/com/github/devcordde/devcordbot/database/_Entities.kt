@@ -76,6 +76,8 @@ open class DatabaseDevCordUser(id: EntityID<Long>) : LongEntity(id), DevCordUser
  * @property author the id of the author of the tag
  * @property content the content of the tag
  * @property createdAt the timestamp of the creation of the tag
+ * @property autoHelp wehther this tag can be used for autohelp or not
+ * @property autoHelpBlocked whether moderators have blocked this from auto-help or not
  */
 class Tag(name: EntityID<String>) : Entity<String>(name) {
     companion object : EntityClass<String, Tag>(Tags) {
@@ -91,6 +93,8 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
     var author: Long by Tags.author
     var content: String by Tags.content
     val createdAt: Instant by Tags.createdAt
+    var autoHelp: Boolean by Tags.autoHelp
+    var autoHelpBlocked: Boolean by Tags.autoHelpBlocked
 
 }
 

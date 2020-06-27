@@ -20,9 +20,7 @@ import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.core.DevCordBot
-import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
-import com.github.devcordde.devcordbot.database.Tag
-import com.github.devcordde.devcordbot.database.Tags
+import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.dsl.sendMessage
@@ -35,6 +33,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -240,7 +239,7 @@ class AutoHelp(
 
     private fun handleCommonException(match: MatchResult, event: GuildMessageReceivedEvent): Boolean {
         val exceptionName = match.groupValues[1]
-        val message = match.groupValues[2]
+        val message = match.groupValues[2].trim()
         if (!handleCommonException(exceptionName, message, event)) {
             val exceptionInMessage = JVM_EXCEPTION_NAME_PATTERN.matchEntire(message) ?: return false
             val newName = exceptionInMessage.groupValues[1]
@@ -255,25 +254,60 @@ class AutoHelp(
         message: String,
         event: GuildMessageReceivedEvent
     ): Boolean {
-        val exceptionName = exception.substring(exception.lastIndexOf('.') + 1).toLowerCase().trim()
-        val tag = when {
-            exceptionName == "nullpointerexception" -> "nullpointerexception"
-            exceptionName == "unsupportedclassversionerror" -> "class-version"
-            exceptionName == "ClassCastException" -> "casting"
+        val exceptionName = exception.substring(exception.lastIndexOf('.') + 1).trim()
+        val searchName = exceptionName.toLowerCase()
+        val tagName = when {
+            searchName == "nullpointerexception" -> {
+                val helpfulNpe = JAVA14_HELPFUL_NPE_PATTERN.matchEntire(message)
+                if (helpfulNpe == null) {
+                    "nullpointerexception"
+                } else {
+                    NPEAnalyzer.handleHelpfulNpe(helpfulNpe, event)
+                    return true
+                }
+            }
+            searchName == "unsupportedclassversionerror" -> "class-version"
+            searchName == "ClassCastException" -> "casting"
             message == "Plugin already initialized!" -> "plugin-already-initialized"
-            exceptionName == "invaliddescriptionexception" -> "plugin.yml"
-            exceptionName == "invalidpluginexception" && "cannot find main class" in message.toLowerCase() -> "main-class-not-found"
+            searchName == "invaliddescriptionexception" -> "plugin.yml"
+            searchName == "invalidpluginexception" && "cannot find main class" in message.toLowerCase() -> "main-class-not-found"
             else -> null
+        }
+        val tag = transaction {
+            if (tagName == null) {
+                TagAlias.find { TagAliases.name eq searchName }.firstOrNull()?.tag
+                    ?: Tag.find { Tags.name eq searchName }.firstOrNull()
+            } else {
+                Tag.find { Tags.name eq tagName }.firstOrNull()
+            }
         } ?: return false
-        val tagContent = transaction { Tag.find { Tags.name eq tag }.firstOrNull() } ?: return false
-        event.channel.sendMessage(tagContent.content).queue()
+        if (!tag.autoHelp) return false
+        event.channel.sendMessage(buildHelpEmbed(tag, exceptionName, event.jda)).queue()
         return true
     }
 
+    private fun buildHelpEmbed(tag: Tag, exceptionName: String, jda: JDA) = Embeds.info(
+        "AutoHelp - $exceptionName",
+        tag.content
+    ) {
+        author {
+            val user = jda.getUserById(tag.author) ?: jda.selfUser
+            name = user.name
+            iconUrl = user.avatarUrl ?: user.defaultAvatarUrl
+        }
+
+        footer("AutoHelp V1 BETA - Bitte bugs auf GitHub.com/devcordde/DevcordBot melden.")
+    }
+
+
     companion object {
-        // https://regex101.com/r/vgz86r/11
+        // https://regex101.com/r/vgz86r/14
         private val JVM_EXCEPTION_PATTERN =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)(?:\R+^\s*.*)?(?:\R+^.*at .*)+""".toRegex()
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(?:.*)(\R+^\s*(?!(.*)at).*)?(?:\R+^.*at .*)+""".toRegex()
+
+        // https://regex101.com/r/SL7g4g/2
+        private val JAVA14_HELPFUL_NPE_PATTERN =
+            """Cannot (assign|read|load from|store to|throw|invoke|enter|exit) (?:(field|method|.* array|synchronized block|the array length|exception) )?(?:"(.*)" )?because "(.*)" is null""".toRegex()
 
         // https://regex101.com/r/HtaGF8/1
         private val JVM_EXCEPTION_NAME_PATTERN =

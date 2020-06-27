@@ -28,6 +28,8 @@ import com.github.devcordde.devcordbot.database.Starrers.entry
 import com.github.devcordde.devcordbot.database.TagAliases.name
 import com.github.devcordde.devcordbot.database.TagAliases.tag
 import com.github.devcordde.devcordbot.database.Tags.author
+import com.github.devcordde.devcordbot.database.Tags.autoHelp
+import com.github.devcordde.devcordbot.database.Tags.autoHelpBlocked
 import com.github.devcordde.devcordbot.database.Tags.content
 import com.github.devcordde.devcordbot.database.Tags.createdAt
 import com.github.devcordde.devcordbot.database.Tags.name
@@ -70,6 +72,8 @@ object Users : IdTable<Long>() {
  * @property author author of the tag
  * @property content the content of the tag
  * @property createdAt the timestamp of the creation of the tag
+ * @property autoHelp wehther this tag can be used for autohelp or not
+ * @property autoHelpBlocked whether moderators have blocked this from auto-help or not
  */
 object Tags : IdTable<String>() {
     /**
@@ -82,6 +86,8 @@ object Tags : IdTable<String>() {
     val author: Column<Long> = long("author")
     val content: Column<String> = varchar("content", Message.MAX_CONTENT_LENGTH)
     val createdAt: Column<Instant> = timestamp("created_at").clientDefault { Instant.now() }
+    val autoHelp: Column<Boolean> = bool("auto_help").default(true)
+    val autoHelpBlocked: Column<Boolean> = bool("auto_help_blocked").default(false)
 
     override val primaryKey: PrimaryKey = PrimaryKey(id)
 }

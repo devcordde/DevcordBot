@@ -111,20 +111,12 @@ class TagCommand : AbstractCommand() {
 
         override suspend fun execute(context: Context) {
             val args = context.args
-            if(args.size < 2) return context.sendHelp().queue()
+            if (args.size < 2) return context.sendHelp().queue()
             val user = args.user(0, true, context) ?: return
             val tagName = args.subList(1, args.size).joinToString(" ")
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
 
-            if (tag.author != context.author.idLong && !context.hasModerator()) {
-                return context.respond(
-                    Embeds.error(
-                        "Fehlende Berechtigung!",
-                        "Nur Benutzer mit der ${Permission.MODERATOR.name} Berechtigung dürfen nichteigene Tags überschreiben."
-                    )
-                ).queue()
-            }
-
+            if (checkPermission(tag, context)) return
             transaction {
                 tag.author = user.idLong
             }
@@ -136,8 +128,8 @@ class TagCommand : AbstractCommand() {
                 )
             ).queue()
         }
-
     }
+
 
     private inner class AliasCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("alias")
@@ -344,6 +336,45 @@ class TagCommand : AbstractCommand() {
             val content =
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
             context.respond(content).queue()
+        }
+    }
+
+    private inner class AutoHelpCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("autohelp")
+        override val displayName: String = "autohelp"
+        override val description: String = "Definiert ob ein tag für auto-help benutzt werden darf"
+        override val usage: String = "[mod-block]"
+
+        override suspend fun execute(context: Context) {
+            val args = context.args
+            if (args.size < 1) return context.sendHelp().queue()
+            val modBlock = args.optionalArgument(0)
+            val tagName = args.subList(if (modBlock == null) 0 else 1, args.size).joinToString(" ")
+            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
+            if (checkPermission(tag, context)) return
+
+            if (!tag.autoHelp and tag.autoHelpBlocked) {
+                return context.respond(
+                    Embeds.error(
+                        "Tag blockiert!",
+                        "Dieser Tag wurde durch die Moderation für auto-help blockiert."
+                    )
+                ).queue()
+            }
+
+            transaction {
+                tag.autoHelp = !tag.autoHelp
+                if (modBlock != null && context.hasModerator()) {
+                    tag.autoHelpBlocked = modBlock.toBoolean()
+                }
+            }
+
+            context.respond(
+                Embeds.success(
+                    "Tag bearbeitet",
+                    if (tag.autoHelp) "Der Tag kann nun für auto-help benutzt werden" else "Der tag kann nicht mehr für auto-help benutzt werden"
+                )
+            ).queue()
         }
     }
 
