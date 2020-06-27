@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.listeners
 
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.util.XPUtil
@@ -48,7 +49,14 @@ class DatabaseUpdater {
      * Removes a user from the database when the user leaves the guild.
      */
     @SubscribeEvent
-    fun onMemberLeave(event: GuildMemberRemoveEvent): Unit = deleteUser(event.member?.idLong)
+    fun onMemberLeave(event: GuildMemberRemoveEvent) {
+        transaction {
+            Tags.update({ Tags.author eq event.user.idLong }) {
+                it[author] = event.jda.selfUser.idLong
+            }
+        }
+        deleteUser(event.member?.idLong)
+    }
 
     /**
      * Adds XP to a user

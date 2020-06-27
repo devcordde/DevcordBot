@@ -60,7 +60,8 @@ class TagCommand : AbstractCommand() {
             ListCommand(),
             FromCommand(),
             SearchCommand(),
-            RawCommand()
+            RawCommand(),
+            TransferCommand()
         )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
@@ -100,6 +101,42 @@ class TagCommand : AbstractCommand() {
                 )
             ).queue()
         }
+    }
+
+    private inner class TransferCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("transfer")
+        override val displayName: String = "Transfer"
+        override val description: String = "Überschreibt einen tag an einen anderen Benutzer"
+        override val usage: String = "<@user> <tag>"
+
+        override suspend fun execute(context: Context) {
+            val args = context.args
+            if(args.size < 2) return context.sendHelp().queue()
+            val user = args.user(0, true, context) ?: return
+            val tagName = args.subList(1, args.size).joinToString(" ")
+            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
+
+            if (tag.author != context.author.idLong && !context.hasModerator()) {
+                return context.respond(
+                    Embeds.error(
+                        "Fehlende Berechtigung!",
+                        "Nur Benutzer mit der ${Permission.MODERATOR.name} Berechtigung dürfen nichteigene Tags überschreiben."
+                    )
+                ).queue()
+            }
+
+            transaction {
+                tag.author = user.idLong
+            }
+
+            context.respond(
+                Embeds.success(
+                    "Tag erfolgreich überschrieben!",
+                    "Der tag wurde erfolgreich an ${user.asMention} überschrieben."
+                )
+            ).queue()
+        }
+
     }
 
     private inner class AliasCommand : AbstractSubCommand(this) {

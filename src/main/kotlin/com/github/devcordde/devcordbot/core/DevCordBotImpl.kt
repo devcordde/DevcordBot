@@ -113,7 +113,7 @@ internal class DevCordBotImpl(
         .build()
     override val gameAnimator = GameAnimator(jda, games)
 
-    private val guildId = env["GUILD_ID"]!!
+    private val guildId = env["GUILD_ID"]?.toLongOrNull() ?: error("Invalid guild id")
     override val guild: Guild
         get() = jda.getGuildById(guildId)!!
 
