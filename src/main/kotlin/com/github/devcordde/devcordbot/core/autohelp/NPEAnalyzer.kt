@@ -21,7 +21,14 @@ import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.sendMessage
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 
+/**
+ * Utility to analyze Java14+ Helpful NPEs.
+ */
 object NPEAnalyzer {
+
+    /**
+     * Handles an NPE.
+     */
     fun handleHelpfulNpe(helpfulNpe: MatchResult, event: GuildMessageReceivedEvent) {
         val embed = Embeds.info("NullPointerExceptions verstehen | Was ist eine NPE?") {
             footer("AutoHelp V1 BETA - Bitte bugs auf GitHub.com/devcordde/DevcordBot melden.")
