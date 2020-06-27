@@ -163,6 +163,7 @@ class Warn(id: EntityID<UUID>) : UUIDEntity(id) {
  * @property punishmentId the id of the punishment.
  * @property kind the kind of the punishment.
  * @property userId the punished user.
+ * @property channelId the channel the punishment is executed for.
  * @property executionTime the time the punishment runs out.
  */
 class Punishment(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -171,5 +172,6 @@ class Punishment(id: EntityID<UUID>) : UUIDEntity(id) {
     val punishmentId: UUID get() = id.value
     var kind: String by Punishments.kind
     var userId: String by Punishments.userId
+    var channelId: String? by Punishments.channelId
     var executionTime: Instant by Punishments.executionTime
 }

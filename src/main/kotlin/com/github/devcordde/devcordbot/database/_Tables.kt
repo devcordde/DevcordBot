@@ -18,6 +18,7 @@
 
 package com.github.devcordde.devcordbot.database
 
+import com.github.devcordde.devcordbot.database.Punishments.channelId
 import com.github.devcordde.devcordbot.database.Punishments.executionTime
 import com.github.devcordde.devcordbot.database.Punishments.id
 import com.github.devcordde.devcordbot.database.Punishments.kind
@@ -169,6 +170,7 @@ object Warns : UUIDTable() {
  * @property punishmentId the id of the punishment.
  * @property kind the kind of the punishment.
  * @property userId the punished user.
+ * @property channelId the channel the punishment is executed for.
  * @property executionTime the time the punishment runs out.
  */
 object Punishments : UUIDTable() {
@@ -177,6 +179,7 @@ object Punishments : UUIDTable() {
     val punishmentId: Column<EntityID<UUID>> = uuid("punishment_id").autoGenerate().entityId()
     val kind: Column<String> = varchar("kind", 120)
     val userId: Column<String> = varchar("user_id", 50)
+    var channelId: Column<String?> = varchar("channel_id", 50).nullable()
     val executionTime: Column<Instant> = timestamp("execution_time")
 
     override val primaryKey: PrimaryKey = PrimaryKey(punishmentId)
