@@ -46,7 +46,7 @@ class UnbanCommand : AbstractCommand() {
             )
         ).queue()
 
-        context.guild.unban(userId).queue()
+        context.bot.punisher.unban(userId)
 
         return context.respond(
             Embeds.success(

@@ -18,6 +18,8 @@ package com.github.devcordde.devcordbot.util
 
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.Punishment
+import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.TextChannel
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormatterBuilder
@@ -63,9 +65,28 @@ class Punisher(private val bot: DevCordBot, private val mutedRoleId: String) {
         addPunishment("ban", userId, executionTime)
     }
 
+    /**
+     * Unban a benned user.
+     */
+    fun unban(memberId: String) {
+        bot.guild.unban(memberId).queue()
+    }
+
+    /**
+     * Blocks a user for a specific channel.
+     */
+    fun addBlock(member: Member, channel: TextChannel, period: Period) {
+
+    }
+
+    /**
+     * Unblocks a user from a channel.
+     */
+    fun unblock(member: Member, channel: TextChannel) {
+
+    }
+
     private fun addPunishment(kind: String, userId: String, executionTime: Period) {
-
-
         val punishment = transaction {
             Punishment.new {
                 this.kind = kind
@@ -91,7 +112,12 @@ class Punisher(private val bot: DevCordBot, private val mutedRoleId: String) {
                 val mutedRole = bot.guild.getRoleById(mutedRoleId)
                 if (mutedRole != null) bot.guild.removeRoleFromMember(punishment.userId, mutedRole).queue()
             }
-            "ban" -> bot.guild.unban(punishment.userId).queue()
+            "ban" -> this.unban(punishment.userId)
+            "block" -> {
+                val channel = bot.guild.getTextChannelById(punishment.channelId ?: return) ?: return
+                val member = bot.guild.getMemberById(punishment.userId) ?: return
+                this.unblock(member, channel)
+            }
         }
 
         transaction {
