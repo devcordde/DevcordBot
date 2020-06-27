@@ -224,7 +224,10 @@ internal class DevCordBotImpl(
             WarnCommand(),
             KickCommand(),
             BanCommand(),
+            UnbanCommand(),
             TempBanCommand(),
+            BlockCommand(),
+            UnblockCommand(),
             UserinfoCommand()
         )
 
