@@ -75,15 +75,28 @@ class Punisher(private val bot: DevCordBot, private val mutedRoleId: String) {
     /**
      * Blocks a user for a specific channel.
      */
-    fun addBlock(member: Member, channel: TextChannel, period: Period) {
+    fun addBlock(member: Member, channel: TextChannel, executionTime: Period) {
+        val punishment = transaction {
+            Punishment.new {
+                this.kind = "block"
+                this.userId = member.id
+                this.channelId = channel.id
+                this.executionTime = Instant.now().plusMillis(executionTime.toStandardDuration().millis)
+            }
+        }
 
+        startPunishmentTimer(punishment)
     }
 
     /**
      * Unblocks a user from a channel.
      */
     fun unblock(member: Member, channel: TextChannel) {
+        val permissionOverride = channel.memberPermissionOverrides.firstOrNull {
+            it.member?.id ?: false == member.id
+        } ?: return
 
+        permissionOverride.delete().queue()
     }
 
     private fun addPunishment(kind: String, userId: String, executionTime: Period) {
@@ -133,6 +146,7 @@ class Punisher(private val bot: DevCordBot, private val mutedRoleId: String) {
                 .appendWeeks().appendSuffix("w")
                 .appendDays().appendSuffix("d ")
                 .appendHours().appendSuffix("h")
+                .appendMinutes().appendSuffix("m")
                 .toFormatter()
 
         /**
