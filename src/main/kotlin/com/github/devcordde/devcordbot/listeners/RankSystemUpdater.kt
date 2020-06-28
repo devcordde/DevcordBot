@@ -16,11 +16,14 @@
 
 package com.github.devcordde.devcordbot.listeners
 
+import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.Tag
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.util.XPUtil
+import mu.KotlinLogging
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -35,7 +38,8 @@ import java.time.Instant
 /**
  * Updates the Database based on Discord events.
  */
-class DatabaseUpdater {
+class DatabaseUpdater(private val bot: DevCordBot) {
+    private val logger = KotlinLogging.logger {}
 
     /**
      * Adds a user to the database when a user joins the guild.
@@ -120,6 +124,11 @@ class DatabaseUpdater {
 
         transaction {
             Users.deleteWhere { Users.id eq id }
+
+            Tag.all().filter { it.author == id }.forEach {
+                logger.info { "Autor geändert: Alter Author: ${it.author}, Name: ${it.name}" }
+                it.author = bot.jda.selfUser.idLong
+            }
         }
     }
 }

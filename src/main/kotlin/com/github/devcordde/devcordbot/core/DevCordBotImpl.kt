@@ -98,7 +98,7 @@ internal class DevCordBotImpl(
             MessageListener(),
             this@DevCordBotImpl,
             SelfMentionListener(this),
-            DatabaseUpdater(),
+            DatabaseUpdater(this),
             commandClient,
             starboard,
             AutoHelp(
