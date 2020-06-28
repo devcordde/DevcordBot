@@ -36,21 +36,19 @@ class UnblockCommand : AbstractCommand() {
     override val commandPlace: CommandPlace = CommandPlace.GM
 
     override suspend fun execute(context: Context) {
-        if (context.args.size < 3) return context.sendHelp().queue()
+        if (context.args.size < 2) return context.sendHelp().queue()
 
         val member = context.args.member(0, context = context) ?: return
 
         val channel = context.args.channel(1, context = context) ?: return
 
-        channel.createPermissionOverride(member).setDeny(net.dv8tion.jda.api.Permission.MESSAGE_WRITE).queue()
-
         context.bot.punisher.unblock(member, channel)
 
-        context.respond(
+        return context.respond(
             Embeds.success(
                 "User geblockt.",
                 "`${member.effectiveName}` wurde erfolgreich vom Channel `${channel.name}` ausgeschlossen."
             )
-        )
+        ).queue()
     }
 }
