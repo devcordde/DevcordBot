@@ -39,7 +39,9 @@ class UnbanCommand : AbstractCommand() {
         if (context.args.size < 1) return context.sendHelp().queue()
 
         val userId = context.args[0]
-        val ban = context.guild.retrieveBanById(userId).submit().get() ?: return context.respond(
+        val ban = runCatching {
+            context.guild.retrieveBanById(userId).submit().get()
+        }.getOrNull() ?: return context.respond(
             Embeds.error(
                 "User nicht gefunden.",
                 "Der angegebene Nutzer ist nicht gebannt."
@@ -54,5 +56,6 @@ class UnbanCommand : AbstractCommand() {
                 "${ban.user.name} wurde erfolgreich entbannt."
             )
         ).queue()
+
     }
 }
