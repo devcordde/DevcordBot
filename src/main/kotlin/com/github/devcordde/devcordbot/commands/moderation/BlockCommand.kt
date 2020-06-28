@@ -44,17 +44,17 @@ class BlockCommand : AbstractCommand() {
         val channel = context.args.channel(1, context = context) ?: return
 
         val period = Punisher.parsePeriod(context.args[2]) ?: return context.respond(
-            Embeds.error("Fehler", "Banzeit konnte nicht geparsed werden.\nPattern: `X`y`X`m`X`w`X`d`X`h")
+            Embeds.error("Fehler", "Banzeit konnte nicht geparsed werden.\nPattern: `X`y`X`m`X`w`X`d`X`h`x`m")
         ).queue()
 
         channel.createPermissionOverride(member).setDeny(net.dv8tion.jda.api.Permission.MESSAGE_WRITE).queue()
         context.bot.punisher.addBlock(member, channel, period)
 
-        context.respond(
+        return context.respond(
             Embeds.success(
                 "User geblockt.",
                 "`${member.effectiveName}` wurde erfolgreich vom Channel `${channel.name}` ausgeschlossen."
             )
-        )
+        ).queue()
     }
 }

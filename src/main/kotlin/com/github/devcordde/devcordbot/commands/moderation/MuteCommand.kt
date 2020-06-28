@@ -46,7 +46,7 @@ class MuteCommand(private val muteRoleId: String) : AbstractCommand() {
         val member = context.args.member(0, context = context) ?: return
 
         val period = Punisher.parsePeriod(context.args[1]) ?: return context.respond(
-            Embeds.error("Fehler", "Banzeit konnte nicht geparsed werden.\nPattern: `X`y`X`m`X`w`X`d`X`h")
+            Embeds.error("Fehler", "Mutezeit konnte nicht geparsed werden.\nPattern: `X`y`X`m`X`w`X`d`X`h`X`m")
         ).queue()
 
         val muteRole = context.jda.getRoleById(muteRoleId) ?: return
