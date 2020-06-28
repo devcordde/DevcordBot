@@ -51,10 +51,7 @@ class CleanupCommand : AbstractCommand() {
         return context.respond(
             Embeds.info(
                 "Erfolgreich ausgeführt!",
-                """
-                Entfernte User: $cleanedUsers
-                Veränderte Tags: $cleanedTags
-                """
+                "Entfernte User: $cleanedUsers\nVeränderte Tags: $cleanedTags"
             )
         ).queue()
     }
