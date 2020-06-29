@@ -53,8 +53,8 @@ fun OracleJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
  * Command for spigot (1.15.2) doc.
  */
 fun SpigotJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
-    "https://hub.spigotmc.org/javadocs/spigot/overview-tree.html",
-    listOf("spigot", "1.15", "115", "sdoc"),
+    DocumentedVersion.V_1_16.url,
+    listOf("spigot", "1.16", "116", "sdoc"),
     "javaodc",
     "Lässt dich javadoc benutzen"
 )
@@ -64,7 +64,7 @@ fun SpigotJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
  * Because some YT tutorial guy had to make videos for an 5 year old version
  */
 fun SpigotLegacyJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
-    "https://helpch.at/docs/1.8.8/overview-tree.html",
+    DocumentedVersion.V_1_8_8.url,
     listOf("spigotlegacy", "1.8", "118", "sldoc"),
     "javaodc",
     "Lässt dich javadoc benutzen"
