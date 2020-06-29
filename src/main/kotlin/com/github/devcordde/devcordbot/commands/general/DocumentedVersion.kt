@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -76,6 +76,6 @@ enum class DocumentedVersion(
     V_1_15_1("SPIGOT", "https://helpch.at/docs/1.15.1/overview-tree.html", "1.15.1"),
     V_1_15_2("SPIGOT", "https://helpch.at/docs/1.15.2/overview-tree.html", "1.15.2"),
 
-    V_1_16("SPIGOT", "https://hub.spigotmc.org/javadocs/spigot/overview-tree.html", "1.15.2"),
+    V_1_16("SPIGOT", "https://hub.spigotmc.org/javadocs/spigot/overview-tree.html", "1.16.1"),
 
 }
