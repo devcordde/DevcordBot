@@ -106,7 +106,7 @@ class TagCommand : AbstractCommand() {
     private inner class TransferCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("transfer")
         override val displayName: String = "Transfer"
-        override val description: String = "Überschreibt einen tag an einen anderen Benutzer"
+        override val description: String = "Überschreibt einen Tag an einen anderen Benutzer"
         override val usage: String = "<@user> <tag>"
 
         override suspend fun execute(context: Context) {
@@ -342,7 +342,7 @@ class TagCommand : AbstractCommand() {
     private inner class AutoHelpCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("autohelp")
         override val displayName: String = "autohelp"
-        override val description: String = "Definiert ob ein tag für auto-help benutzt werden darf"
+        override val description: String = "Definiert ob ein Tag für auto-help benutzt werden darf"
         override val usage: String = "[mod-block]"
 
         override suspend fun execute(context: Context) {
@@ -372,7 +372,7 @@ class TagCommand : AbstractCommand() {
             context.respond(
                 Embeds.success(
                     "Tag bearbeitet",
-                    if (tag.autoHelp) "Der Tag kann nun für auto-help benutzt werden" else "Der tag kann nicht mehr für auto-help benutzt werden"
+                    if (tag.autoHelp) "Der Tag kann nun für auto-help benutzt werden" else "Der Tag kann nicht mehr für auto-help benutzt werden"
                 )
             ).queue()
         }
