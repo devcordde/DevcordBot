@@ -48,7 +48,7 @@ object NPEAnalyzer {
             "invoke" -> "Die Methode `$accessedTokenName` kann nicht aufgerufen werden"
             "enter" -> "Der $type kann nicht betreten werden"
             "exit" -> "Der $type kann nicht verlassen werden"
-            else -> "Unbekannt ein freundliches Communitymitglied wird dir gleich helfen"
+            else -> "Unbekannt, ein freundliches Communitymitglied wird dir gleich helfen"
         }
 
         embed.addField("Symptom", error)
