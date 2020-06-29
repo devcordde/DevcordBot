@@ -211,7 +211,7 @@ internal class DevCordBotImpl(
             InfoCommand(),
             OracleJavaDocCommand(),
             SpigotJavaDocCommand(),
-            SpigotLegacyJavaDocCommand()
+            SpigotLegacyJavaDocCommand(),
             CleanupCommand()
         )
 
