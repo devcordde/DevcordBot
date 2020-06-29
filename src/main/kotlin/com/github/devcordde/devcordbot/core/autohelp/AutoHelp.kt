@@ -71,11 +71,11 @@ class AutoHelp(
         val userLevel by lazy { transaction { DatabaseDevCordUser.findOrCreateById(event.author.idLong).level } }
 
         if (
-            event.author.isBot
-            || bot.debugMode
-            || (event.channel.parent?.id !in whitelist || event.channel.id in blacklist)
-            || userLevel < levelLimit
-            || bypassWord !in input
+            !bot.debugMode &&
+            (event.author.isBot
+                    || (event.channel.parent?.id !in whitelist || event.channel.id in blacklist)
+                    || userLevel > levelLimit
+                    || bypassWord in input)
         ) return
 
         // Asynchronously fetch potential content
@@ -83,13 +83,32 @@ class AutoHelp(
         if (input.isNotBlank()) {
             val hastebinMatches = findInput(HASTEBIN_PATTERN, input, ::fetchHastebin)
             val pastebinMatches = findInput(PASTEBIN_PATTERN, input, ::fetchPastebin)
+            val ghostbinMatches = findInput(GHOSTBIN_PATTERN, input, ::fetchGhostbin)
+            val githubMatches = findInputs(GITHUB_GIST_PATTERN, input, ::fetchGithub)
+
             // Quit on first match
             if (analyzeInputs(hastebinMatches, event)) {
                 pastebinMatches.cancel(true)
+                ghostbinMatches.cancel(true)
+                githubMatches.cancel(true)
                 attachments.cancel(true)
                 return
             }
+
             if (analyzeInputs(pastebinMatches, event)) {
+                ghostbinMatches.cancel(true)
+                githubMatches.cancel(true)
+                attachments.cancel(true)
+                return
+            }
+
+            if (analyzeInputs(githubMatches, event)) {
+                ghostbinMatches.cancel(true)
+                attachments.cancel(true)
+                return
+            }
+
+            if (analyzeInputs(ghostbinMatches, event)) {
                 attachments.cancel(true)
                 return
             }
@@ -121,6 +140,18 @@ class AutoHelp(
         }
     }
 
+    private fun findInputs(
+        pattern: Regex,
+        input: String,
+        fetcher: (MatchResult, String) -> CompletableFuture<List<String?>>
+    ): CompletableFuture<List<String?>> {
+        return GlobalScope.future(executor) {
+            pattern.findAll(input).toList().map {
+                fetcher(it, input).await()
+            }.flatten()
+        }
+    }
+
     private suspend fun fetchAttachments(message: Message): CompletableFuture<List<String?>> {
         return GlobalScope.future(executor) {
             message.attachments.filter { !it.isVideo && !it.isImage }.map {
@@ -137,9 +168,8 @@ class AutoHelp(
     }
 
     private fun fetchHastebin(match: MatchResult): CompletableFuture<String?> {
-        val hastebinSite = match.groupValues[1]
+        val domain = match.groupValues[1]
         val pasteId = match.groupValues[2]
-        val domain = if (hastebinSite == ".com") "hastebin.com" else "hasteb.in"
         val rawPaste = "https://$domain/raw/$pasteId"
         return fetcher.fetchContent(rawPaste)
     }
@@ -148,6 +178,23 @@ class AutoHelp(
         val pasteId = match.groupValues[1]
         val rawPaste = "https://pastebin.com/raw/$pasteId"
         return fetcher.fetchContent(rawPaste)
+    }
+
+    private fun fetchGhostbin(match: MatchResult): CompletableFuture<String?> {
+        val pasteId = match.groupValues[1]
+        val rawPaste = "https://ghostbin.co/paste/$pasteId/raw"
+        return fetcher.fetchContent(rawPaste)
+    }
+
+    private fun fetchGithub(match: MatchResult, url: String): CompletableFuture<List<String?>> {
+        val host = match.groupValues[1]
+        val gistId = match.groupValues[3]
+        if (host == "gist.githubusercontent.com") {
+            return fetcher.fetchContent(url).thenApply { listOf(it) }
+        }
+        return bot.github.retrieveGistFiles(gistId).thenApplyAsync { fileUrls ->
+            fileUrls.map { fetcher.fetchContent(it).join() }
+        }
     }
 
     private suspend fun analyzeInput(
@@ -212,6 +259,7 @@ class AutoHelp(
         val tag = when {
             exceptionName == "nullpointerexception" -> "nullpointerexception"
             exceptionName == "unsupportedclassversionerror" -> "class-version"
+            exceptionName == "ClassCastException" -> "casting"
             message == "Plugin already initialized!" -> "plugin-already-initialized"
             exceptionName == "invaliddescriptionexception" -> "plugin.yml"
             exceptionName == "invalidpluginexception" && "cannot find main class" in message.toLowerCase() -> "main-class-not-found"
@@ -231,11 +279,20 @@ class AutoHelp(
         private val JVM_EXCEPTION_NAME_PATTERN =
             """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.*)(?:\R+^\s*.*)?""".toRegex()
 
-        // https://regex101.com/r/u0QAR6/2
+        // https://regex101.com/r/u0QAR6/6
         private val HASTEBIN_PATTERN =
-            "(?:https?:\\/\\/(?:www\\.)?)?hasteb((?:in\\.com|\\.in))\\/(?:raw\\/)?(.+?(?=\\.|\$)\\/?)".toRegex()
+            "(?:https?:\\/\\/)?(?:(?:www\\.)?)?(hastebin\\.com|hasteb\\.in|paste\\.helpch\\.at)\\/(?:raw\\/)?(.+?(?=\\.|\$|\\/|#))".toRegex()
 
-        // https://regex101.com/r/N8NBDz/1
-        private val PASTEBIN_PATTERN = "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.*)".toRegex()
+        // https://regex101.com/r/N8NBDz/2
+        private val PASTEBIN_PATTERN =
+            "(?:https?:\\/\\/(?:www\\.)?)?pastebin\\.com\\/(?:raw\\/)?(.+?(?=\\.|\$|\\/|#))".toRegex()
+
+        // https://regex101.com/r/CyjiKt/2
+        private val GHOSTBIN_PATTERN =
+            "(?:https?:\\/\\/(?:www\\.)?)?(?:ghostbin\\.co)\\/(?:paste\\/)?(.+?(?=\\.|\$|\\/))(?:\\/raw)?".toRegex()
+
+        // https://regex101.com/r/AlVYjn/2
+        private val GITHUB_GIST_PATTERN =
+            "(?:https?:\\/\\/)?(gist\\.github\\.com|gist.githubusercontent.com)\\/(.+?(?=\\.|\$|\\/))\\/(.+?(?=\\.|\$|\\/|#))".toRegex()
     }
 }

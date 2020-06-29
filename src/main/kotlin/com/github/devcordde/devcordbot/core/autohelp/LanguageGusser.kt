@@ -20,8 +20,6 @@ import com.codewaves.codehighlight.core.Highlighter
 import com.codewaves.codehighlight.core.StyleRenderer
 import com.codewaves.codehighlight.core.StyleRendererFactory
 
-private const val MAX_LINES = 15
-
 /**
  * LanguageGusser
  */
@@ -32,9 +30,10 @@ class LanguageGusser(knownLanguages: List<String>) {
     /**
      * Guesses the programming language of [potentialCode].
      */
-    fun guessLanguage(potentialCode: String) = languageGuesser.highlightAuto(potentialCode, knownLanguages)
+    fun guessLanguage(potentialCode: String): Highlighter.HighlightResult? =
+        languageGuesser.highlightAuto(potentialCode, knownLanguages)
 
- }
+}
 
 // We don't want to highlight anything
 @Suppress("FunctionName") // It should act like a class

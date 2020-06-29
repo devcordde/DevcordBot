@@ -28,7 +28,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.requests.ErrorResponse
 import java.awt.Color
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -139,6 +142,14 @@ class Paginator(
         paginate(nextPage)
     }
 
+    /**
+     * Cancells timeout keeper when message get's deleted
+     */
+    @EventSubscriber
+    fun onMessageDeletion(event: GuildMessageDeleteEvent) {
+        canceller.cancel()
+    }
+
     private fun rescheduleTimeout() {
         if (::canceller.isInitialized) {
             canceller.cancel()
@@ -151,7 +162,7 @@ class Paginator(
 
     private fun close(cancelJob: Boolean = true) {
         if (cancelJob) canceller.cancel()
-        message.clearReactions().queue()
+        message.clearReactions().queue(null, ErrorResponseException.ignore(ErrorResponse.UNKNOWN_MESSAGE))
         message.jda.removeEventListener(this)
     }
 
