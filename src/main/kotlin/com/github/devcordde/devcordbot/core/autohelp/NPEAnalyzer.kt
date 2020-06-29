@@ -31,7 +31,7 @@ object NPEAnalyzer {
      */
     fun handleHelpfulNpe(helpfulNpe: MatchResult, event: GuildMessageReceivedEvent) {
         val embed = Embeds.info("NullPointerExceptions verstehen | Was ist eine NPE?") {
-            footer("AutoHelp V1 BETA - Bitte bugs auf GitHub.com/devcordde/DevcordBot melden.")
+            footer("AutoHelp V1 BETA - Bitte Bugs auf GitHub.com/devcordde/DevcordBot melden.")
         }
         val values = helpfulNpe.groupValues
         val operator = values[1]
@@ -54,15 +54,6 @@ object NPEAnalyzer {
         embed.addField("Symptom", error)
 
         analyzeCause(nullName, embed)
-//        embed.addField(
-//            "Ursache",
-//            "`$nullName` ist `null`"
-//        )
-//
-//        embed.addField(
-//            "Lösung",
-//            "Bitte weise `$nullName` einen Wert zu oder füge einen Null-check ein um das Nullcase zu überprüfen"
-//        )
 
         embed.addField(
             "Weitere Informationen",

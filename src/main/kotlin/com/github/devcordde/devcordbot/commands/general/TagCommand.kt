@@ -124,7 +124,7 @@ class TagCommand : AbstractCommand() {
             context.respond(
                 Embeds.success(
                     "Tag erfolgreich überschrieben!",
-                    "Der tag wurde erfolgreich an ${user.asMention} überschrieben."
+                    "Der Tag wurde erfolgreich an ${user.asMention} überschrieben."
                 )
             ).queue()
         }

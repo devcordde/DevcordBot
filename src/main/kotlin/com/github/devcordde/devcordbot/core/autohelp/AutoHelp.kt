@@ -296,7 +296,7 @@ class AutoHelp(
             iconUrl = user.avatarUrl ?: user.defaultAvatarUrl
         }
 
-        footer("AutoHelp V1 BETA - Bitte bugs auf GitHub.com/devcordde/DevcordBot melden.")
+        footer("AutoHelp V1 BETA - Bitte Bugs auf GitHub.com/devcordde/DevcordBot melden.")
     }
 
 
