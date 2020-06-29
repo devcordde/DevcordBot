@@ -16,7 +16,6 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.johnnyjayjay.javadox.*
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
@@ -26,7 +25,12 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.util.limit
+import com.github.johnnyjayjay.javadox.Documented
+import com.github.johnnyjayjay.javadox.DocumentedMember
+import com.github.johnnyjayjay.javadox.DocumentedType
+import com.github.johnnyjayjay.javadox.Javadocs
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter
+import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 
 /**
@@ -99,16 +103,16 @@ abstract class AbstractJavadocCommand() : AbstractCommand() {
                     "Ich konnte die Methode `$method` der klasse `$pakage.$clazz` nicht finden"
                 )
             ).queue()
-            return renderMethod(context, methodDoc)
+            return renderMethod(context, methodDoc, classDoc.`package`, url)
         }
 
-        renderClass(context, classDoc)
+        renderClass(context, classDoc, url)
     }
 
-    private fun renderClass(context: Context, classDoc: DocumentedType) {
+    private fun renderClass(context: Context, classDoc: DocumentedType, url: String) {
         renderDoc(context, classDoc) {
             title {
-                url = classDoc.uri
+                this.url = classDoc.uri.fixLink(classDoc.`package`, url)
                 title = classDoc.displayName
             }
             if (classDoc.enumConstants.isNotEmpty()) {
@@ -119,10 +123,10 @@ abstract class AbstractJavadocCommand() : AbstractCommand() {
         }
     }
 
-    private fun renderMethod(context: Context, methodDoc: DocumentedMember) {
+    private fun renderMethod(context: Context, methodDoc: DocumentedMember, pakage: String, url: String) {
         renderDoc(context, methodDoc) {
             title {
-                url = methodDoc.uri
+                this.url = methodDoc.uri.fixLink(pakage, url)
                 title = methodDoc.name
             }
         }
@@ -165,7 +169,12 @@ abstract class AbstractJavadocCommand() : AbstractCommand() {
         // https://regex101.com/r/26jVyw/4
         private val referenceRegex = "((?:[a-zA-Z0-9]+\\.?)+)\\.([a-zA-Z0-9]+)(?:#|\\.)([a-zA-Z0-9(), ]+)".toRegex()
 
-        val htmlRenderer = FlexmarkHtmlConverter.builder().build()
+        internal val htmlRenderer = FlexmarkHtmlConverter.builder().build()
+
+        private fun String.fixLink(pakage: String, baseUrl: String): String {
+            if (EmbedBuilder.URL_PATTERN.matcher(this).matches()) return this
+            return "$baseUrl/${pakage.replace('.', '/')}$this"
+        }
     }
 
 }
