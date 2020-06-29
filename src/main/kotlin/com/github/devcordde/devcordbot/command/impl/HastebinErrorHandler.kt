@@ -14,16 +14,17 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command.impl
+package com.github.devcordde.devcordbot.command.impl
 
-import com.github.seliba.devcordbot.command.ErrorHandler
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.constants.Emotes
-import com.github.seliba.devcordbot.dsl.editMessage
-import com.github.seliba.devcordbot.util.HastebinUtil
-import com.github.seliba.devcordbot.util.stringify
+import com.github.devcordde.devcordbot.command.ErrorHandler
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.dsl.editMessage
+import com.github.devcordde.devcordbot.util.HastebinUtil
+import com.github.devcordde.devcordbot.util.stringify
 import mu.KotlinLogging
+import net.dv8tion.jda.api.entities.ChannelType
 import java.time.LocalDateTime
 import kotlin.coroutines.CoroutineContext
 
@@ -79,7 +80,11 @@ class HastebinErrorHandler : ErrorHandler {
             .append(executor.discriminator).append('(').append(executor.id).appendln(')')
         val selfMember = guild.selfMember
         information.append("Permissions: ").appendln(selfMember.permissions)
-        information.append("Channel permissions: ").appendln(selfMember.getPermissions(channel))
+
+        if (context.message.channelType == ChannelType.TEXT) {
+            information.append("Channel permissions: ").appendln(selfMember.getPermissions(context.message.textChannel))
+        }
+
         information.append("Timestamp: ").appendln(LocalDateTime.now())
         information.append("Thread: ").appendln(thread)
         information.append("Coroutine: ").appendln(coroutineContext)

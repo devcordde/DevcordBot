@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command
+package com.github.devcordde.devcordbot.command
 
-import com.github.seliba.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.context.Context
 import kotlin.coroutines.CoroutineContext
 
 /**

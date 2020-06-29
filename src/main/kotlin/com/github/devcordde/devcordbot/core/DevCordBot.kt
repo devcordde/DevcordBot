@@ -14,10 +14,12 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
+package com.github.devcordde.devcordbot.core
 
-import com.github.seliba.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.util.GithubUtil
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.Guild
 import okhttp3.OkHttpClient
 
 /**
@@ -33,6 +35,7 @@ interface DevCordBot {
      * The [JDA] instance.
      */
     val jda: JDA
+
     /**
      * The [GameAnimator] instance.
      */
@@ -57,4 +60,14 @@ interface DevCordBot {
      * The starboard instance.
      */
     val starboard: Starboard
+
+    /**
+     * The guild that the bot is operating on.
+     */
+    val guild: Guild
+
+    /**
+     * See [GithubUtil].
+     */
+    val github: GithubUtil
 }

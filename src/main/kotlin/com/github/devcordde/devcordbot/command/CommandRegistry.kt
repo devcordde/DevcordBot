@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command
+package com.github.devcordde.devcordbot.command
 
 /**
  * A registry of [AbstractCommand]s.

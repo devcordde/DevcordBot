@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command.permission
+package com.github.devcordde.devcordbot.command.permission
 
 /**
  * PermissionState returned when checking the user permissions

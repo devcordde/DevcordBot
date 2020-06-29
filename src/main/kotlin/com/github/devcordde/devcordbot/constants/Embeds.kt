@@ -14,12 +14,12 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.constants
+package com.github.devcordde.devcordbot.constants
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.AbstractSubCommand
-import com.github.seliba.devcordbot.dsl.EmbedConvention
-import com.github.seliba.devcordbot.dsl.EmbedCreator
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.dsl.EmbedConvention
+import com.github.devcordde.devcordbot.dsl.EmbedCreator
 
 /**
  * Some presets for frequently used embeds.

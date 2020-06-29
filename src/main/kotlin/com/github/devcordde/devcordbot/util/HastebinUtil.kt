@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.util
+package com.github.devcordde.devcordbot.util
 
-import com.github.seliba.devcordbot.constants.Constants
+import com.github.devcordde.devcordbot.constants.Constants
 import net.dv8tion.jda.api.utils.data.DataObject
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient

@@ -14,21 +14,24 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.menu
+package com.github.devcordde.devcordbot.menu
 
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.constants.Colors
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.dsl.editMessage
-import com.github.seliba.devcordbot.dsl.embed
-import com.github.seliba.devcordbot.event.EventSubscriber
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.constants.Colors
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.dsl.editMessage
+import com.github.devcordde.devcordbot.dsl.embed
+import com.github.devcordde.devcordbot.event.EventSubscriber
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
+import net.dv8tion.jda.api.exceptions.ErrorResponseException
+import net.dv8tion.jda.api.requests.ErrorResponse
 import java.awt.Color
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -74,8 +77,8 @@ class Paginator(
             message = context.respond(Embeds.loading(loadingTitle, loadingDescription)).complete()
             context.jda.addEventListener(this)
             CompletableFuture.allOf(*listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).map {
-                    message.addReaction(it).submit()
-                }.toTypedArray())
+                message.addReaction(it).submit()
+            }.toTypedArray())
                 .thenAccept {
                     paginate(currentPage)
                 }
@@ -103,7 +106,7 @@ class Paginator(
         title(title)
         val rowBuilder = StringBuilder()
         rows.indices.forEach {
-            rowBuilder.append('`').append(it + 1).append("`. ").appendln(rows[it])
+            rowBuilder.append('`').append(it + (itemsPerPage * (currentPage - 1)) + 1).append("`. ").appendln(rows[it])
         }
         description = rowBuilder
         footer("Seite $currentPage/$pages (${rows.size} Einträge)")
@@ -139,6 +142,14 @@ class Paginator(
         paginate(nextPage)
     }
 
+    /**
+     * Cancells timeout keeper when message get's deleted
+     */
+    @EventSubscriber
+    fun onMessageDeletion(event: GuildMessageDeleteEvent) {
+        canceller.cancel()
+    }
+
     private fun rescheduleTimeout() {
         if (::canceller.isInitialized) {
             canceller.cancel()
@@ -151,7 +162,7 @@ class Paginator(
 
     private fun close(cancelJob: Boolean = true) {
         if (cancelJob) canceller.cancel()
-        message.clearReactions().queue()
+        message.clearReactions().queue(null, ErrorResponseException.ignore(ErrorResponse.UNKNOWN_MESSAGE))
         message.jda.removeEventListener(this)
     }
 

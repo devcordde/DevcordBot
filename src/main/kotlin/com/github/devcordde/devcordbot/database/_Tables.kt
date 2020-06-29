@@ -16,27 +16,27 @@
 
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-package com.github.seliba.devcordbot.database
+package com.github.devcordde.devcordbot.database
 
-import com.github.seliba.devcordbot.database.StarboardEntries.authorId
-import com.github.seliba.devcordbot.database.StarboardEntries.botMessageId
-import com.github.seliba.devcordbot.database.StarboardEntries.channelId
-import com.github.seliba.devcordbot.database.StarboardEntries.messageId
-import com.github.seliba.devcordbot.database.Starrers.authorId
-import com.github.seliba.devcordbot.database.Starrers.emojis
-import com.github.seliba.devcordbot.database.Starrers.entry
-import com.github.seliba.devcordbot.database.TagAliases.name
-import com.github.seliba.devcordbot.database.TagAliases.tag
-import com.github.seliba.devcordbot.database.Tags.author
-import com.github.seliba.devcordbot.database.Tags.content
-import com.github.seliba.devcordbot.database.Tags.createdAt
-import com.github.seliba.devcordbot.database.Tags.name
-import com.github.seliba.devcordbot.database.Tags.usages
-import com.github.seliba.devcordbot.database.Users.blacklisted
-import com.github.seliba.devcordbot.database.Users.experience
-import com.github.seliba.devcordbot.database.Users.id
-import com.github.seliba.devcordbot.database.Users.lastUpgrade
-import com.github.seliba.devcordbot.database.Users.level
+import com.github.devcordde.devcordbot.database.StarboardEntries.authorId
+import com.github.devcordde.devcordbot.database.StarboardEntries.botMessageId
+import com.github.devcordde.devcordbot.database.StarboardEntries.channelId
+import com.github.devcordde.devcordbot.database.StarboardEntries.messageId
+import com.github.devcordde.devcordbot.database.Starrers.authorId
+import com.github.devcordde.devcordbot.database.Starrers.emojis
+import com.github.devcordde.devcordbot.database.Starrers.entry
+import com.github.devcordde.devcordbot.database.TagAliases.name
+import com.github.devcordde.devcordbot.database.TagAliases.tag
+import com.github.devcordde.devcordbot.database.Tags.author
+import com.github.devcordde.devcordbot.database.Tags.content
+import com.github.devcordde.devcordbot.database.Tags.createdAt
+import com.github.devcordde.devcordbot.database.Tags.name
+import com.github.devcordde.devcordbot.database.Tags.usages
+import com.github.devcordde.devcordbot.database.Users.blacklisted
+import com.github.devcordde.devcordbot.database.Users.experience
+import com.github.devcordde.devcordbot.database.Users.id
+import com.github.devcordde.devcordbot.database.Users.lastUpgrade
+import com.github.devcordde.devcordbot.database.Users.level
 import net.dv8tion.jda.api.entities.Message
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable

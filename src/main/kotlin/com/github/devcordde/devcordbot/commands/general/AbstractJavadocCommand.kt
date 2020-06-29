@@ -14,17 +14,18 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.devcordde.devcordbot.commands.general
 
 import com.github.johnnyjayjay.javadox.*
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.dsl.EmbedConvention
-import com.github.seliba.devcordbot.dsl.embed
-import com.github.seliba.devcordbot.util.limit
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.dsl.EmbedConvention
+import com.github.devcordde.devcordbot.dsl.embed
+import com.github.devcordde.devcordbot.util.limit
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter
 import net.dv8tion.jda.api.entities.MessageEmbed
 
@@ -36,6 +37,7 @@ abstract class AbstractJavadocCommand() : AbstractCommand() {
         get() = "[reference]"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.GM
 
     /**
      * Parses the command in [context].

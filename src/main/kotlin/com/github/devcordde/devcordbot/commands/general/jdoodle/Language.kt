@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general.jdoodle
+package com.github.devcordde.devcordbot.commands.general.jdoodle
 
 /**
  * Language definition.

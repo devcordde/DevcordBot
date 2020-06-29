@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot
+package com.github.devcordde.devcordbot
 
-import com.github.seliba.devcordbot.core.GameAnimator
+import com.github.devcordde.devcordbot.core.GameAnimator
 import io.github.cdimascio.dotenv.dotenv
 import io.sentry.Sentry
 import kotlinx.cli.ArgParser
@@ -27,9 +27,11 @@ import mu.KotlinLogging
 import org.slf4j.event.Level as SLF4JLevel
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.github.devcordde.devcordbot.constants.Constants
 import net.dv8tion.jda.api.entities.Activity
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.LoggerFactory
-import com.github.seliba.devcordbot.core.DevCordBotImpl as DevCordBot
+import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
 
 private val logger = KotlinLogging.logger {}
 
@@ -60,7 +62,7 @@ fun main(args: Array<String>) {
         Sentry.init() // Initilizing sentry with null does mute sentry
     } else {
         env["SENTRY_DSN"]?.let {
-            Sentry.init("$it?stacktrace.app.packages=com.github.seliba.devcordbot")
+            Sentry.init("$it?stacktrace.app.packages=com.github.devcordde.devcordbot")
         }
     }
 
@@ -82,6 +84,8 @@ fun main(args: Array<String>) {
         logger.warn { "Games could not be found, returning to fallback status..." }
         games = listOf(GameAnimator.AnimatedGame("with errors"))
     }
+
+    Constants.hastebinUrl = env["HASTE_HOST"]?.toHttpUrl() ?: "https://hasteb.in".toHttpUrl()
 
     logger.info { "Launching DevCordBot..." }
     DevCordBot(token, games, env, debugMode)

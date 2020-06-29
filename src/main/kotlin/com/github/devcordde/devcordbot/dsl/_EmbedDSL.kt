@@ -16,7 +16,7 @@
 
 @file:Suppress("unused")
 
-package com.github.seliba.devcordbot.dsl
+package com.github.devcordde.devcordbot.dsl
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.Message

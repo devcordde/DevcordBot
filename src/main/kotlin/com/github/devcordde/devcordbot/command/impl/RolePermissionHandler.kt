@@ -14,19 +14,16 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command.impl
+package com.github.devcordde.devcordbot.command.impl
 
-import com.github.seliba.devcordbot.command.PermissionHandler
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.command.permission.PermissionState
-import com.github.seliba.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.command.PermissionHandler
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.permission.PermissionState
+import com.github.devcordde.devcordbot.database.DevCordUser
 import net.dv8tion.jda.api.entities.Member
-import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
- * Implementation of [PermissionHandler] that checks the users roles,
- *
- *
+ * Implementation of [PermissionHandler] that checks the users roles.
  */
 class RolePermissionHandler(
     private val botOwners: List<String>
@@ -36,22 +33,18 @@ class RolePermissionHandler(
 
     override fun isCovered(
         permission: Permission,
-        executor: Member
+        executor: Member?,
+        devCordUser: DevCordUser,
+        acknowledgeBlacklist: Boolean
     ): PermissionState {
+        executor ?: return PermissionState.DECLINED
         if (executor.id in botOwners) return PermissionState.ACCEPTED
-        if (isBlacklisted(executor.idLong)) return PermissionState.IGNORED
+        if (acknowledgeBlacklist and devCordUser.blacklisted) return PermissionState.IGNORED
         return when (permission) {
             Permission.ANY -> PermissionState.ACCEPTED
             Permission.MODERATOR -> if (executor.roles.any { it.name.matches(moderatorPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
             Permission.ADMIN -> if (executor.roles.any { it.name.matches(adminPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
             Permission.BOT_OWNER -> PermissionState.DECLINED
-        }
-    }
-
-    private fun isBlacklisted(executorId: Long): Boolean {
-        return transaction {
-            val user = DevCordUser.findById(executorId) ?: DevCordUser.new(executorId) {}
-            user.blacklisted
         }
     }
 }

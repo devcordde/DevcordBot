@@ -14,19 +14,20 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.devcordde.devcordbot.commands.general
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.AbstractSubCommand
-import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Colors
-import com.github.seliba.devcordbot.constants.Constants
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.database.*
-import com.github.seliba.devcordbot.dsl.embed
-import com.github.seliba.devcordbot.menu.Paginator
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.constants.Colors
+import com.github.devcordde.devcordbot.constants.Constants
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.database.*
+import com.github.devcordde.devcordbot.dsl.embed
+import com.github.devcordde.devcordbot.menu.Paginator
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Role
@@ -47,6 +48,7 @@ class TagCommand : AbstractCommand() {
     override val usage: String = "<tagname>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     init {
         registerCommands(
@@ -237,6 +239,7 @@ class TagCommand : AbstractCommand() {
         override val displayName: String = "List"
         override val description: String = "Gibt eine Liste aller Tags aus"
         override val usage: String = ""
+        override val commandPlace: CommandPlace = CommandPlace.GM
 
         override suspend fun execute(context: Context) {
             val tags = transaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
@@ -252,6 +255,7 @@ class TagCommand : AbstractCommand() {
         override val displayName: String = "from"
         override val description: String = "Gibt eine Liste aller Tags eines bestimmten Benutzers aus"
         override val usage: String = "<@user>"
+        override val commandPlace: CommandPlace = CommandPlace.GM
 
         override suspend fun execute(context: Context) {
             val user = context.args.optionalUser(0, jda = context.jda) ?: context.author
@@ -269,6 +273,7 @@ class TagCommand : AbstractCommand() {
         override val displayName: String = "search"
         override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
         override val usage: String = "<query>"
+        override val commandPlace: CommandPlace = CommandPlace.GM
 
         override suspend fun execute(context: Context) {
             if (context.args.isEmpty()) {
@@ -390,7 +395,7 @@ class TagCommand : AbstractCommand() {
             return context.respond(
                 Embeds.error(
                     "Tag nicht gefunden!",
-                    "Es wurde kein Tag mit dem Namen $name gefunden.$similarTagHint"
+                    "Es wurde kein Tag mit dem Namen `${name}` gefunden.$similarTagHint"
                 )
             ).queue().run { null }
         }
@@ -411,7 +416,7 @@ class TagCommand : AbstractCommand() {
     }
 
     private fun checkReservedName(name: String, context: Context): Boolean {
-        if (name in reservedNames) {
+        if (name.split(' ').first() in reservedNames) {
             context.respond(
                 Embeds.error(
                     "Reservierter Name!",

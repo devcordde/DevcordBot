@@ -14,19 +14,22 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command.context
+package com.github.devcordde.devcordbot.command.context
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.CommandClient
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.command.permission.PermissionState
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.core.DevCordBot
-import com.github.seliba.devcordbot.dsl.EmbedConvention
-import com.github.seliba.devcordbot.dsl.sendMessage
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.command.impl.CommandClientImpl
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.permission.PermissionState
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.dsl.EmbedConvention
+import com.github.devcordde.devcordbot.dsl.sendMessage
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.requests.restaction.MessageAction
 
 /**
@@ -36,6 +39,7 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction
  * @property commandClient the [CommandClient] which executed this command
  * @property bot instance of the [DevCordBot]
  * @property message the message that triggered the command
+ * @property devCordUser User storing database settings. See [DevCordUser]
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Context(
@@ -43,7 +47,8 @@ data class Context(
     val command: AbstractCommand,
     val args: Arguments,
     val message: Message,
-    val commandClient: CommandClient
+    val commandClient: CommandClient,
+    val devCordUser: DevCordUser
 ) {
     /**
      * The [JDA] instance.
@@ -60,8 +65,8 @@ data class Context(
     /**
      * The [TextChannel] of [message].
      */
-    val channel: TextChannel
-        get() = message.textChannel
+    val channel: MessageChannel
+        get() = message.channel
 
     /**
      * The author of the [message].
@@ -72,14 +77,14 @@ data class Context(
     /**
      * The member of the [author].
      */
-    val member: Member
-        get() = message.member!! //CommandClient ignores webhook messages, so this cannot be null
+    val member: Member?
+        get() = if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(author.id)
 
     /**
      * The guild of the [channel].
      */
     val guild: Guild
-        get() = message.guild
+        get() = if (message.channelType == ChannelType.TEXT) message.guild else bot.guild
 
     /**
      * The [self member][Member] of the bot.
@@ -97,31 +102,32 @@ data class Context(
      * Sends [content] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(content: String): MessageAction = channel.sendMessage(content)
+    fun respond(content: String): RestAction<Message> = notifyCommandHandler(channel.sendMessage(content))
 
     /**
      * Sends [embed] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(embed: MessageEmbed): MessageAction = channel.sendMessage(embed)
+    fun respond(embed: MessageEmbed): RestAction<Message> = notifyCommandHandler(channel.sendMessage(embed))
 
     /**
      * Sends [embedBuilder] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(embedBuilder: EmbedBuilder): MessageAction = channel.sendMessage(embedBuilder.build())
+    fun respond(embedBuilder: EmbedBuilder): RestAction<Message> =
+        notifyCommandHandler(channel.sendMessage(embedBuilder.build()))
 
     /**
      * Sends [embed] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(embed: EmbedConvention): MessageAction = channel.sendMessage(embed)
+    fun respond(embed: EmbedConvention): RestAction<Message> = notifyCommandHandler(channel.sendMessage(embed))
 
     /**
      * Sends a help embed for [command].
      * @see Embeds.command
      */
-    fun sendHelp(): MessageAction = respond(Embeds.command(command))
+    fun sendHelp(): RestAction<Message> = respond(Embeds.command(command))
 
     /**
      * Checks whether the [member] has [Permission.ADMIN] or not.
@@ -133,7 +139,14 @@ data class Context(
      */
     fun hasModerator(): Boolean = hasPermission(Permission.MODERATOR)
 
-    private fun hasPermission(permission: Permission) =
-        commandClient.permissionHandler.isCovered(permission, member) == PermissionState.ACCEPTED
+    /**
+     * Checks if [devCordUser] has [permission].
+     */
+    fun hasPermission(permission: Permission): Boolean =
+        commandClient.permissionHandler.isCovered(permission, member, devCordUser) == PermissionState.ACCEPTED
+
+    private fun notifyCommandHandler(action: MessageAction) = action.map {
+        (commandClient as CommandClientImpl).acknowledgeResponse(message.idLong, it.channel.idLong, it.idLong); it
+    }
 
 }

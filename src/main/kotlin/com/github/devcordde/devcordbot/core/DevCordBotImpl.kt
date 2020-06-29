@@ -14,22 +14,27 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
+package com.github.devcordde.devcordbot.core
 
-import com.github.seliba.devcordbot.command.CommandClient
-import com.github.seliba.devcordbot.command.impl.CommandClientImpl
-import com.github.seliba.devcordbot.command.impl.RolePermissionHandler
-import com.github.seliba.devcordbot.commands.`fun`.SourceCommand
-import com.github.seliba.devcordbot.commands.general.*
-import com.github.seliba.devcordbot.commands.general.jdoodle.EvalCommand
-import com.github.seliba.devcordbot.commands.moderation.BlacklistCommand
-import com.github.seliba.devcordbot.commands.moderation.StarboardCommand
-import com.github.seliba.devcordbot.constants.Constants
-import com.github.seliba.devcordbot.database.*
-import com.github.seliba.devcordbot.event.AnnotatedEventManager
-import com.github.seliba.devcordbot.event.EventSubscriber
-import com.github.seliba.devcordbot.listeners.DatabaseUpdater
-import com.github.seliba.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.command.impl.CommandClientImpl
+import com.github.devcordde.devcordbot.command.impl.RolePermissionHandler
+import com.github.devcordde.devcordbot.commands.`fun`.SourceCommand
+import com.github.devcordde.devcordbot.commands.general.*
+import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
+import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
+import com.github.devcordde.devcordbot.commands.moderation.StarboardCommand
+import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
+import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
+import com.github.devcordde.devcordbot.constants.Constants
+import com.github.devcordde.devcordbot.core.autohelp.AutoHelp
+import com.github.devcordde.devcordbot.database.*
+import com.github.devcordde.devcordbot.event.AnnotatedEventManager
+import com.github.devcordde.devcordbot.event.EventSubscriber
+import com.github.devcordde.devcordbot.event.MessageListener
+import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
+import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.util.GithubUtil
 import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.Dotenv
 import mu.KotlinLogging
@@ -37,6 +42,7 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.events.DisconnectEvent
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ReconnectedEvent
@@ -50,7 +56,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
-import com.github.seliba.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
+import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 
 /**
  * General class to manage the Discord bot.
@@ -69,6 +75,7 @@ internal class DevCordBotImpl(
     override val commandClient: CommandClient =
         CommandClientImpl(this, Constants.prefix, RolePermissionHandler(env["BOT_OWNERS"]!!.split(',')))
     override val httpClient: OkHttpClient = OkHttpClient()
+    override val github: GithubUtil = GithubUtil(httpClient)
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
 
@@ -82,26 +89,33 @@ internal class DevCordBotImpl(
         )
     )
         .setEventManager(AnnotatedEventManager())
-        .setDisabledCacheFlags(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
+        .disableCache(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
         .setMemberCachePolicy(MemberCachePolicy.ALL)
         .setActivity(Activity.playing("Starting ..."))
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
         .setHttpClient(httpClient)
         .addEventListeners(
+            MessageListener(),
             this@DevCordBotImpl,
-            SelfMentionListener(),
+            SelfMentionListener(this),
             DatabaseUpdater(),
             commandClient,
             starboard,
-            CommonPitfallListener(
+            AutoHelp(
                 this,
                 env["AUTO_HELP_WHITELIST"]!!.split(','),
                 env["AUTO_HELP_BLACKLIST"]!!.split(','),
-                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(',')
+                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(','),
+                env["AUTO_HELP_BYPASS"]!!,
+                Integer.parseInt(env["AUTO_HELP_MAX_LINES"])
             )
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
+
+    private val guildId = env["GUILD_ID"]!!
+    override val guild: Guild
+        get() = jda.getGuildById(guildId)!!
 
     /**
      * Whether the bot received the [ReadyEvent] or not.
@@ -114,7 +128,7 @@ internal class DevCordBotImpl(
         RestAction.setDefaultFailure {
             restActionLogger.error(it) { "An error occurred while executing restaction" }
         }
-        registerCommands()
+        registerCommands(env)
         logger.info { "Establishing connection to the database …" }
         connectToDatabase(env)
     }
@@ -131,7 +145,7 @@ internal class DevCordBotImpl(
     }
 
     /**
-     * Fired when the Discord connection geht's interrupted
+     * Fired when the Discord connection gets interrupted
      */
     @EventSubscriber
     fun whenDisconnected(event: DisconnectEvent) {
@@ -183,23 +197,31 @@ internal class DevCordBotImpl(
         dataSource.close()
     }
 
-    private fun registerCommands() {
+    private fun registerCommands(env: Dotenv) {
         commandClient.registerCommands(
             HelpCommand(),
-            MockCommand(),
             TagCommand(),
-            LmgtfyCommand(),
             EvalCommand(),
             OwnerEvalCommand(),
             StarboardCommand(),
             SourceCommand(),
-            BlacklistCommand(),
             RankCommand(),
-            JavadocCommand(),
-            OracleJavaDocCommand(),
-            SpigotJavaDocCommand(),
-            SpigotLegacyJavaDocCommand()
+            RanksCommand(),
+            BlacklistCommand(),
+            InfoCommand(),
+            CleanupCommand()
         )
+
+        val cseKey = env["CSE_KEY"]
+        val cseId = env["CSE_ID"]
+        if (cseKey != null && cseId != null && cseKey.isNotBlank() && cseId.isNotBlank()) {
+            commandClient.registerCommands(GoogleCommand(cseKey, cseId))
+        }
+
+        val redeployHost = env["REDEPLOY_HOST"]
+        val redeployToken = env["REDEPLOY_TOKEN"]
+        if (redeployHost != null && redeployToken != null && redeployHost.isNotBlank() && redeployToken.isNotBlank()) {
+            commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
+        }
     }
 }
-

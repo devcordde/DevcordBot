@@ -14,16 +14,30 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.util
+package com.github.devcordde.devcordbot.core.autohelp
 
-import kotlin.math.sqrt
+import com.github.devcordde.devcordbot.util.executeAsync
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.concurrent.CompletableFuture
 
 /**
- * XP utilities.
+ * ContentFetcher
  */
-object XPUtil {
+class ContentFetcher(private val httpClient: OkHttpClient) {
+
     /**
-     * Calculates the needed amount of xp to [level].
+     * Fetch content from given Url.
      */
-    fun getXpToLevelup(level: Int): Long = (25 * sqrt(level.toDouble())).toLong()
+    fun fetchContent(url: String): CompletableFuture<String?> {
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        return httpClient.newCall(request).executeAsync().thenApply { response ->
+            response.body.use {
+                it?.string()
+            }
+        }
+    }
 }

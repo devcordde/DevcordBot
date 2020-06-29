@@ -14,10 +14,10 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command
+package com.github.devcordde.devcordbot.command
 
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
 
 /**
  * Skeleton of a command.
@@ -29,6 +29,7 @@ import com.github.seliba.devcordbot.command.permission.Permission
  * @property permission the command permissions
  * @property commandAssociations all alias-command associations of sub-commands
  * @property category the [CommandCategory] of the command
+ * @property commandPlace th [CommandPlace] of the command
  * @property callback an [Exception] that is supposed to highlight class defention line
  */
 abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
@@ -44,6 +45,7 @@ abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
     abstract val usage: String
     abstract val permission: Permission
     abstract val category: CommandCategory
+    abstract val commandPlace: CommandPlace
 
     /**
      * Invokes the command.

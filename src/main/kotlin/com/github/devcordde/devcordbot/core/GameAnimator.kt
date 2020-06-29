@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
+package com.github.devcordde.devcordbot.core
 
-import com.github.seliba.devcordbot.util.DefaultThreadFactory
+import com.github.devcordde.devcordbot.util.DefaultThreadFactory
 import kotlinx.coroutines.*
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Activity

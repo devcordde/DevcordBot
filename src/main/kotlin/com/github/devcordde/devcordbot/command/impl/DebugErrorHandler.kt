@@ -14,10 +14,10 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command.impl
+package com.github.devcordde.devcordbot.command.impl
 
-import com.github.seliba.devcordbot.command.ErrorHandler
-import com.github.seliba.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.ErrorHandler
+import com.github.devcordde.devcordbot.command.context.Context
 import mu.KotlinLogging
 import kotlin.coroutines.CoroutineContext
 

@@ -16,9 +16,9 @@
 
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-package com.github.seliba.devcordbot.database
+package com.github.devcordde.devcordbot.database
 
-import com.github.seliba.devcordbot.database.Starrers.entry
+import com.github.devcordde.devcordbot.database.Starrers.entry
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.LongEntity
@@ -26,6 +26,23 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SizedIterable
 import java.time.Instant
+
+/**
+ * Representation of a devcord user.
+ * @param id the [EntityID] of the user.
+ * @property userID accessor for the value of [id]
+ * @property level the current level of the user
+ * @property experience the current amount of experience points of the user
+ * @property lastUpgrade the last time the user gained XP
+ * @property blacklisted user is blacklisted for commands
+ */
+interface DevCordUser {
+    val userID: Long
+    var level: Int
+    var experience: Long
+    var lastUpgrade: Instant
+    var blacklisted: Boolean
+}
 
 /**
  * Representation of a user in the database.
@@ -36,15 +53,20 @@ import java.time.Instant
  * @property lastUpgrade the last time the user gained XP
  * @property blacklisted user is blacklisted for commands
  */
-class DevCordUser(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<DevCordUser>(Users)
+open class DatabaseDevCordUser(id: EntityID<Long>) : LongEntity(id), DevCordUser {
+    companion object : LongEntityClass<DatabaseDevCordUser>(Users) {
+        /**
+         * Returns the [DevCordUser] corresponding to [id] and created one if needed.
+         */
+        fun findOrCreateById(id: Long): DevCordUser = findById(id) ?: new(id) { }
+    }
 
-    val userID: Long
+    override val userID: Long
         get() = id.value
-    var level: Int by Users.level
-    var experience: Long by Users.experience
-    var lastUpgrade: Instant by Users.lastUpgrade
-    var blacklisted: Boolean by Users.blacklisted
+    override var level: Int by Users.level
+    override var experience: Long by Users.experience
+    override var lastUpgrade: Instant by Users.lastUpgrade
+    override var blacklisted: Boolean by Users.blacklisted
 }
 
 /**

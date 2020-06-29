@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.util
+package com.github.devcordde.devcordbot.util
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors

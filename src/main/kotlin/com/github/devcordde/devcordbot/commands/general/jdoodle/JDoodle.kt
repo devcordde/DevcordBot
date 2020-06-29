@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general.jdoodle
+package com.github.devcordde.devcordbot.commands.general.jdoodle
 
-import com.github.seliba.devcordbot.util.MapJsonObject
+import com.github.devcordde.devcordbot.util.MapJsonObject
 import io.github.cdimascio.dotenv.dotenv
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient

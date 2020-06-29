@@ -14,18 +14,19 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.moderation
+package com.github.devcordde.devcordbot.commands.moderation
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.AbstractSubCommand
-import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.core.Starboard
-import com.github.seliba.devcordbot.database.StarboardEntries
-import com.github.seliba.devcordbot.database.StarboardEntry
-import com.github.seliba.devcordbot.menu.Paginator
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.core.Starboard
+import com.github.devcordde.devcordbot.database.StarboardEntries
+import com.github.devcordde.devcordbot.database.StarboardEntry
+import com.github.devcordde.devcordbot.menu.Paginator
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.internal.utils.Helpers
 import org.jetbrains.exposed.sql.or
@@ -41,6 +42,7 @@ class StarboardCommand : AbstractCommand() {
     override val usage: String = ""
     override val permission: Permission = Permission.MODERATOR
     override val category: CommandCategory = CommandCategory.MODERATION
+    override val commandPlace: CommandPlace = CommandPlace.GM
 
     init {
         registerCommands(

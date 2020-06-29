@@ -14,19 +14,20 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general.jdoodle
+package com.github.devcordde.devcordbot.commands.general.jdoodle
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.AbstractSubCommand
-import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Constants
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.constants.Emotes
-import com.github.seliba.devcordbot.dsl.editMessage
-import com.github.seliba.devcordbot.util.HastebinUtil
-import com.github.seliba.devcordbot.util.await
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.constants.Constants
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.dsl.editMessage
+import com.github.devcordde.devcordbot.util.HastebinUtil
+import com.github.devcordde.devcordbot.util.await
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.exceptions.ParsingException
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
@@ -42,6 +43,7 @@ class EvalCommand : AbstractCommand() {
     override val usage: String = MarkdownSanitizer.escape("\n```<language>\n<code>\n```")
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.GM
 
     init {
         registerCommands(ListCommand())

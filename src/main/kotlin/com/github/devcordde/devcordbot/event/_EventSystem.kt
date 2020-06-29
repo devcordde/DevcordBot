@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.event
+package com.github.devcordde.devcordbot.event
 
-import com.github.seliba.devcordbot.util.DefaultThreadFactory
+import com.github.devcordde.devcordbot.util.DefaultThreadFactory
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -143,8 +143,9 @@ class AnnotatedEventManager(
                     it.call(event)
                 }
             }
-            if (eventType == GenericEvent::class || !callParents) {
-                callEvent(eventType.superclasses.first())
+
+            if (eventClass != GenericEvent::class && callParents) {
+                callEvent(eventClass.superclasses.first())
             }
         }
 

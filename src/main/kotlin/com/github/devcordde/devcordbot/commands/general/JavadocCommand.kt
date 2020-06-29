@@ -14,12 +14,12 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.devcordde.devcordbot.commands.general
 
 import com.github.johnnyjayjay.javadox.JavadocParser
 import com.github.johnnyjayjay.javadox.Javadocs
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.constants.Embeds
 import org.jsoup.Jsoup
 
 /**
@@ -31,7 +31,7 @@ class JavadocCommand : AbstractJavadocCommand() {
     override val usage: String = "[type] [version] <query>"
     override val description: String = "Erlaubt dir andere Versionen von Docs zu benutzen"
 
-    override fun execute(context: Context) {
+    override suspend fun execute(context: Context) {
         val args = context.args
         val (_, version, query) = when (args.size) {
             0 -> return context.sendHelp().queue()

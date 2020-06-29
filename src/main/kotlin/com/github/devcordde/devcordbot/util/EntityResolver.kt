@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.util
+package com.github.devcordde.devcordbot.util
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*

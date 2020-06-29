@@ -14,17 +14,17 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.core
+package com.github.devcordde.devcordbot.core
 
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.database.StarboardEntries
-import com.github.seliba.devcordbot.database.StarboardEntry
-import com.github.seliba.devcordbot.database.Starrer
-import com.github.seliba.devcordbot.database.Starrers
-import com.github.seliba.devcordbot.dsl.embed
-import com.github.seliba.devcordbot.dsl.sendMessage
-import com.github.seliba.devcordbot.event.EventSubscriber
-import com.github.seliba.devcordbot.util.await
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.database.StarboardEntries
+import com.github.devcordde.devcordbot.database.StarboardEntry
+import com.github.devcordde.devcordbot.database.Starrer
+import com.github.devcordde.devcordbot.database.Starrers
+import com.github.devcordde.devcordbot.dsl.embed
+import com.github.devcordde.devcordbot.dsl.sendMessage
+import com.github.devcordde.devcordbot.event.EventSubscriber
+import com.github.devcordde.devcordbot.util.await
 import kotlinx.coroutines.future.await
 import mu.KotlinLogging
 import net.dv8tion.jda.api.MessageBuilder

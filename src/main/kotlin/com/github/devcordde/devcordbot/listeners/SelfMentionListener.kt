@@ -14,31 +14,31 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.listeners
+package com.github.devcordde.devcordbot.listeners
 
-import com.github.seliba.devcordbot.constants.Constants
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.dsl.sendMessage
-import com.github.seliba.devcordbot.util.asMention
-import com.github.seliba.devcordbot.util.asNickedMention
-import net.dv8tion.jda.api.entities.TextChannel
+import com.github.devcordde.devcordbot.constants.Constants
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.dsl.editMessage
+import com.github.devcordde.devcordbot.dsl.sendMessage
+import com.github.devcordde.devcordbot.util.asMention
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 
 /**
  * Listens for the bot being mentioned.
  */
-class SelfMentionListener {
+class SelfMentionListener(private val bot: DevCordBot) {
 
     /**
      * Listens for new Guild messages.
      */
     @SubscribeEvent
     fun onMessageReceive(event: GuildMessageReceivedEvent) {
-        if (event.message.contentRaw == event.guild.selfMember.asMention() ||
-            event.message.contentRaw == event.guild.selfMember.asNickedMention()
-        ) {
-            sendInfo(event.channel, event.jda.users.size)
+        if (event.guild.selfMember.asMention().matchEntire(event.message.contentRaw) != null) {
+            sendInfo(event.channel, event.jda.users.size, bot)
         }
     }
 
@@ -46,10 +46,16 @@ class SelfMentionListener {
         /**
          * Send Bot-Information to given channel
          */
-        fun sendInfo(textChannel: TextChannel, userCount: Int) {
+        fun sendInfo(textChannel: MessageChannel, userCount: Int, devCordBot: DevCordBot) {
+            val contributors = devCordBot.github.retrieveContributors().thenApply { contributors ->
+                contributors.joinToString(", ") {
+                    "[${it.name}](${it.url})"
+                }
+            }
+
             textChannel.sendMessage(Embeds.info("DevCordBot") {
                 addField("Programmiersprache", "[Kotlin](https://kotlinlang.org)", inline = true)
-                addField("Entwickler", "das_#9677 & Schlaubi#0001 & kobold#1524", inline = true)
+                addField("Entwickler", Emotes.LOADING, inline = true)
                 addField(
                     "Source",
                     "[github.com/devcordde/Devcordbot](https://github.com/devcordde/Devcordbot)",
@@ -57,7 +63,21 @@ class SelfMentionListener {
                 )
                 addField("User", userCount.toString(), inline = true)
                 addField("Prefix", "`${Constants.firstPrefix}`", inline = true)
-            }).queue()
+            }).flatMap {
+                it.editMessage(
+                    Embeds.info("DevCordBot") {
+                        addField("Programmiersprache", "[Kotlin](https://kotlinlang.org)", inline = true)
+                        addField("Entwickler", contributors.join(), inline = true)
+                        addField(
+                            "Source",
+                            "[github.com/devcordde/Devcordbot](https://github.com/devcordde/Devcordbot)",
+                            inline = true
+                        )
+                        addField("User", userCount.toString(), inline = true)
+                        addField("Prefix", "`${Constants.firstPrefix}`", inline = true)
+                    }
+                )
+            }.queue()
         }
     }
 }

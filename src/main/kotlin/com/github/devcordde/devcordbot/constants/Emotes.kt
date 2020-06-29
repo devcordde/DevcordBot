@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.constants
+package com.github.devcordde.devcordbot.constants
 
 /**
  * Useful collection of Discord emotes.
@@ -23,7 +23,7 @@ package com.github.seliba.devcordbot.constants
  * Designed by [Rxsto#1337](https://rxsto.me)
  * Bot needs to be on [https://discord.gg/8phqcej](https://discord.gg/8phqcej)
  */
-@Suppress("KDocMissingDocumentation", "unused")
+@Suppress("KDocMissingDocumentation")
 object Emotes {
     const val LOADING: String = "<a:loading:547513249835384833>"
     const val ERROR: String = "<:error:535827110489620500>"

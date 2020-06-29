@@ -14,14 +14,15 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.devcordde.devcordbot.commands.general
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.command.permission.PermissionState
-import com.github.seliba.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.permission.PermissionState
+import com.github.devcordde.devcordbot.constants.Embeds
 
 /**
  * Help command.
@@ -33,6 +34,7 @@ class HelpCommand : AbstractCommand() {
     override val usage: String = "[command]"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
         val commandName = context.args.optionalArgument(0)
@@ -48,13 +50,24 @@ class HelpCommand : AbstractCommand() {
 
         if (command == null || context.commandClient.permissionHandler.isCovered(
                 command.permission,
-                context.member
+                context.member,
+                context.devCordUser,
+                acknowledgeBlacklist = false
             ) != PermissionState.ACCEPTED
         ) {
             return context.respond(
                 Embeds.error(
                     "Befehl nicht gefunden!",
                     "Es scheint für dich keinen Befehl mit diesem Namen zu geben."
+                )
+            ).queue()
+        }
+
+        if (!command.commandPlace.matches(context.message)) {
+            return context.respond(
+                Embeds.error(
+                    "Falscher Context!",
+                    "Der Command ist in diesem Channel nicht ausführbar."
                 )
             ).queue()
         }
@@ -72,8 +85,10 @@ class HelpCommand : AbstractCommand() {
                 val commands = context.commandClient.registeredCommands.filter {
                     context.commandClient.permissionHandler.isCovered(
                         it.permission,
-                        context.member
-                    ) == PermissionState.ACCEPTED
+                        context.member,
+                        context.devCordUser,
+                        acknowledgeBlacklist = false // Ignore BL to save DB Query since BLed users cannot execute help anyways
+                    ) == PermissionState.ACCEPTED && it.commandPlace.matches(context.message)
                 }
                 CommandCategory.values().forEach { category ->
                     val categoryCommands = commands.filter { it.category == category }.map { it.name }

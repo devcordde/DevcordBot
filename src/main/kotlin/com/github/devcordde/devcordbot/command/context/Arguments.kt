@@ -14,11 +14,11 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command.context
+package com.github.devcordde.devcordbot.command.context
 
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.dsl.EmbedConvention
-import com.github.seliba.devcordbot.util.EntityResolver
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.dsl.EmbedConvention
+import com.github.devcordde.devcordbot.util.EntityResolver
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
 

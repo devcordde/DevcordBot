@@ -17,10 +17,10 @@
 plugins {
     id("com.github.johnrengelman.shadow") version "5.2.0"
     application
-    kotlin("jvm") version "1.3.70"
+    kotlin("jvm") version "1.3.72"
 }
 
-group = "com.github.seliba"
+group = "com.github.devcord.devcordbot"
 version = "2.0-SNAPSHOT"
 
 repositories {
@@ -36,7 +36,7 @@ dependencies {
     implementation(kotlin("reflect"))
 
     // Scripting Support (For bot owner eval)
-    runtimeOnly(kotlin("scripting-jsr223"))
+    runtimeOnly(kotlin("scripting-jsr223-embeddable"))
 
     // Coroutines
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.3.4")
@@ -57,7 +57,7 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "3.4.2")
 
     // Discord
-    implementation("net.dv8tion", "JDA", "4.1.1_113") {
+    implementation("net.dv8tion", "JDA", "4.1.1_162") {
         exclude(module = "opus-java")
     }
 
@@ -68,6 +68,7 @@ dependencies {
     implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
     implementation("com.github.JohnnyJayJay", "javadox", "adb3613484")
     implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.60.2")
+    implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.3.3")
@@ -78,7 +79,7 @@ dependencies {
 }
 
 application {
-    mainClassName = "com.github.seliba.devcordbot.LauncherKt"
+    mainClassName = "com.github.devcordde.devcordbot.LauncherKt"
 }
 
 tasks {

@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.database
+package com.github.devcordde.devcordbot.database
 
 import org.jetbrains.exposed.sql.*
 

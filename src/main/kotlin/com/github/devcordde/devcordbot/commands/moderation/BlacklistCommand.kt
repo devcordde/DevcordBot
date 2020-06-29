@@ -14,16 +14,17 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.moderation
+package com.github.devcordde.devcordbot.commands.moderation
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.AbstractSubCommand
-import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.database.DevCordUser
-import com.github.seliba.devcordbot.database.Users
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
+import com.github.devcordde.devcordbot.database.Users
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
@@ -36,6 +37,7 @@ class BlacklistCommand : AbstractCommand() {
     override val usage: String = "<playerid>"
     override val permission: Permission = Permission.ADMIN
     override val category: CommandCategory = CommandCategory.MODERATION
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     init {
         registerCommands(BlacklistListCommand())
@@ -46,7 +48,7 @@ class BlacklistCommand : AbstractCommand() {
             ?: return context.sendHelp().queue()
 
         val blacklisted = transaction {
-            val dcUser = DevCordUser.findById(user.idLong) ?: DevCordUser.new(user.idLong) {}
+            val dcUser = DatabaseDevCordUser.findOrCreateById(user.idLong)
 
             dcUser.blacklisted = !dcUser.blacklisted
             dcUser.blacklisted
@@ -64,7 +66,7 @@ class BlacklistCommand : AbstractCommand() {
 
         override suspend fun execute(context: Context) {
             val userNames = transaction {
-                DevCordUser.find {
+                DatabaseDevCordUser.find {
                     Users.blacklisted eq true
                 }.map {
                     "`${context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"}`"

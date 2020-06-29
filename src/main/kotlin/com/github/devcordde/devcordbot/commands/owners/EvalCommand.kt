@@ -14,18 +14,19 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.owners
+package com.github.devcordde.devcordbot.commands.owners
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.constants.Emotes
-import com.github.seliba.devcordbot.dsl.editMessage
-import com.github.seliba.devcordbot.util.HastebinUtil
-import com.github.seliba.devcordbot.util.limit
-import com.github.seliba.devcordbot.util.stringify
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.dsl.editMessage
+import com.github.devcordde.devcordbot.util.HastebinUtil
+import com.github.devcordde.devcordbot.util.limit
+import com.github.devcordde.devcordbot.util.stringify
 import net.dv8tion.jda.api.entities.MessageEmbed
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
@@ -40,8 +41,8 @@ class EvalCommand : AbstractCommand() {
     override val usage: String = "<code>"
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    @Suppress("KDocMissingDocumentation")
     override suspend fun execute(context: Context) {
         context.respond(
             Embeds.loading(
@@ -54,11 +55,11 @@ class EvalCommand : AbstractCommand() {
             //language=kotlin
             scriptEngine.eval(
                 """
-                import com.github.seliba.devcordbot.*
-                import com.github.seliba.devcordbot.database.*
-                import com.github.seliba.devcordbot.command.*
-                import com.github.seliba.devcordbot.command.permission.Permission as BotPermission
-                import com.github.seliba.devcordbot.command.context.*
+                import com.github.devcordde.devcordbot.*
+                import com.github.devcordde.devcordbot.database.*
+                import com.github.devcordde.devcordbot.command.*
+                import com.github.devcordde.devcordbot.command.permission.Permission as BotPermission
+                import com.github.devcordde.devcordbot.command.context.*
                 import org.jetbrains.exposed.sql.transactions.*
                 import okhttp3.*
                 import net.dv8tion.jda.api.*

@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.command
+package com.github.devcordde.devcordbot.command
 
-import com.github.seliba.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.permission.Permission
 
 /**
  * Skeleton of a sub command.
@@ -31,4 +31,6 @@ abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand
         get() = parent.category
     override val permission: Permission
         get() = parent.permission
+    override val commandPlace: CommandPlace
+        get() = parent.commandPlace
 }

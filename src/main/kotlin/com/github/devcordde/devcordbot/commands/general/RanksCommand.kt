@@ -21,21 +21,32 @@ import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.listeners.Level
 
 /**
- * InfoCommand.
+ * RanksCommand.
  */
-class InfoCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("info")
-    override val displayName: String = "info"
-    override val description: String = "Zeigt Bot-Informationen an."
+class RanksCommand : AbstractCommand() {
+    override val aliases: List<String> = listOf("ranks", "levels")
+    override val displayName: String = "ranks"
+    override val description: String = "Zeigt die verfügbaren Ränge an."
     override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
-        SelfMentionListener.sendInfo(context.channel, context.jda.users.size, context.bot)
+        context.respond(
+            Embeds.info("Rollen") {
+                Level.values().forEach {
+                    val roleName = context.guild.getRoleById(it.roleId)?.name ?: "Rolle nicht gefunden"
+                    addField(
+                        "Level ${it.level}",
+                        roleName
+                    )
+                }
+            }
+        ).queue()
     }
 }

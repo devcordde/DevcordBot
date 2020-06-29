@@ -14,16 +14,39 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.util
+package com.github.devcordde.devcordbot.command
 
-import kotlin.math.sqrt
+import net.dv8tion.jda.api.entities.ChannelType
+import net.dv8tion.jda.api.entities.Message
 
 /**
- * XP utilities.
+ * CommandPlace defines the places where the command may be executed.
  */
-object XPUtil {
+enum class CommandPlace {
     /**
-     * Calculates the needed amount of xp to [level].
+     * Private Messages
      */
-    fun getXpToLevelup(level: Int): Long = (25 * sqrt(level.toDouble())).toLong()
+    PM,
+
+    /**
+     * Guild Messages
+     */
+    GM,
+
+    /**
+     * Guild and Private Messages
+     */
+    ALL;
+
+
+    /**
+     * Check if the message matches the CommandPlace.
+     */
+    fun matches(message: Message): Boolean {
+        return when (this) {
+            ALL -> true
+            PM -> message.channelType == ChannelType.PRIVATE
+            GM -> message.channelType == ChannelType.TEXT
+        }
+    }
 }

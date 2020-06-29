@@ -14,16 +14,17 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.`fun`
+package com.github.devcordde.devcordbot.commands.`fun`
 
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.AbstractSubCommand
-import com.github.seliba.devcordbot.command.CommandCategory
-import com.github.seliba.devcordbot.command.context.Arguments
-import com.github.seliba.devcordbot.command.context.Context
-import com.github.seliba.devcordbot.command.permission.Permission
-import com.github.seliba.devcordbot.constants.Embeds
-import com.github.seliba.devcordbot.util.hasSubCommands
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.command.CommandCategory
+import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.context.Arguments
+import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.util.hasSubCommands
 
 /**
  * Source command.
@@ -35,6 +36,7 @@ class SourceCommand : AbstractCommand() {
     override val usage: String = "[command]"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.FUN
+    override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
         val command = findCommand(context) ?: return context.respond(

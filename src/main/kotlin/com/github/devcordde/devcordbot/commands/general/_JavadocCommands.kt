@@ -16,12 +16,12 @@
 
 @file:Suppress("FunctionName")
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.devcordde.devcordbot.commands.general
 
 import com.github.johnnyjayjay.javadox.JavadocParser
 import com.github.johnnyjayjay.javadox.Javadocs
-import com.github.seliba.devcordbot.command.AbstractCommand
-import com.github.seliba.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.context.Context
 import org.jsoup.Jsoup
 
 private fun URLJavaDocCommand(url: String, aliases: List<String>, displayName: String, description: String) =
@@ -36,7 +36,7 @@ private fun URLJavaDocCommand(url: String, aliases: List<String>, displayName: S
             Jsoup.connect(it).userAgent("Mozilla").get()
         }
 
-        override fun execute(context: Context) = execute(context, url, docs)
+        override suspend fun execute(context: Context) = execute(context, url, docs)
     }
 
 /**

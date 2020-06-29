@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.util
+package com.github.devcordde.devcordbot.util
 
-import com.github.seliba.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractCommand
 import kotlinx.coroutines.future.await
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
@@ -52,13 +52,7 @@ fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()
 /**
  * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
  */
-fun Member.asMention(): String = "<@$id>"
-
-
-/**
- * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
- */
-fun Member.asNickedMention(): String = "<@!$id>"
+fun Member.asMention(): Regex = "<@!?$id>\\s?".toRegex()
 
 /**
  * Executes a [Call] asynchronously.

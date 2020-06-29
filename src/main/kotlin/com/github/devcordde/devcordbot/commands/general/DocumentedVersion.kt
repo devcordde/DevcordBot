@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.commands.general
+package com.github.devcordde.devcordbot.commands.general
 
 @Suppress("KDocMissingDocumentation")
 enum class DocumentedVersion(

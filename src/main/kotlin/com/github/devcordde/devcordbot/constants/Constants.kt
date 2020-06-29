@@ -14,10 +14,9 @@
  *    limitations under the License.
  */
 
-package com.github.seliba.devcordbot.constants
+package com.github.devcordde.devcordbot.constants
 
 import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -41,7 +40,7 @@ object Constants {
     /**
      * URL that is used for pasting text.
      */
-    val hastebinUrl: HttpUrl = "https://hasteb.in".toHttpUrl()
+    lateinit var hastebinUrl: HttpUrl
 
     /**
      * Dateformat used in the bot.

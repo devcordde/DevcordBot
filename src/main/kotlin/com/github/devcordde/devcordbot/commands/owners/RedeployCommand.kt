@@ -14,28 +14,38 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.commands.general
+package com.github.devcordde.devcordbot.commands.owners
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.constants.Embeds
+import okhttp3.Request
 
 /**
- * InfoCommand.
+ * RedeployCommand.
  */
-class InfoCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("info")
-    override val displayName: String = "info"
-    override val description: String = "Zeigt Bot-Informationen an."
+class RedeployCommand(private val host: String, private val token: String) : AbstractCommand() {
+    override val aliases: List<String> = listOf("redeploy")
+    override val displayName: String = "redeploy"
+    override val description: String = "Erlaubt dem Bot sich zu updaten und neu zu starten."
     override val usage: String = ""
-    override val permission: Permission = Permission.ANY
-    override val category: CommandCategory = CommandCategory.GENERAL
+    override val permission: Permission = Permission.BOT_OWNER
+    override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
-        SelfMentionListener.sendInfo(context.channel, context.jda.users.size, context.bot)
+        val request = Request.Builder().url(host).addHeader("Redeploy-Token", token).build()
+        val response = context.bot.httpClient.newCall(request).execute()
+
+        if (response.code != 200 || response.body?.string().equals("Hook rules were not satisfied.")) {
+            return context.respond(
+                Embeds.error("Fehler", "Der Bot konnte nicht neu gestartet werden.")
+            ).queue()
+        }
+
+        return context.respond(Embeds.info("Erfolgreich", "Der Bot startet sich jetzt neu.")).queue()
     }
 }
