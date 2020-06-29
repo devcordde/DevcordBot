@@ -395,7 +395,7 @@ class TagCommand : AbstractCommand() {
             return context.respond(
                 Embeds.error(
                     "Tag nicht gefunden!",
-                    "Es wurde kein Tag mit dem Namen $name gefunden.$similarTagHint"
+                    "Es wurde kein Tag mit dem Namen `${name}` gefunden.$similarTagHint"
                 )
             ).queue().run { null }
         }
