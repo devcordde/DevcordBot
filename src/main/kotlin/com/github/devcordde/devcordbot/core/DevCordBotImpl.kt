@@ -209,7 +209,10 @@ internal class DevCordBotImpl(
             RanksCommand(),
             BlacklistCommand(),
             InfoCommand(),
-            CleanupCommand()
+            CleanupCommand(),
+            OracleJavaDocCommand(),
+            SpigotJavaDocCommand(),
+            SpigotLegacyJavaDocCommand()
         )
 
         val cseKey = env["CSE_KEY"]
