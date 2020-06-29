@@ -209,6 +209,9 @@ internal class DevCordBotImpl(
             RanksCommand(),
             BlacklistCommand(),
             InfoCommand(),
+            OracleJavaDocCommand(),
+            SpigotJavaDocCommand(),
+            SpigotLegacyJavaDocCommand()
             CleanupCommand()
         )
 
