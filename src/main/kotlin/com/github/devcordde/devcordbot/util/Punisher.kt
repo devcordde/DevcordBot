@@ -24,14 +24,18 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormatterBuilder
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import kotlin.collections.HashMap
 
 /**
  *
  */
 class Punisher(private val bot: DevCordBot, private val mutedRoleId: String) {
     private val scheduler = Executors.newScheduledThreadPool(1)
+    private val scheduledPunishments = HashMap<UUID, ScheduledFuture<*>>()
 
     /**
      * Closes the PunishmentRemover.
@@ -116,7 +120,11 @@ class Punisher(private val bot: DevCordBot, private val mutedRoleId: String) {
 
         if (executionTime <= 0) return executePunishmentRemoval(punishment)
 
-        scheduler.schedule({ executePunishmentRemoval(punishment) }, executionTime, TimeUnit.MILLISECONDS)
+        val scheduledFuture = scheduler.schedule(
+            { executePunishmentRemoval(punishment) }, executionTime, TimeUnit.MILLISECONDS
+        )
+
+        scheduledPunishments[punishment.punishmentId] = scheduledFuture
     }
 
     private fun executePunishmentRemoval(punishment: Punishment) {
@@ -136,6 +144,18 @@ class Punisher(private val bot: DevCordBot, private val mutedRoleId: String) {
         transaction {
             punishment.delete()
         }
+
+        scheduledPunishments.remove(punishment.punishmentId)
+    }
+
+    /**
+     * Remove timed punishment.
+     */
+    fun forceRemovePunishment(punishment: Punishment) {
+        val punishmentTimer = scheduledPunishments[punishment.punishmentId]
+        this.executePunishmentRemoval(punishment)
+
+        punishmentTimer?.cancel(true)
     }
 
     companion object {
