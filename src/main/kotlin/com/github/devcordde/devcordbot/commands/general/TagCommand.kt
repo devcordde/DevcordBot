@@ -61,7 +61,8 @@ class TagCommand : AbstractCommand() {
             FromCommand(),
             SearchCommand(),
             RawCommand(),
-            TransferCommand()
+            TransferCommand(),
+            AutoHelpCommand()
         )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
@@ -343,7 +344,7 @@ class TagCommand : AbstractCommand() {
         override val aliases: List<String> = listOf("autohelp")
         override val displayName: String = "autohelp"
         override val description: String = "Definiert ob ein Tag für auto-help benutzt werden darf"
-        override val usage: String = "[mod-block]"
+        override val usage: String = ""
 
         override suspend fun execute(context: Context) {
             val args = context.args
@@ -353,7 +354,7 @@ class TagCommand : AbstractCommand() {
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
             if (checkPermission(tag, context)) return
 
-            if (!tag.autoHelp and tag.autoHelpBlocked) {
+            if (!tag.autoHelp) {
                 return context.respond(
                     Embeds.error(
                         "Tag blockiert!",
@@ -364,9 +365,6 @@ class TagCommand : AbstractCommand() {
 
             transaction {
                 tag.autoHelp = !tag.autoHelp
-                if (modBlock != null && context.hasModerator()) {
-                    tag.autoHelpBlocked = modBlock.toBoolean()
-                }
             }
 
             context.respond(

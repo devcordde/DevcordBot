@@ -29,8 +29,6 @@ import java.time.Instant
 
 /**
  * Representation of a devcord user.
- * @param id the [EntityID] of the user.
- * @property userID accessor for the value of [id]
  * @property level the current level of the user
  * @property experience the current amount of experience points of the user
  * @property lastUpgrade the last time the user gained XP
@@ -77,7 +75,6 @@ open class DatabaseDevCordUser(id: EntityID<Long>) : LongEntity(id), DevCordUser
  * @property content the content of the tag
  * @property createdAt the timestamp of the creation of the tag
  * @property autoHelp wehther this tag can be used for autohelp or not
- * @property autoHelpBlocked whether moderators have blocked this from auto-help or not
  */
 class Tag(name: EntityID<String>) : Entity<String>(name) {
     companion object : EntityClass<String, Tag>(Tags) {
@@ -94,7 +91,6 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
     var content: String by Tags.content
     val createdAt: Instant by Tags.createdAt
     var autoHelp: Boolean by Tags.autoHelp
-    var autoHelpBlocked: Boolean by Tags.autoHelpBlocked
 
 }
 
