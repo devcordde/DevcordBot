@@ -29,6 +29,7 @@ import java.time.Instant
 
 /**
  * Representation of a devcord user.
+ * @property userID the id of the user
  * @property level the current level of the user
  * @property experience the current amount of experience points of the user
  * @property lastUpgrade the last time the user gained XP
