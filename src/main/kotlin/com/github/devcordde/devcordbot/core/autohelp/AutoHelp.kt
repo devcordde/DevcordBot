@@ -205,8 +205,7 @@ class AutoHelp(
 
         // It's kind of unlikely to paste code blocks on hastebin so only check for codeblocks if it's not pasted
         val inputBlockMatch by lazy { Constants.CODE_BLOCK_REGEX.matchEntire(inputString) }
-        val cleanInput =
-            if (!wasPaste && inputBlockMatch != null) inputBlockMatch!!.groupValues[2].trim() else inputString
+        val cleanInput = inputBlockMatch?.groupValues?.get(2)?.trim() ?: inputString
 
         val language = guesser.guessLanguage(cleanInput)
         if (!wasPaste && language != null) {
