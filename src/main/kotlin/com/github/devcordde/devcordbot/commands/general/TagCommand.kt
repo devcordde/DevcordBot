@@ -357,7 +357,7 @@ class TagCommand : AbstractCommand() {
             }
             args.size == 1 -> {
                 val name = context.args.first()
-                name to sanitizeMentions(context.args.join().drop(name.length))
+                name to sanitizeMentions(context.args.join().substring(name.length))
             }
             else -> {
                 args.first().trim() to sanitizeMentions(args.subList(1, args.size).joinToString("\n"))
