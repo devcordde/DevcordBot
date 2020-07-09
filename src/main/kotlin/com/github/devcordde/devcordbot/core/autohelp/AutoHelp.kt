@@ -112,7 +112,9 @@ class AutoHelp(
                 return
             }
 
-            analyzeInput(input, false, event)
+            if (analyzeInput(input, false, event)) {
+                return
+            }
         }
         analyzeInputs(attachments, event, false)
     }
@@ -208,22 +210,32 @@ class AutoHelp(
         val cleanInput = inputBlockMatch?.groupValues?.get(2)?.trim() ?: inputString
 
         val language = guesser.guessLanguage(cleanInput)
-        if (!wasPaste && language != null) {
+        if (!wasPaste && language != null && inputString.lines().size > maxLines && !Constants.prefix.containsMatchIn(
+                inputString
+            )
+        ) {
             val code = if (language.language.equals("java", ignoreCase = true)) {
                 beautifier.formatCode(cleanInput).await()
             } else cleanInput
-            if (inputString.lines().size > maxLines &&
-                !Constants.prefix.containsMatchIn(inputString)
-            ) {
-                val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
-                val hastebinUrl = HastebinUtil.postErrorToHastebin(code, bot.httpClient).await()
-                message.editMessage(buildTooLongEmbed(hastebinUrl)).queue()
+
+            val message = event.channel.sendMessage(buildTooLongEmbed(Emotes.LOADING)).await()
+            val hastebinUrl = HastebinUtil.postErrorToHastebin(code, bot.httpClient).await()
+            message.editMessage(buildTooLongEmbed(hastebinUrl)).queue()
+
+        }
+
+        val exceptions = JVM_EXCEPTION_PATTERN.findAll(cleanInput)
+        if (exceptions.count() != 0) {
+            return exceptions.any {
+                handleCommonException(it, event)
             }
         }
 
-        return JVM_EXCEPTION_PATTERN.findAll(cleanInput).any {
-            handleCommonException(it, event)
+        if (JVM_EXCEPTION_NAME_PATTERN.findAll(cleanInput).count() != 0) {
+            event.channel.sendMessage(missingStacktrace).queue()
+            return true
         }
+        return false
     }
 
     private fun buildTooLongEmbed(url: String): EmbedConvention {
@@ -308,9 +320,9 @@ class AutoHelp(
         private val JAVA14_HELPFUL_NPE_PATTERN =
             """Cannot (assign|read|load from|store to|throw|invoke|enter|exit) (?:(field|method|.* array|synchronized block|the array length|exception) )?(?:"(.*)" )?because "(.*)" is null""".toRegex()
 
-        // https://regex101.com/r/HtaGF8/1
+        // https://regex101.com/r/HtaGF8/3
         private val JVM_EXCEPTION_NAME_PATTERN =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.*)(?:\R+^\s*.*)?""".toRegex()
+            """(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error))(?:\: )(.+)(?:\R+^\s*.*)?""".toRegex()
 
         // https://regex101.com/r/u0QAR6/6
         private val HASTEBIN_PATTERN =
@@ -327,5 +339,13 @@ class AutoHelp(
         // https://regex101.com/r/AlVYjn/2
         private val GITHUB_GIST_PATTERN =
             "(?:https?:\\/\\/)?(gist\\.github\\.com|gist.githubusercontent.com)\\/(.+?(?=\\.|\$|\\/))\\/(.+?(?=\\.|\$|\\/|#))".toRegex()
+
+        private val missingStacktrace = Embeds.warn(
+            "Unvollständige Fehlermeldung",
+            """Glückwunsch du hast es geschafft die Fehlermeldung zu finden was schonmal gut ist.
+                    Was noch besser wäre ist wenn du nun auch die vollständige Fehlermeldung hier reinschickst.
+                    Das bedeuted, dass du sowohl den Stacktrace (das ganze `at package.method(File.java:Zeile)`) und den eventuellen `Caused by:` Teil mitschickst, dann kann man dir hier auch schneller helfen.
+                    """.trimMargin()
+        )
     }
 }
