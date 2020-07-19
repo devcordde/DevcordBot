@@ -30,7 +30,7 @@ import com.google.api.services.customsearch.Customsearch
 /**
  * Google command.
  */
-class GoogleCommand(private val apiKey: String, private val engineId: String) : AbstractCommand() {
+class GoogleCommand() : AbstractCommand() {
 
     private val search =
         Customsearch.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
@@ -51,13 +51,9 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
 
         if (query.isBlank()) return context.sendHelp().queue()
 
-        val results = with(search.cse().list(query)) {
-            key = apiKey
-            cx = engineId
-            execute()
-        }.items
+        val results = context.bot.googler.google(query)
 
-        if (results == null || results.isEmpty()) {
+        if (results.isEmpty()) {
             return context.respond(
                 Embeds.error(
                     title = "Keine Suchergebnisse gefunden",
