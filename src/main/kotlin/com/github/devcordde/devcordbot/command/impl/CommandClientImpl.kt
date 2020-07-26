@@ -98,12 +98,6 @@ class CommandClientImpl(
     @EventSubscriber
     fun onPrivateMessage(event: DevCordMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message, event)
 
-    /**
-     * Listens for new private messages
-     */
-    @EventSubscriber
-    fun onPrivateMessage(event: PrivateMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message, event)
-
     private fun dispatchPrivateMessageCommand(message: Message, event: Event) {
         if (!bot.isInitialized) return
 
