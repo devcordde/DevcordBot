@@ -212,11 +212,20 @@ internal class DevCordBotImpl(
             RanksCommand(),
             BlacklistCommand(),
             InfoCommand(),
-            OracleJavaDocCommand(),
-            SpigotJavaDocCommand(),
-            SpigotLegacyJavaDocCommand(),
             CleanupCommand()
         )
+
+        runCatching { OracleJavaDocCommand() }.onSuccess {
+            commandClient.registerCommands(it)
+        }
+
+        runCatching { SpigotJavaDocCommand() }.onSuccess {
+            commandClient.registerCommands(it)
+        }
+
+        runCatching { SpigotLegacyJavaDocCommand() }.onSuccess {
+            commandClient.registerCommands(it)
+        }
 
         val cseKey = env["CSE_KEY"]
         val cseId = env["CSE_ID"]
