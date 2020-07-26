@@ -36,7 +36,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 /**
  * Abstract implementation for javadoc search command.
  */
-abstract class AbstractJavadocCommand() : AbstractCommand() {
+abstract class AbstractJavadocCommand : AbstractCommand() {
     override val usage: String
         get() = "[reference]"
     override val permission: Permission = Permission.ANY

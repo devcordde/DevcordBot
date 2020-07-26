@@ -16,17 +16,13 @@
 
 package com.github.devcordde.devcordbot.core.autohelp
 
-import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.Tag
 import com.github.devcordde.devcordbot.database.Tags
-import com.github.devcordde.devcordbot.dsl.EmbedConvention
-import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.util.Googler
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
-import okhttp3.OkHttpClient
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
 import java.time.OffsetDateTime
@@ -35,16 +31,12 @@ import java.time.OffsetDateTime
  * I mean not actully a brain but the name sounds cool.
  */
 class Brain(
-    knownLanguages: List<String>,
-    private val httpClient: OkHttpClient,
     private val maxLines: Int,
     googler: Googler
 ) {
 
     private val shortTimeMemory = mutableListOf<Conversation>()
     private val javadocFinder = JavaDocFinder(googler)
-    private val guesser = LanguageGusser(knownLanguages)
-    private val beautifier = CodeBeautifier(httpClient)
 
     init {
         cleanShortTimeMemory()
@@ -84,23 +76,59 @@ class Brain(
     }
 
     private fun think(conversation: Conversation) {
-        conversation.findException()
-        conversation.findCause()
+        if (conversation.answer.exception == null) {
+            conversation.findException()
+        }
+        if (conversation.answer.causeContent == null) {
+            conversation.findCause()
+        }
         if (conversation.answer.useless) return
-        conversation.safeHelpMessage.editMessage(conversation.answer.toEmbed()).queue()
+        if (conversation.answer.npeHint == null) {
+            conversation.analyzeNpe()
+        }
+        conversation.update()
         if (conversation.answer.isComplete) {
             shortTimeMemory.remove(conversation)
         }
-        tryToFindJavadoc(conversation)
+        if (conversation.answer.exception?.exceptionDoc == null) {
+            tryToFindJavadoc(conversation)
+        }
     }
+
+    private fun Conversation.analyzeNpe() {
+        val causeContent = answer.causeContent?.drop(1)?.dropLast(1) ?: return
+        if (answer.exception?.exceptionName?.equals(
+                "java.lang.nullpointerexception",
+                ignoreCase = true
+            ) == true
+        ) {
+            val elements = causeContent.split('.').dropLast(1)
+            answer.npeHint = buildNpeHint(elements, answer.exception?.causeLine ?: 0)
+        }
+    }
+
+    private fun buildNpeHint(elements: List<String>, lineNumber: Int): String =
+        """Eines dieser Dinge ${elements.joinToString(
+            prefix = "(`",
+            separator = "`, `",
+            postfix = "`)"
+        )} scheint null zu sein.
+        |Bitte stelle sicher, dass alle davon einen Wert haben oder füge ein `Null-Check` hinzu.
+        |**Tipp**: Füge einen Breakpoint zur zeile `$lineNumber` hinzu um zu checken was genau `null` ist oder benutze die [Helpful NPEs](https://openjdk.java.net/jeps/358) von Java 14+.
+    """.trimMargin()
 
     private fun tryToFindJavadoc(conversation: Conversation) {
         GlobalScope.launch {
             val exception = conversation.answer.exception
             if (exception != null) {
-                val javadoc = javadocFinder.findJavadocForClass(exception.exceptionName)
-                conversation.answer.exception?.exceptionDoc = javadoc
-                conversation.safeHelpMessage.editMessage(conversation.answer.toEmbed()).queue()
+                val doc = javadocFinder.findJavadocForClass(exception.exceptionName)
+                if (doc != null) {
+                    exception.explanation = exception.explanation ?: doc.description
+                    exception.exceptionDoc = doc.uri
+                } else {
+                    exception.exceptionDoc = "Ich konnte kein doc finden :C"
+                }
+                conversation.update()
             }
         }
     }
@@ -138,17 +166,6 @@ class Brain(
                 .getOrNull(exception.causeLine - 1)?.let { "`${it.trim()}`" }
                 ?: "Der Inhalt konnte nicht gefunden werden bitte stelle sicher die ganze Klasse zu senden"
         }
-    }
-
-
-    private fun buildTooLongEmbed(url: String): EmbedConvention {
-        return Embeds.warn(
-            "Huch, ist das viel?",
-            """Bitte sende lange Codeteile nicht über den Chat oder als Datei, sondern benutze stattdessen ein haste-Tool. Mehr dazu findest du bei `sudo tag haste`.
-                                        |Faustregel: Alles, was mehr als $maxLines Zeilen hat.
-                                        |Hier, ich mache das schnell für dich: $url
-                                    """.trimMargin()
-        )
     }
 
     private fun handleCommonException(match: StackTrace) =

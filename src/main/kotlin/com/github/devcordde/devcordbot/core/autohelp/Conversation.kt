@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.core.autohelp
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
+import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.dsl.sendMessage
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Message
@@ -45,7 +46,7 @@ data class StackTraceElement(val pakage: String, val method: String, val classNa
  *
  * @property exceptionName the name of the exception
  * @property message the message
- * @property elements a list of [StacktTraceElement]s
+ * @property elements a list of [StackTraceElement]s
  */
 data class StackTrace(
     val exceptionName: String,
@@ -80,7 +81,7 @@ data class Conversation(
     val classes: MutableList<Class>,
     var helpMessage: Message?,
     var lastInteraction: OffsetDateTime,
-    val answer: ConversationAnswer = ConversationAnswer(null, null)
+    val answer: ConversationAnswer = ConversationAnswer(null, null, null)
 ) {
     /**
      * The text Channel the message is in.
@@ -91,7 +92,7 @@ data class Conversation(
     /**
      * Creates message if needed.
      */
-    val safeHelpMessage: Message
+    private val safeHelpMessage: Message
         get() {
             if (helpMessage == null) {
                 helpMessage = trigger.channel.sendMessage(
@@ -103,6 +104,12 @@ data class Conversation(
             }
             return helpMessage!!
         }
+
+    /**
+     * Updates the Discord answer message.
+     */
+    fun update(): Unit =
+        safeHelpMessage.editMessage(answer.toEmbed()).queue()
 }
 
 /**
@@ -113,7 +120,7 @@ data class Conversation(
  * @property useless whether this answer does contain any useful info or not
  * @property isComplete whether all information was found or not
  */
-data class ConversationAnswer(var exception: ExceptionAnswer?, var causeContent: String?) {
+data class ConversationAnswer(var exception: ExceptionAnswer?, var causeContent: String?, var npeHint: String?) {
     val useless: Boolean
         get() = exception == null && causeContent == null
 
@@ -132,7 +139,7 @@ data class ConversationAnswer(var exception: ExceptionAnswer?, var causeContent:
      */
     data class ExceptionAnswer(
         val exceptionName: String,
-        val explanation: String?,
+        var explanation: String?,
         val causeClass: String,
         val causeLine: Int,
         var exceptionDoc: String? = null,
@@ -157,6 +164,9 @@ data class ConversationAnswer(var exception: ExceptionAnswer?, var causeContent:
                 ?: "Ich konnte keinen Code finden, bitte schicke die komplette Klasse in der der Fehler auftritt (Am besten via hastebin)"
         )
 
+        if (npeHint != null) {
+            addField("NPE Hinweis", npeHint)
+        }
 
         footer("AutoHelp V1 BETA - Bitte Bugs auf GitHub.com/devcordde/DevcordBot melden.")
     }

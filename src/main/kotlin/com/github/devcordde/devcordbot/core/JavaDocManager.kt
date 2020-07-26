@@ -20,19 +20,57 @@ import com.github.devcordde.devcordbot.commands.general.AbstractJavadocCommand
 import com.github.devcordde.devcordbot.commands.general.DocumentedVersion
 import com.github.johnnyjayjay.javadox.JavadocParser
 import com.github.johnnyjayjay.javadox.Javadocs
+import mu.KotlinLogging
+import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 
+/**
+ * Manager for javadocs.
+ */
 object JavaDocManager {
 
+    private val LOG = KotlinLogging.logger { }
     private val parser: JavadocParser = JavadocParser(AbstractJavadocCommand.htmlRenderer::convert)
 
-    val javadocPool: Map<String, Javadocs> = mapOf(
-        "java" to makeJavadoc(DocumentedVersion.V_10.url),
-        "org.bukkit" to makeJavadoc(DocumentedVersion.V_1_16.url),
-        "org.spigotmc" to makeJavadoc(DocumentedVersion.V_1_16.url)
-    )
+    /**
+     * Pool of javadocs
+     */
+    val javadocPool: Map<String, Javadocs> = mutableMapOf()
 
-    private fun makeJavadoc(url: String) = Javadocs(tree = url, parser = parser) {
-        Jsoup.connect(it).userAgent("Mozilla").get()
+    init {
+        makeJavadoc("java", DocumentedVersion.V_10.url, false)
+        val spigot = makeJavadoc("org.bukkit", DocumentedVersion.V_1_16.url, false)
+        makeJavadoc("spigot-legacy", DocumentedVersion.V_1_8_8.url, false)
+        if (spigot != null) {
+            (javadocPool as MutableMap<String, Javadocs>)["org.spigotmc"] = spigot
+        }
     }
+
+    internal fun makeJavadoc(pakage: String, url: String, register: Boolean = true): Javadocs? {
+        return try {
+            val docs = Javadocs(
+                tree = url,
+                parser = parser,
+                scrape = ::scrape
+            )
+            if (register) (javadocPool as MutableMap<String, Javadocs>)[pakage] = docs
+            docs
+        } catch (ignored: IllegalStateException) {
+            null
+        }
+    }
+
+    private fun scrape(url: String) = scrape(url, 1)
+
+    private fun scrape(url: String, tried: Int): Document =
+        try {
+            Jsoup.connect(url).userAgent("Mozilla").get()
+        } catch (e: HttpStatusException) {
+            LOG.warn(e) { "Could not fetch $url doc trying again" }
+            if (tried >= 5) {
+                throw IllegalStateException("Could not fetch doc!", e)
+            }
+            scrape(url, tried + 1)
+        }
 }

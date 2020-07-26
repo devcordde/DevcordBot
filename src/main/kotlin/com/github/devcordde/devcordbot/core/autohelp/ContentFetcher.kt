@@ -54,7 +54,7 @@ class ContentFetcher(
 
             mutableListOf(hastebinMatches, pastebinMatches, ghostbinMatches, githubMatches)
         } else mutableListOf()
-        return messageContents.plus(attachments).plus(CompletableFuture.completedFuture(listOf(input))).toList()
+        return messageContents.plus(attachments).toList()
     }
 
     private fun findInput(

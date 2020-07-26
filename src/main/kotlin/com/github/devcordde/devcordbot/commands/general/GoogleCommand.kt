@@ -30,7 +30,7 @@ import com.google.api.services.customsearch.Customsearch
 /**
  * Google command.
  */
-class GoogleCommand() : AbstractCommand() {
+class GoogleCommand : AbstractCommand() {
 
     private val search =
         Customsearch.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)

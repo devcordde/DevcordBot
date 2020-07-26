@@ -18,10 +18,12 @@ package com.github.devcordde.devcordbot.core.autohelp
 
 import com.github.devcordde.devcordbot.core.JavaDocManager
 import com.github.devcordde.devcordbot.util.Googler
+import com.github.johnnyjayjay.javadox.DocumentedType
+import com.github.johnnyjayjay.javadox.Javadocs
 
 class JavaDocFinder(private val googler: Googler) {
 
-    fun findJavadocForClass(clazz: String): String {
+    fun findJavadocForClass(clazz: String): DocumentedType? {
         val index = clazz.lastIndexOf('.')
         val pakage = clazz.take(index)
         val className = clazz.drop(index + 1)
@@ -31,17 +33,19 @@ class JavaDocFinder(private val googler: Googler) {
             pakage.take(pakage.indexOf('.', pakage.indexOf('.') + 1))
         }
 
-        val javadoc = JavaDocManager.javadocPool[identifier] ?: return googleJavadoc(className)
-        return javadoc.find(pakage, className).firstOrNull()?.uri?.toMarkDownUrl()
-            ?: "Ich konnte kein javadoc finden :("
+        val javadoc = JavaDocManager.javadocPool[identifier] ?: googleJavadoc(className)
+        return javadoc?.find(pakage, className)?.firstOrNull()
+
     }
 
-    private fun googleJavadoc(clazz: String): String {
+    private fun googleJavadoc(clazz: String): Javadocs? {
         val query = "$clazz javadoc"
-        return googler.google(query)
-            .firstOrNull { it.htmlTitle.contains("API", ignoreCase = true); true }?.formattedUrl?.toMarkDownUrl()
-            ?: "Ich konnte keine Docs finden"
+        val rawUrl = googler.google(query)
+            .firstOrNull { it.htmlTitle.contains("API", ignoreCase = true); true }?.formattedUrl
+        return rawUrl?.let {
+            val pakage = clazz.take(clazz.indexOf('.'))
+            val url = rawUrl.take(rawUrl.indexOf(pakage))
+            JavaDocManager.makeJavadoc(url)
+        }
     }
-
-    private fun String.toMarkDownUrl() = "[$this]($this)"
 }
