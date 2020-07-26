@@ -128,9 +128,12 @@ internal class DevCordBotImpl(
         RestAction.setDefaultFailure {
             restActionLogger.error(it) { "An error occurred while executing restaction" }
         }
-        registerCommands(env)
+
         logger.info { "Establishing connection to the database …" }
         connectToDatabase(env)
+
+        logger.info { "Registering commands …" }
+        registerCommands(env)
     }
 
     /**
