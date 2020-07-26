@@ -60,7 +60,8 @@ class TagCommand : AbstractCommand() {
             ListCommand(),
             FromCommand(),
             SearchCommand(),
-            RawCommand()
+            RawCommand(),
+            TransferCommand()
         )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
@@ -208,7 +209,6 @@ class TagCommand : AbstractCommand() {
     }
 
     private inner class DeleteCommand : AbstractSubCommand(this) {
-
         override val aliases: List<String> = listOf("delete", "del", "d", "remove", "rem", "r")
         override val displayName: String = "delete"
         override val description: String = "Löscht einen Tag"
@@ -229,6 +229,36 @@ class TagCommand : AbstractCommand() {
                 Embeds.success(
                     "Tag erfolgreich gelöscht!",
                     "Du hast den Tag mit dem Namen `${tag.name}` erfolgreich gelöscht."
+                )
+            ).queue()
+        }
+    }
+
+    private inner class TransferCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("transfer")
+        override val displayName: String = "Transfer"
+        override val description: String = "Überschreibt einen Tag an einen anderen Benutzer"
+        override val usage: String = "<@user> <tag>"
+
+        override suspend fun execute(context: Context) {
+            val args = context.args
+            if (args.size < 2) return context.sendHelp().queue()
+
+            val user = args.user(0, true, context) ?: return
+
+            val tagName = args.subList(1, args.size).joinToString(" ")
+            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
+
+            if (checkPermission(tag, context)) return
+
+            transaction {
+                tag.author = user.idLong
+            }
+
+            return context.respond(
+                Embeds.success(
+                    "Tag erfolgreich überschrieben!",
+                    "Der Tag wurde erfolgreich an ${user.asMention} überschrieben."
                 )
             ).queue()
         }
