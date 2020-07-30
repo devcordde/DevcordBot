@@ -131,9 +131,12 @@ internal class DevCordBotImpl(
         RestAction.setDefaultFailure {
             restActionLogger.error(it) { "An error occurred while executing restaction" }
         }
-        registerCommands(env)
+
         logger.info { "Establishing connection to the database …" }
         connectToDatabase(env)
+
+        logger.info { "Registering commands …" }
+        registerCommands(env)
     }
 
     /**
@@ -218,6 +221,12 @@ internal class DevCordBotImpl(
             CleanupCommand(),
             GoogleCommand()
         )
+
+        val cseKey = env["CSE_KEY"]
+        val cseId = env["CSE_ID"]
+        if (cseKey != null && cseId != null && cseKey.isNotBlank() && cseId.isNotBlank()) {
+            commandClient.registerCommands(GoogleCommand(cseKey, cseId))
+        }
 
         val redeployHost = env["REDEPLOY_HOST"]
         val redeployToken = env["REDEPLOY_TOKEN"]
