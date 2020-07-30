@@ -39,9 +39,9 @@ object JavaDocManager {
     val javadocPool: Map<String, Javadocs> = mutableMapOf()
 
     init {
-        makeJavadoc("java", DocumentedVersion.V_10.url, false)
-        val spigot = makeJavadoc("org.bukkit", DocumentedVersion.V_1_16.url, false)
-        makeJavadoc("spigot-legacy", DocumentedVersion.V_1_8_8.url, false)
+        makeJavadoc("java", DocumentedVersion.V_10.url)
+        val spigot = makeJavadoc("org.bukkit", DocumentedVersion.V_1_16.url)
+        makeJavadoc("spigot-legacy", DocumentedVersion.V_1_8_8.url)
         if (spigot != null) {
             (javadocPool as MutableMap<String, Javadocs>)["org.spigotmc"] = spigot
         }

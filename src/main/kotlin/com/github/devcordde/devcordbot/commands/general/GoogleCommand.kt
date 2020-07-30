@@ -44,7 +44,7 @@ class GoogleCommand : AbstractCommand() {
     override val usage: String = "<query>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
-    override val commandPlace: CommandPlace = CommandPlace.GM
+    override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
     override suspend fun execute(context: Context) {
         val query = context.args.join()

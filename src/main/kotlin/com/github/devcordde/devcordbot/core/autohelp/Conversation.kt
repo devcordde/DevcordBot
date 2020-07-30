@@ -47,11 +47,13 @@ data class StackTraceElement(val pakage: String, val method: String, val classNa
  * @property exceptionName the name of the exception
  * @property message the message
  * @property elements a list of [StackTraceElement]s
+ * @property cause a probably cause for this stacktrace
  */
 data class StackTrace(
     val exceptionName: String,
     val message: String,
-    val elements: List<StackTraceElement>
+    val elements: List<StackTraceElement>,
+    val cause: StackTrace? = null
 ) : AutoHelpItem
 
 /**
@@ -81,7 +83,7 @@ data class Conversation(
     val classes: MutableList<Class>,
     var helpMessage: Message?,
     var lastInteraction: OffsetDateTime,
-    val answer: ConversationAnswer = ConversationAnswer(null, null, null)
+    val answer: ConversationAnswer = ConversationAnswer()
 ) {
     /**
      * The text Channel the message is in.
@@ -119,18 +121,34 @@ data class Conversation(
  * @property causeContent the raw string of the line causing the issue
  * @property useless whether this answer does contain any useful info or not
  * @property isComplete whether all information was found or not
+ *  @property npeHint hint to resolve an NPE
  */
-data class ConversationAnswer(var exception: ExceptionAnswer?, var causeContent: String?, var npeHint: String?) {
+class ConversationAnswer {
+    lateinit var exception: ExceptionAnswer
+    lateinit var causeContent: String
+    lateinit var npeHint: String
+
     val useless: Boolean
-        get() = exception == null && causeContent == null
+        get() = !::exception.isInitialized && !::causeContent.isInitialized
 
     val isComplete: Boolean
-        get() = exception != null && causeContent != null
+        get() = ::exception.isInitialized && ::causeContent.isInitialized
+
+    internal val exceptionSet: Boolean
+        get() = ::exception.isInitialized
+
+    internal val causeSet: Boolean
+        get() = ::causeContent.isInitialized
+
+    internal val npeHintSet: Boolean
+        get() = ::npeHint.isInitialized
 
     /**
      * Info about the exception.
      *
      * @property exceptionName the name of the exception
+     * @property exceptionMessage the message of the exception
+     * @property causee exception that is caused by this
      * @property explanation the tag explaining the exception
      * @property causeClass the class in which the exception is caused
      * @property causeLine the line in which the exception is caused
@@ -139,9 +157,11 @@ data class ConversationAnswer(var exception: ExceptionAnswer?, var causeContent:
      */
     data class ExceptionAnswer(
         val exceptionName: String,
+        val exceptionMessage: String?,
+        val causee: String?,
         var explanation: String?,
-        val causeClass: String,
-        val causeLine: Int,
+        val causeClass: String?,
+        val causeLine: Int?,
         var exceptionDoc: String? = null,
         var sealed: Boolean = false
     )
@@ -149,22 +169,39 @@ data class ConversationAnswer(var exception: ExceptionAnswer?, var causeContent:
     /**
      * Converts the answer into a user-friendly embed.
      */
-    fun toEmbed(): EmbedConvention = Embeds.info("AutoHelp - ${exception?.exceptionName}", exception?.explanation) {
+    fun toEmbed(): EmbedConvention = Embeds.info("AutoHelp - ${exception.exceptionName}", exception.explanation) {
 
-        addField("Exception", exception?.exceptionName ?: Emotes.LOADING)
-        addField("Exception Doc", exception?.exceptionDoc ?: Emotes.LOADING)
-        addField(
-            "Ursache",
-            "Der Fehler befindet sich vermutlich in der Datei `${exception?.causeClass}.java` in Zeile `${exception?.causeLine}`"
-        )
+        if (exceptionSet) {
+            addField("Exception", exception.exceptionName)
+            if (!exception.exceptionMessage.isNullOrBlank() && exception.exceptionMessage != null) {
+                addField("Beschreibung", exception.exceptionMessage)
+            }
+            addField("Exception Doc", exception.exceptionDoc ?: Emotes.LOADING)
+            if (exception.causeClass != null) {
+                addField(
+                    "Ursache",
+                    "Der Fehler befindet sich vermutlich in der Datei `${exception.causeClass}.java` in Zeile `${exception.causeLine}`"
+                )
+            }
 
-        addField(
-            "Ursache - Code",
-            causeContent
-                ?: "Ich konnte keinen Code finden, bitte schicke die komplette Klasse in der der Fehler auftritt (Am besten via hastebin)"
-        )
+            if (exception.causee != null) {
+                addField("Verursacht", exception.causee)
+            }
+        }
 
-        if (npeHint != null) {
+        if (causeSet) {
+            addField(
+                "Ursache - Code",
+                causeContent
+            )
+        } else {
+            addField(
+                "Ursache - Code",
+                "Ich konnte keinen Code finden, bitte schicke die komplette Klasse in der der Fehler auftritt (Am besten via hastebin)"
+            )
+        }
+
+        if (npeHintSet) {
             addField("NPE Hinweis", npeHint)
         }
 

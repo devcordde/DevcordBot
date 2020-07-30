@@ -38,6 +38,7 @@ class ContentFetcher(
     private val executor: CoroutineDispatcher
 ) {
 
+
     /**
      * Trigger AutoHelp on Message.
      */
@@ -83,7 +84,7 @@ class ContentFetcher(
 
     private suspend fun fetchAttachments(message: Message): CompletableFuture<List<String?>> {
         return GlobalScope.future(executor) {
-            message.attachments.filter { !it.isVideo && !it.isImage }.map {
+            message.attachments.filter { !it.isVideo }.map {
                 fetchAttachment(it)
             }
         }
@@ -91,10 +92,15 @@ class ContentFetcher(
 
     private suspend fun fetchAttachment(attachment: Message.Attachment): String {
         val stream = attachment.retrieveInputStream().await()
-        return BufferedReader(InputStreamReader(stream)).use { reader ->
-            reader.readText()
+        return if (attachment.isImage) {
+            ImageReader.readImage(stream) ?: ""
+        } else {
+            BufferedReader(InputStreamReader(stream)).use { reader ->
+                reader.readText()
+            }
         }
     }
+
 
     private fun fetchHastebin(match: MatchResult): CompletableFuture<String?> {
         val domain = match.groupValues[1]
@@ -143,9 +149,9 @@ class ContentFetcher(
 
     companion object {
 
-        // https://regex101.com/r/u0QAR6/6
+        // https://regex101.com/r/u0QAR6/7
         private val HASTEBIN_PATTERN =
-            "(?:https?:\\/\\/)?(?:(?:www\\.)?)?(hastebin\\.com|hasteb\\.in|paste\\.helpch\\.at)\\/(?:raw\\/)?(.+?(?=\\.|\$|\\/|#))".toRegex()
+            "(?:https?:\\/\\/)?(?:(?:www\\.)?)?(hastebin\\.com|hasteb\\.in|paste\\.helpch\\.at|haste\\.jkoenig\\.dev|haste\\.devcord\\.xyz|haste\\.schlaubi\\.me)\\/(?:raw\\/)?(.+?(?=\\.|\$|\\/|#))".toRegex()
 
         // https://regex101.com/r/N8NBDz/2
         private val PASTEBIN_PATTERN =

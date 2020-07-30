@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot.core.autohelp
 
+import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.database.Tag
 import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
@@ -31,7 +32,6 @@ import java.time.OffsetDateTime
  * I mean not actully a brain but the name sounds cool.
  */
 class Brain(
-    private val maxLines: Int,
     googler: Googler
 ) {
 
@@ -63,7 +63,7 @@ class Brain(
     }
 
     internal fun determinedException(conversation: Conversation, exception: StackTrace) {
-        if (conversation.answer.exception?.sealed == true) return
+        if (conversation.answer.exceptionSet && conversation.answer.exception.sealed) return
         conversation.stacktraces.add(exception)
         conversation.lastInteraction = OffsetDateTime.now()
         think(conversation)
@@ -76,34 +76,35 @@ class Brain(
     }
 
     private fun think(conversation: Conversation) {
-        if (conversation.answer.exception == null) {
+        if (!conversation.answer.exceptionSet) {
             conversation.findException()
         }
-        if (conversation.answer.causeContent == null) {
+        if (!conversation.answer.causeSet) {
             conversation.findCause()
         }
         if (conversation.answer.useless) return
-        if (conversation.answer.npeHint == null) {
+        if (!conversation.answer.npeHintSet) {
             conversation.analyzeNpe()
         }
         conversation.update()
         if (conversation.answer.isComplete) {
             shortTimeMemory.remove(conversation)
         }
-        if (conversation.answer.exception?.exceptionDoc == null) {
+        if (conversation.answer.exceptionSet && conversation.answer.exception.exceptionDoc == null) {
             tryToFindJavadoc(conversation)
         }
     }
 
     private fun Conversation.analyzeNpe() {
-        val causeContent = answer.causeContent?.drop(1)?.dropLast(1) ?: return
-        if (answer.exception?.exceptionName?.equals(
+        if (!answer.causeSet or !answer.exceptionSet) return
+        val causeContent = answer.causeContent.drop(1).dropLast(1)
+        if (answer.exception.exceptionName.equals(
                 "java.lang.nullpointerexception",
                 ignoreCase = true
-            ) == true
+            )
         ) {
             val elements = causeContent.split('.').dropLast(1)
-            answer.npeHint = buildNpeHint(elements, answer.exception?.causeLine ?: 0)
+            answer.npeHint = answer.exception.causeLine?.let { buildNpeHint(elements, it) } ?: return
         }
     }
 
@@ -120,46 +121,61 @@ class Brain(
     private fun tryToFindJavadoc(conversation: Conversation) {
         GlobalScope.launch {
             val exception = conversation.answer.exception
-            if (exception != null) {
-                val doc = javadocFinder.findJavadocForClass(exception.exceptionName)
-                if (doc != null) {
-                    exception.explanation = exception.explanation ?: doc.description
-                    exception.exceptionDoc = doc.uri
-                } else {
-                    exception.exceptionDoc = "Ich konnte kein doc finden :C"
-                }
-                conversation.update()
+            val doc = javadocFinder.findJavadocForClass(exception.exceptionName)
+            if (doc != null) {
+                exception.explanation = exception.explanation ?: doc.description
+                exception.exceptionDoc = doc.uri
+            } else {
+                exception.exceptionDoc = "Ich konnte kein doc finden :C"
             }
+            conversation.update()
         }
     }
 
     private fun Conversation.findException() {
-        if (stacktraces.isEmpty()) return
-        for (stacktrace in stacktraces) {
-            val possibleAnswer = handleCommonException(stacktrace) ?: continue
-            val stacktraceElement = stacktrace.elements.first()
+        fun List<StackTraceElement>.firstByUser(): StackTraceElement? = firstOrNull {
+            !it.pakage.matches(Constants.KNOWN_PACKAGES)
+        }
+
+        fun buildAnswer(finalStackTrace: StackTrace, stackTrace: StackTrace, possibleAnswer: String?) {
+            val stacktraceElement = (finalStackTrace.cause ?: finalStackTrace).elements.firstByUser()
+            val causedException = finalStackTrace.cause ?: finalStackTrace
             answer.exception = ConversationAnswer.ExceptionAnswer(
-                stacktrace.exceptionName,
+                causedException.exceptionName,
+                causedException.message,
+                stackTrace.cause?.let { "`${stackTrace.exceptionName}: ${stackTrace.message}`" },
                 possibleAnswer,
-                stacktraceElement.className,
-                stacktraceElement.lineNumber
+                stacktraceElement?.className,
+                stacktraceElement?.lineNumber
             )
         }
 
-        if (answer.exception == null) {
-            val stacktrace = stacktraces.first()
-            val stacktraceElement = stacktrace.elements.first()
-            answer.exception = ConversationAnswer.ExceptionAnswer(
-                stacktrace.exceptionName,
-                null,
-                stacktraceElement.className,
-                stacktraceElement.lineNumber
-            )
+        if (stacktraces.isEmpty()) return
+        for (stacktrace in stacktraces) {
+            var finalStackTrace: StackTrace = stacktrace
+            var possibleAnswer = handleCommonException(stacktrace)
+            if (possibleAnswer == null) {
+                if (stacktrace.cause != null) {
+                    finalStackTrace = stacktrace.cause
+                    possibleAnswer = handleCommonException(finalStackTrace)
+                } else continue
+            }
+            if (possibleAnswer == null) continue
+
+            buildAnswer(finalStackTrace, stacktrace, possibleAnswer)
+        }
+
+        if (!answer.exceptionSet) { // fallback to first
+            val exception = stacktraces.first()
+            val finalException = exception.cause ?: exception
+            buildAnswer(finalException, exception, null)
         }
     }
 
     private fun Conversation.findCause() {
-        val exception = answer.exception ?: return
+        if (!answer.exceptionSet) return
+        val exception = answer.exception
+        if (exception.causeLine == null) return
         for ((_, name, rawContent) in classes) {
             if (name != exception.causeClass) continue
             answer.causeContent = rawContent.lines()
@@ -183,6 +199,7 @@ class Brain(
             message == "Plugin already initialized!" -> "plugin-already-initialized"
             exceptionName == "invaliddescriptionexception" -> "plugin.yml"
             exceptionName == "invalidpluginexception" && "cannot find main class" in message.toLowerCase() -> "main-class-not-found"
+            exceptionName == "arrayindexoutofboundsexception" -> "ArrayIndexOutOfBoundsException"
             else -> null
         } ?: return null
         val tagContent = transaction { Tag.find { Tags.name eq tag }.firstOrNull() } ?: return null

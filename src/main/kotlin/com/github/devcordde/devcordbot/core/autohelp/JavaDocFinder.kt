@@ -21,12 +21,20 @@ import com.github.devcordde.devcordbot.util.Googler
 import com.github.johnnyjayjay.javadox.DocumentedType
 import com.github.johnnyjayjay.javadox.Javadocs
 
+/**
+ * Utility class to find Javadocs
+ *
+ * @param googler [Googler] instance to google javadoc
+ */
 class JavaDocFinder(private val googler: Googler) {
 
+    /**
+     * Tries to find the javadoc for [clazz]
+     */
     fun findJavadocForClass(clazz: String): DocumentedType? {
         val index = clazz.lastIndexOf('.')
-        val pakage = clazz.take(index)
-        val className = clazz.drop(index + 1)
+        val pakage = clazz.take(index).trim()
+        val className = clazz.drop(index + 1).trim()
         val identifier = if (pakage.startsWith("java")) {
             "java"
         } else {
@@ -43,9 +51,9 @@ class JavaDocFinder(private val googler: Googler) {
         val rawUrl = googler.google(query)
             .firstOrNull { it.htmlTitle.contains("API", ignoreCase = true); true }?.formattedUrl
         return rawUrl?.let {
-            val pakage = clazz.take(clazz.indexOf('.'))
+            val pakage = clazz.take(clazz.indexOf('.')).replace('.', '/')
             val url = rawUrl.take(rawUrl.indexOf(pakage))
-            JavaDocManager.makeJavadoc(url)
+            JavaDocManager.makeJavadoc(pakage, url)
         }
     }
 }

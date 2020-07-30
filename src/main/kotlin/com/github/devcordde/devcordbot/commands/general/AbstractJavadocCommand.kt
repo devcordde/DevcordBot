@@ -41,7 +41,7 @@ abstract class AbstractJavadocCommand : AbstractCommand() {
         get() = "[reference]"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
-    override val commandPlace: CommandPlace = CommandPlace.GM
+    override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
     /**
      * Parses the command in [context].

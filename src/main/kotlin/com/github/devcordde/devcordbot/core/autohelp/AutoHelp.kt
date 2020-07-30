@@ -50,7 +50,7 @@ class AutoHelp(
 
     private val executor = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
     private val fetcher = ContentFetcher(bot.httpClient, bot.github, executor)
-    private val brain = Brain(maxLines, bot.googler)
+    private val brain = Brain(bot.googler)
     private val guesser = LanguageGusser(knownLanguages)
     private val beautifier = CodeBeautifier(bot.httpClient)
 
@@ -70,41 +70,76 @@ class AutoHelp(
         ) return
 
         val inputs = fetcher.fetchMessageContents(event.message)
-        val rawMessage = Constants.CODE_BLOCK_REGEX.find(input)?.groupValues?.getOrNull(1) ?: input
+        val codeblocks =
+            Constants.CODE_BLOCK_REGEX.findAll(input).map {
+                val language = it.groupValues.getOrNull(1)
+                language to it.groupValues[2]
+            }.toList()
+        val messageContents = if (codeblocks.isEmpty()) {
+            listOf(null to input)
+        } else codeblocks
 
-        if (rawMessage.lines().size > maxLines && guesser.guessLanguage(rawMessage) != null) {
+        val tooLongBlocks =
+            messageContents.mapNotNull {
+                if (it.second.lines().size < maxLines) {
+                    null
+                } else {
+                    val language = guesser.guessLanguage(it.second)
+                    language?.let { result ->
+                        (it.first ?: result.language) to it.second
+                    }
+                }
+            }
+
+        if (tooLongBlocks.isNotEmpty()) {
             val message = event.channel.sendMessage(buildTooLongEmbed()).await()
-            val hasteUrl = beautifier.formatCode(rawMessage).thenCompose {
-                HastebinUtil.postErrorToHastebin(it, bot.httpClient)
-            }.await()
-            message.editMessage(buildTooLongEmbed(hasteUrl)).queue()
+            val hasteUrls = tooLongBlocks.map {
+                val rawUrl = beautifier.formatCode(it.second).thenCompose { beautified ->
+                    HastebinUtil.postErrorToHastebin(beautified, bot.httpClient)
+                }.await()
+                if (!it.first.isNullOrBlank()) {
+                    rawUrl + ".${it.first}"
+                } else rawUrl
+            }
+            message.editMessage(buildTooLongEmbed(hasteUrls.joinToString())).queue()
         }
 
         if (userLevel >= levelLimit) return
         val conversation by lazy { brain.findConversation(event) }
 
         for (future in inputs) {
-            val userInput = (future.await() + rawMessage)
+            val userInput = (future.await() + messageContents.map { it.second })
             userInput.forEach {
                 if (it != null) {
                     JVM_EXCEPTION_PATTERN.findAll(it).forEach { match ->
-                        val (_, name, message) = match.groupValues
-                        val elementsRaw = match.groupValues[3]
-                        val elements = STACK_TRACE_ELEMENT_PATTERN.findAll(elementsRaw).map { elementMatch ->
-                            val (_, pakage, method, className, line) = elementMatch.groupValues
-                            StackTraceElement(pakage, method, className, line.toInt())
-                        }.toList()
-                        brain.determinedException(conversation, StackTrace(name, message, elements))
+                        val root = match.groupValues.drop(1)
+                        val rootException = parseException(root)
+                        val finalException = if (root.size > 3) {
+                            val cause = root.drop(5)
+                            val causeException = parseException(cause)
+                            rootException.copy(cause = causeException)
+                        } else rootException
+                        brain.determinedException(conversation, finalException)
                     }
 
                     JAVA_CLASS_PATTERN.findAll(it).forEach { match ->
                         val (_, pakage, _, name) = match.groupValues
-
                         brain.determinedClass(conversation, Class(pakage, name, it))
                     }
                 }
             }
         }
+    }
+
+    private fun parseException(values: List<String>): StackTrace {
+        val (name, message) = values
+        val elementsRaw = values[2]
+        val elements = STACK_TRACE_ELEMENT_PATTERN.findAll(elementsRaw).map { elementMatch ->
+            val (_, pakage, method, className, line) = elementMatch.groupValues
+            StackTraceElement(pakage, method, className, line.toInt())
+        }.toList()
+
+        return StackTrace(name, message, elements)
     }
 
     private fun buildTooLongEmbed(url: String? = null): EmbedConvention {
@@ -119,15 +154,16 @@ class AutoHelp(
 
     companion object {
         /**
-         * https://regex101.com/r/vgz86r/16
+         * https://regex101.com/r/vgz86r/17
          */
         val JVM_EXCEPTION_PATTERN: Regex =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)((?:\R+^\s*.*)?(?:\R+^.*at .*)+)""".toRegex()
+            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)((?:\R+^\s*.*)?(?:\R+^.*at .*)+)(\R)*(Caused by: (.+?(?<=Exception|Error:))(?:\: )?(.*)?((?:\R+^\s*.*)?(?:\R+^.*at .*)+))?""".toRegex()
 
         /**
-         * https://regex101.com/r/xYGH0m/1
+         * https://regex101.com/r/xYGH0m/2
          */
-        val STACK_TRACE_ELEMENT_PATTERN: Regex = "at ((?:(?:\\w)+\\.?)+)\\.(\\w+)\\((\\w+).java:([0-9]+)\\)".toRegex()
+        val STACK_TRACE_ELEMENT_PATTERN: Regex =
+            "at ((?:(?:\\w)+\\.?)+)\\.((?:\\w|<|>)+)\\((\\w+).java:([0-9]+)\\)".toRegex()
 
         /**
          * Java class pattern (should match kotlin (maybe))
