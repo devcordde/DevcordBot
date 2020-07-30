@@ -222,12 +222,6 @@ internal class DevCordBotImpl(
             GoogleCommand()
         )
 
-        val cseKey = env["CSE_KEY"]
-        val cseId = env["CSE_ID"]
-        if (cseKey != null && cseId != null && cseKey.isNotBlank() && cseId.isNotBlank()) {
-            commandClient.registerCommands(GoogleCommand(cseKey, cseId))
-        }
-
         val redeployHost = env["REDEPLOY_HOST"]
         val redeployToken = env["REDEPLOY_TOKEN"]
         if (redeployHost != null && redeployToken != null && redeployHost.isNotBlank() && redeployToken.isNotBlank()) {
