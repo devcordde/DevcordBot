@@ -54,7 +54,7 @@ fun OracleJavaDocCommand(): AbstractCommand = URLJavaDocCommand(
     "java",
     DocumentedVersion.V_10.url,
     listOf("doc", "docs"),
-    "javaodc",
+    "javadoc",
     "Lässt dich javadoc benutzen"
 )
 
