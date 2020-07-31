@@ -115,7 +115,7 @@ class Brain(
             postfix = "`)"
         )} scheint null zu sein.
         |Bitte stelle sicher, dass alle davon einen Wert haben oder füge ein `Null-Check` hinzu.
-        |**Tipp**: Füge einen Breakpoint zur zeile `$lineNumber` hinzu um zu checken was genau `null` ist oder benutze die [Helpful NPEs](https://openjdk.java.net/jeps/358) von Java 14+.
+        |**Tipp**: Füge einen Breakpoint zur Zeile `$lineNumber` hinzu um zu checken was genau `null` ist oder benutze die [Helpful NPEs](https://openjdk.java.net/jeps/358) von Java 14+.
     """.trimMargin()
 
     private fun tryToFindJavadoc(conversation: Conversation) {
