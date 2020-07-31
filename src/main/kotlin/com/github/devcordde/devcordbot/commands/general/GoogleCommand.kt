@@ -23,19 +23,11 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.menu.Paginator
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.services.customsearch.Customsearch
 
 /**
  * Google command.
  */
 class GoogleCommand : AbstractCommand() {
-
-    private val search =
-        Customsearch.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
-            .setApplicationName("DevcordBot")
-            .build()
 
     override val aliases: List<String> = listOf("google", "search", "g")
     override val displayName: String = "google"

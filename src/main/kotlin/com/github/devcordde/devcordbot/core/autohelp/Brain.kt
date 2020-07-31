@@ -126,7 +126,7 @@ class Brain(
                 exception.explanation = exception.explanation ?: doc.description
                 exception.exceptionDoc = doc.uri
             } else {
-                exception.exceptionDoc = "Ich konnte kein doc finden :C"
+                exception.exceptionDoc = "Es wurde kein Doc gefunden"
             }
             conversation.update()
         }
