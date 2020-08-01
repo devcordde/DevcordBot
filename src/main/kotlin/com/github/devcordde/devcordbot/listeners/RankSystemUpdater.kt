@@ -36,7 +36,7 @@ import java.time.Instant
 /**
  * Updates the Database based on Discord events.
  */
-class DatabaseUpdater {
+class DatabaseUpdater(private val whiteList: List<String>) {
 
     /**
      * Adds a user to the database when a user joins the guild.
@@ -69,6 +69,10 @@ class DatabaseUpdater {
     @SubscribeEvent
     fun onMessageSent(event: DevCordGuildMessageReceivedEvent) {
         if (event.author.isBot) {
+            return
+        }
+
+        if (event.channel.id !in whiteList) {
             return
         }
 
@@ -139,12 +143,12 @@ enum class Level(
     val level: Int,
     val previousLevel: Level?
 ) {
-    LEVEL_1(554734490359037996L, 1, null),
-    LEVEL_5(554734613365391361L, 5, LEVEL_1),
-    LEVEL_10(554734631866335233L, 10, LEVEL_5),
-    LEVEL_20(554734647893032962L, 20, LEVEL_10),
-    LEVEL_35(554734662472433677L, 35, LEVEL_20),
-    LEVEL_50(563378794111565861, 50, LEVEL_35),
-    LEVEL_75(696293683254919219, 75, LEVEL_50),
-    LEVEL_100(696294056317157406, 100, LEVEL_75)
+    LEVEL_1(739065032897200228, 1, null),
+    LEVEL_5(739065117702094890, 5, LEVEL_1),
+    LEVEL_10(739065451325423679, 10, LEVEL_5),
+    LEVEL_20(739065355116347434, 20, LEVEL_10),
+    LEVEL_35(739065293808205904, 35, LEVEL_20),
+    LEVEL_50(739064877842432010, 50, LEVEL_35),
+    LEVEL_75(739064774427541514, 75, LEVEL_50),
+    LEVEL_100(739064698498187286, 100, LEVEL_75)
 }
