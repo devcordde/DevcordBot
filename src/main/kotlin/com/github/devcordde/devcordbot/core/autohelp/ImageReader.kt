@@ -44,8 +44,10 @@ object ImageReader {
      * Whether ratelimit has been hit or not
      */
     val available: Boolean
-        get() = Ratelimiter.isAvailable
-    private val client = ImageAnnotatorClient.create()
+        get() = Ratelimiter.isAvailable && client != null
+    private val client = runCatching {
+        ImageAnnotatorClient.create()
+    }.getOrNull()
 
     /**
      * Reads the image from [inputStream].
@@ -58,7 +60,7 @@ object ImageReader {
     }
 
     private fun sendRequest(inputStream: InputStream): String? {
-        if (!Ratelimiter.isAvailable) return null
+        if (!Ratelimiter.isAvailable || client == null) return null
         Ratelimiter.register()
         val imageBytes = ByteString.readFrom(inputStream)
         val image = Image.newBuilder().setContent(imageBytes).build()
