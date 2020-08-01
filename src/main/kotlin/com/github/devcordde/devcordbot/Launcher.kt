@@ -28,6 +28,8 @@ import org.slf4j.event.Level as SLF4JLevel
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.constants.Constants
+import com.github.devcordde.devcordbot.core.JavaDocManager
+import com.github.devcordde.devcordbot.core.autohelp.ImageReader
 import net.dv8tion.jda.api.entities.Activity
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.LoggerFactory
@@ -88,5 +90,7 @@ fun main(args: Array<String>) {
     Constants.hastebinUrl = env["HASTE_HOST"]?.toHttpUrl() ?: "https://hasteb.in".toHttpUrl()
 
     logger.info { "Launching DevCordBot..." }
+    logger.info { "OCR Available: ${ImageReader.available}" }
+    JavaDocManager.javadocPool // for some reason the object instance is made lazly which is to late here
     DevCordBot(token, games, env, debugMode)
 }

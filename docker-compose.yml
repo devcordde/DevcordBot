@@ -14,3 +14,5 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
     depends_on:
       - database
+    env_file:
+      - .env
