@@ -36,7 +36,7 @@ import java.time.Instant
 /**
  * Updates the Database based on Discord events.
  */
-class DatabaseUpdater {
+class DatabaseUpdater(private val whiteList: List<String>) {
 
     /**
      * Adds a user to the database when a user joins the guild.
@@ -69,6 +69,10 @@ class DatabaseUpdater {
     @SubscribeEvent
     fun onMessageSent(event: DevCordGuildMessageReceivedEvent) {
         if (event.author.isBot) {
+            return
+        }
+
+        if (event.channel.id !in whiteList) {
             return
         }
 

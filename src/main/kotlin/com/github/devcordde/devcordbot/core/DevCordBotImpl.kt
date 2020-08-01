@@ -101,7 +101,7 @@ internal class DevCordBotImpl(
             MessageListener(),
             this@DevCordBotImpl,
             SelfMentionListener(this),
-            DatabaseUpdater(),
+            DatabaseUpdater(env["XP_WHITELIST"]!!.split(",")),
             commandClient,
             starboard,
             AutoHelp(
