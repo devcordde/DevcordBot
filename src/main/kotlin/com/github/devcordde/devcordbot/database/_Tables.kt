@@ -55,7 +55,7 @@ import java.time.Instant
  */
 object Users : IdTable<Long>() {
     override val id: Column<EntityID<Long>> = long("id").entityId()
-    val level: Column<Int> = integer("level").default(1)
+    val level: Column<Int> = integer("level").default(0)
     val experience: Column<Long> = long("experience").default(0L)
     val lastUpgrade: Column<Instant> = timestamp("last_experience_gained").default(Instant.now())
     val blacklisted: Column<Boolean> = bool("blacklisted").default(false)
