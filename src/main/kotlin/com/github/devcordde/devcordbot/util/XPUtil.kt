@@ -16,14 +16,22 @@
 
 package com.github.devcordde.devcordbot.util
 
-import kotlin.math.sqrt
+import kotlin.math.pow
 
 /**
  * XP utilities.
  */
 object XPUtil {
+    private val xpMap = HashMap<Int, Long>()
+
     /**
-     * Calculates the needed amount of xp to [level].
+     * Calculates or gets the needed amount of xp to [level].
+     *
+     * http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiIoMip4KV4xLjgrMjAwIiwiY29sb3IiOiIjMDAwMDAwIn0seyJ0eXBlIjoxMDAwLCJ3aW5kb3ciOlsiLTAiLCIyMDAiLCItMCIsIjUwMDAwIl0sInNpemUiOlsxMTAwLDQwMF19XQ--
      */
-    fun getXpToLevelup(level: Int): Long = (25 * sqrt(level.toDouble())).toLong()
+    fun getXpToLevelup(level: Int): Long = xpMap[level] ?: {
+        val requiredXp = (2.0 * level).pow(1.8).toLong() + 200
+        xpMap[level] = requiredXp
+        requiredXp
+    }()
 }
