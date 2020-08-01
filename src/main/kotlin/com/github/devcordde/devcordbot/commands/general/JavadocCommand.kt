@@ -16,10 +16,10 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.johnnyjayjay.javadox.JavadocParser
-import com.github.johnnyjayjay.javadox.Javadocs
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.johnnyjayjay.javadox.JavadocParser
+import com.github.johnnyjayjay.javadox.Javadocs
 import org.jsoup.Jsoup
 
 /**

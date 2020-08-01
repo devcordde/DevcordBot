@@ -42,7 +42,7 @@ class StarboardCommand : AbstractCommand() {
     override val usage: String = ""
     override val permission: Permission = Permission.MODERATOR
     override val category: CommandCategory = CommandCategory.MODERATION
-    override val commandPlace: CommandPlace = CommandPlace.GM
+    override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
     init {
         registerCommands(

@@ -1,6 +1,11 @@
-FROM adoptopenjdk/openjdk13-openj9
+FROM adoptopenjdk/openjdk14-openj9 as builder
+WORKDIR /usr/app
+COPY . .
+RUN ./gradlew installDist -Dorg.gradle.daemon=false
+
+FROM adoptopenjdk/openjdk14-openj9
 
 WORKDIR /usr/app
-COPY build/libs/*-all.jar ./bot.jar
+COPY build/install/devcordbot/ .
 
-ENTRYPOINT ["java","-jar","./bot.jar"]
+ENTRYPOINT ["/usr/app/bin/devcordbot"]

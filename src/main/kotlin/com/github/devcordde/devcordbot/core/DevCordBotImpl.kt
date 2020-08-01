@@ -35,6 +35,7 @@ import com.github.devcordde.devcordbot.event.MessageListener
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 import com.github.devcordde.devcordbot.util.GithubUtil
+import com.github.devcordde.devcordbot.util.Googler
 import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.Dotenv
 import mu.KotlinLogging
@@ -78,6 +79,8 @@ internal class DevCordBotImpl(
     override val github: GithubUtil = GithubUtil(httpClient)
     override val starboard: Starboard =
         Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
+
+    override val googler: Googler = Googler(env["CSE_KEY"]!!, env["CSE_ID"]!!)
 
     override val jda: JDA = JDABuilder.create(
         token,
@@ -212,26 +215,12 @@ internal class DevCordBotImpl(
             RanksCommand(),
             BlacklistCommand(),
             InfoCommand(),
-            CleanupCommand()
+            OracleJavaDocCommand(),
+            SpigotJavaDocCommand(),
+            SpigotLegacyJavaDocCommand(),
+            CleanupCommand(),
+            GoogleCommand()
         )
-
-        runCatching { OracleJavaDocCommand() }.onSuccess {
-            commandClient.registerCommands(it)
-        }
-
-        runCatching { SpigotJavaDocCommand() }.onSuccess {
-            commandClient.registerCommands(it)
-        }
-
-        runCatching { SpigotLegacyJavaDocCommand() }.onSuccess {
-            commandClient.registerCommands(it)
-        }
-
-        val cseKey = env["CSE_KEY"]
-        val cseId = env["CSE_ID"]
-        if (cseKey != null && cseId != null && cseKey.isNotBlank() && cseId.isNotBlank()) {
-            commandClient.registerCommands(GoogleCommand(cseKey, cseId))
-        }
 
         val redeployHost = env["REDEPLOY_HOST"]
         val redeployToken = env["REDEPLOY_TOKEN"]
