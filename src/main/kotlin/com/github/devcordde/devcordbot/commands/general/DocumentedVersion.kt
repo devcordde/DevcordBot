@@ -27,12 +27,12 @@ enum class DocumentedVersion(
     V_6("JAVA", "https://docs.oracle.com/javase/6/docs/api/overview-tree.html", "6"),
     V_7("JAVA", "https://docs.oracle.com/javase/7/docs/api/overview-tree.html", "7"),
     V_8("JAVA", "https://docs.oracle.com/javase/8/docs/api/overview-tree.html", "8"),
-    V_9("JAVA", "https://docs.oracle.com/javase/9/docs/api/overview-tree.html", "9"),
-    V_10("JAVA", "https://docs.oracle.com/javase/10/docs/api/overview-tree.html", "10"),
-    V_11("JAVA", "https://docs.oracle.com/en/java/javase/11/docs/api/overview-tree.html", "11"),
-    V_12("JAVA", "https://docs.oracle.com/en/java/javase/12/docs/api/overview-tree.html", "12"),
-    V_13("JAVA", "https://docs.oracle.com/en/java/javase/13/docs/api/overview-tree.html", "13"),
-    V_14("JAVA", "https://download.java.net/java/GA/jdk14/docs/api/overview-tree.html", "14"),
+    V_9("JAVA", "https://cr.openjdk.java.net/~iris/se/9/latestSpec/api/overview-tree.html", "9"),
+    V_10("JAVA", "https://cr.openjdk.java.net/~iris/se/10/latestSpec/api/overview-tree.html", "10"),
+    V_11("JAVA", "https://cr.openjdk.java.net/~iris/se/11/latestSpec/api/overview-tree.html", "11"),
+    V_12("JAVA", "https://cr.openjdk.java.net/~iris/se/12/latestSpec/api/overview-tree.html", "12"),
+    V_13("JAVA", "https://cr.openjdk.java.net/~iris/se/13/latestSpec/api/overview-tree.html", "13"),
+    V_14("JAVA", "https://cr.openjdk.java.net/~iris/se/14/latestSpec/api/overview-tree.html", "14"),
 
     // Spigot
     V_1_7_10("SPIGOT", "https://helpch.at/docs/1.7.10/overview-tree.html", "1.7.10"),

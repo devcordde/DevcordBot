@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.core
 
 import com.github.devcordde.devcordbot.command.CommandClient
 import com.github.devcordde.devcordbot.util.GithubUtil
+import com.github.devcordde.devcordbot.util.Googler
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
 import okhttp3.OkHttpClient
@@ -70,4 +71,9 @@ interface DevCordBot {
      * See [GithubUtil].
      */
     val github: GithubUtil
+
+    /**
+     * See [Googler].
+     */
+    val googler: Googler
 }
