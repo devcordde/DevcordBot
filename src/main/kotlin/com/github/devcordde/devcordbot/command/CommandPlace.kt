@@ -26,12 +26,12 @@ enum class CommandPlace {
     /**
      * Private Messages
      */
-    PM,
+    PRIVATE_MESSAGE,
 
     /**
      * Guild Messages
      */
-    GM,
+    GUILD_MESSAGE,
 
     /**
      * Guild and Private Messages
@@ -45,8 +45,8 @@ enum class CommandPlace {
     fun matches(message: Message): Boolean {
         return when (this) {
             ALL -> true
-            PM -> message.channelType == ChannelType.PRIVATE
-            GM -> message.channelType == ChannelType.TEXT
+            PRIVATE_MESSAGE -> message.channelType == ChannelType.PRIVATE
+            GUILD_MESSAGE -> message.channelType == ChannelType.TEXT
         }
     }
 }

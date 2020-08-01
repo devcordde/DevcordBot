@@ -23,19 +23,11 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.menu.Paginator
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.services.customsearch.Customsearch
 
 /**
  * Google command.
  */
-class GoogleCommand(private val apiKey: String, private val engineId: String) : AbstractCommand() {
-
-    private val search =
-        Customsearch.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
-            .setApplicationName("DevcordBot")
-            .build()
+class GoogleCommand : AbstractCommand() {
 
     override val aliases: List<String> = listOf("google", "search", "g")
     override val displayName: String = "google"
@@ -44,20 +36,16 @@ class GoogleCommand(private val apiKey: String, private val engineId: String) : 
     override val usage: String = "<query>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
-    override val commandPlace: CommandPlace = CommandPlace.GM
+    override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
     override suspend fun execute(context: Context) {
         val query = context.args.join()
 
         if (query.isBlank()) return context.sendHelp().queue()
 
-        val results = with(search.cse().list(query)) {
-            key = apiKey
-            cx = engineId
-            execute()
-        }.items
+        val results = context.bot.googler.google(query)
 
-        if (results == null || results.isEmpty()) {
+        if (results.isEmpty()) {
             return context.respond(
                 Embeds.error(
                     title = "Keine Suchergebnisse gefunden",

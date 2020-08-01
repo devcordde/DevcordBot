@@ -43,7 +43,7 @@ class EvalCommand : AbstractCommand() {
     override val usage: String = MarkdownSanitizer.escape("\n```<language>\n<code>\n```")
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
-    override val commandPlace: CommandPlace = CommandPlace.GM
+    override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
     init {
         registerCommands(ListCommand())
