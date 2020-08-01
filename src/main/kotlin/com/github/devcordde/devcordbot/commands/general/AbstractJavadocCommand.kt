@@ -36,12 +36,12 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 /**
  * Abstract implementation for javadoc search command.
  */
-abstract class AbstractJavadocCommand() : AbstractCommand() {
+abstract class AbstractJavadocCommand : AbstractCommand() {
     override val usage: String
         get() = "[reference]"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
-    override val commandPlace: CommandPlace = CommandPlace.GM
+    override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
     /**
      * Parses the command in [context].
