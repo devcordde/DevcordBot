@@ -111,9 +111,9 @@ class AutoHelp(
 
         for (future in (inputs + CompletableFuture.completedFuture(messageContents.map { it.second }))) {
             val userInput = future.await()
-            userInput.toList().forEach {
+            userInput.forEach {
                 if (it != null) {
-                    JVM_EXCEPTION_PATTERN.findAll(it).toList().forEach { match ->
+                    JVM_EXCEPTION_PATTERN.findAll(it).forEach { match ->
                         val root = match.groupValues.drop(1)
                         val rootException = parseException(root)
                         val cause = root.drop(5).filterNot(String::isNullOrBlank)
