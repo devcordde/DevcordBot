@@ -22,16 +22,10 @@ import kotlin.math.pow
  * XP utilities.
  */
 object XPUtil {
-    private val xpMap = HashMap<Int, Long>()
-
     /**
      * Calculates or gets the needed amount of xp to [level].
      *
      * http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiIoMip4KV4xLjYrMTAwIiwiY29sb3IiOiIjMDAwMDAwIn0seyJ0eXBlIjoxMDAwLCJ3aW5kb3ciOlsiLTAiLCIxMDAiLCItMCIsIjEwMDAwIl0sInNpemUiOlsxMTAwLDQwMF19XQ--
      */
-    fun getXpToLevelup(level: Int): Long = xpMap[level] ?: {
-        val requiredXp = (2.0 * level).pow(1.6).toLong() + 100
-        xpMap[level] = requiredXp
-        requiredXp
-    }()
+    fun getXpToLevelup(level: Int): Long = (2.0 * level).pow(1.6).toLong() + 100
 }
