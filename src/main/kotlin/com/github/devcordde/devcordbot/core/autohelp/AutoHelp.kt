@@ -34,7 +34,7 @@ import kotlinx.coroutines.future.await
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.Executors
 
-private val levelLimit = dotenv()["AUTO_HELP_LEVEL_LIMIT"]?.toInt() ?: 75
+private val levelLimit = dotenv()["AUTO_HELP_LEVEL_LIMIT"]?.toInt() ?: 25
 
 /**
  * AutoHelp.
