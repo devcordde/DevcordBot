@@ -21,6 +21,7 @@ import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.dsl.sendMessage
+import com.github.devcordde.devcordbot.util.limit
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.TextChannel
@@ -111,7 +112,7 @@ data class Conversation(
      * Updates the Discord answer message.
      */
     fun update(): Unit =
-        safeHelpMessage.editMessage(answer.toEmbed()).queue()
+        safeHelpMessage.editMessage(answer.toEmbed()).queue().also { println(Integer.toHexString(hashCode())) }
 }
 
 /**
@@ -180,7 +181,7 @@ class ConversationAnswer {
             if (exception.causeClass != null) {
                 addField(
                     "Ursache",
-                    "Der Fehler befindet sich vermutlich in der Datei `${exception.causeClass}.java` in Zeile `${exception.causeLine}`"
+                    "Der Fehler befindet sich vermutlich in der Datei `${exception.causeClass?.limit(100)}.java` in Zeile `${exception.causeLine}`"
                 )
             }
 
