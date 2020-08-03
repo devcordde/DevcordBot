@@ -112,7 +112,7 @@ data class Conversation(
      * Updates the Discord answer message.
      */
     fun update(): Unit =
-        safeHelpMessage.editMessage(answer.toEmbed()).queue().also { println(Integer.toHexString(hashCode())) }
+        safeHelpMessage.editMessage(answer.toEmbed()).queue()
 }
 
 /**

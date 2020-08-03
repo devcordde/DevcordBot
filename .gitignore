@@ -129,4 +129,4 @@ gradle-app.setting
 
 # GCP Vision
 ServiceAccountKey.json
-/ocr_usages.json
+ocr_usages.json
