@@ -42,6 +42,10 @@ class Brain(
         cleanShortTimeMemory()
     }
 
+    internal fun abandon(conversation: Conversation) {
+        shortTimeMemory.remove(conversation)
+    }
+
     internal fun findConversation(event: DevCordGuildMessageReceivedEvent): Conversation {
         val found = shortTimeMemory.firstOrNull { it.owner == event.member && it.textChannel == event.channel }
         if (found == null) {
@@ -88,7 +92,7 @@ class Brain(
         }
         conversation.update()
         if (conversation.answer.isComplete) {
-            shortTimeMemory.remove(conversation)
+            abandon(conversation)
         }
         if (conversation.answer.exceptionSet && conversation.answer.exception.exceptionDoc == null) {
             tryToFindJavadoc(conversation)
@@ -138,12 +142,18 @@ class Brain(
         }
 
         fun buildAnswer(finalStackTrace: StackTrace, stackTrace: StackTrace, possibleAnswer: String?) {
-            val stacktraceElement = (finalStackTrace.cause ?: finalStackTrace).elements.firstByUser()
             val causedException = finalStackTrace.cause ?: finalStackTrace
+            val stacktraceElement = causedException.elements.firstByUser()
             answer.exception = ConversationAnswer.ExceptionAnswer(
                 causedException.exceptionName,
                 causedException.message,
-                stackTrace.cause?.let { "`${stackTrace.exceptionName}: ${stackTrace.message}`" },
+                stackTrace.cause?.let {
+                    if (stackTrace.message.isOrSpellsNullOrBlank()) {
+                        stackTrace.exceptionName
+                    } else {
+                        "${stackTrace.exceptionName}: ${stackTrace.message}"
+                    }
+                },
                 possibleAnswer,
                 stacktraceElement?.className,
                 stacktraceElement?.lineNumber
@@ -217,3 +227,5 @@ class Brain(
         }
     }
 }
+
+private fun String.isOrSpellsNullOrBlank() = isNullOrBlank() || this == "null"
