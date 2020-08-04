@@ -32,6 +32,7 @@ import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 private val levelLimit = dotenv()["AUTO_HELP_LEVEL_LIMIT"]?.toInt() ?: 75
@@ -105,26 +106,32 @@ class AutoHelp(
         }
 
         if (userLevel >= levelLimit) return
-        val conversation by lazy { brain.findConversation(event) }
+        val newConversation = { brain.findConversation(event) }
+        val container = ConversationContainer(newConversation)
 
-        for (future in inputs) {
-            val userInput = (future.await() + messageContents.map { it.second })
+        for (future in (inputs + CompletableFuture.completedFuture(messageContents.map { it.second }))) {
+            val userInput = future.await()
             userInput.forEach {
                 if (it != null) {
                     JVM_EXCEPTION_PATTERN.findAll(it).forEach { match ->
                         val root = match.groupValues.drop(1)
                         val rootException = parseException(root)
-                        val finalException = if (root.size > 3) {
-                            val cause = root.drop(5)
+                        val cause = root.drop(5).filterNot(String::isNullOrBlank)
+                        val finalException = if (cause.isNotEmpty()) {
                             val causeException = parseException(cause)
                             rootException.copy(cause = causeException)
                         } else rootException
-                        brain.determinedException(conversation, finalException)
+
+                        if (container.conversation.answer.exceptionSet) {
+                            brain.abandon(container.conversation)
+//                            container.conversation = brain.findConversation(event)
+                        }
+                        brain.determinedException(container.conversation, finalException)
                     }
 
                     JAVA_CLASS_PATTERN.findAll(it).forEach { match ->
                         val (_, pakage, _, name) = match.groupValues
-                        brain.determinedClass(conversation, Class(pakage, name, it))
+                        brain.determinedClass(container.conversation, Class(pakage, name, it))
                     }
                 }
             }
@@ -173,4 +180,15 @@ class AutoHelp(
             """(?m)package ((?:\w+\.?)+);[\s\S]*(public|private|protected) class (\w*) \{([\s\S]*)}""".toRegex()
 
     }
+}
+
+private data class ConversationContainer(
+    private val newConversation: () -> Conversation,
+    private var setConversation: Conversation? = null
+) {
+    var conversation: Conversation
+        get() = setConversation ?: newConversation().also { setConversation = it }
+        set(value) {
+            setConversation = value
+        }
 }
