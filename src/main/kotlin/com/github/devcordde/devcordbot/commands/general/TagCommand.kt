@@ -30,6 +30,7 @@ import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.menu.Paginator
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
@@ -364,11 +365,15 @@ class TagCommand : AbstractCommand() {
                 return when (mentionable) {
                     is Member -> mentionable.user.asTag
                     is Role -> mentionable.name
-                    else -> "Unknown mention"
+                    else -> "\\${mentionable.asMention}"
                 }
             }
 
-            val mentions: List<IMentionable> = context.message.mentionedMembers + context.message.mentionedRoles
+            val mentions: List<IMentionable> = listOf(
+                context.message.mentionedMembers,
+                context.message.mentionedRoles,
+                context.message.mentionedTags
+            ).flatten()
 
             return mentions
                 .fold(content, fun(previous: String, mentionable: IMentionable): String {
@@ -461,4 +466,13 @@ class TagCommand : AbstractCommand() {
     companion object {
         private val multiWordAliasRegex = """"(.*)" "(.*)"""".toRegex()
     }
+}
+
+private val Message.mentionedTags: List<IMentionable>
+    get() = if (mentionsEveryone()) listOf(TagMentionable("@here"), TagMentionable("@everyone")) else emptyList()
+
+private class TagMentionable(private val tag: String) : IMentionable {
+    override fun getIdLong(): Long = throw UnsupportedOperationException()
+
+    override fun getAsMention(): String = tag
 }
