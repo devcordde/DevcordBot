@@ -85,6 +85,10 @@ application {
 }
 
 tasks {
+    shadowJar {
+        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
+    }
+
     compileKotlin {
         kotlinOptions.jvmTarget = "12"
     }
