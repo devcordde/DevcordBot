@@ -57,7 +57,7 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "3.4.2")
 
     // Discord
-    implementation("net.dv8tion", "JDA", "4.1.1_162") {
+    implementation("net.dv8tion", "JDA", "4.2.0_187") {
         exclude(module = "opus-java")
     }
 
