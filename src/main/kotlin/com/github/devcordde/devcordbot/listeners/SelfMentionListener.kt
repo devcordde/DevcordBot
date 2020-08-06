@@ -37,6 +37,7 @@ class SelfMentionListener(private val bot: DevCordBot) {
      */
     @SubscribeEvent
     fun onMessageReceive(event: GuildMessageReceivedEvent) {
+        if (event.author.isBot) return
         if (event.guild.selfMember.asMention().matchEntire(event.message.contentRaw) != null) {
             sendInfo(event.channel, event.jda.users.size, bot)
         }
