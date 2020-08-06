@@ -28,6 +28,7 @@ import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.sendMessage
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.entities.*
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.requests.restaction.MessageAction
@@ -102,7 +103,11 @@ data class Context(
      * Sends [content] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(content: String): RestAction<Message> = notifyCommandHandler(channel.sendMessage(content))
+    fun respond(content: String): RestAction<Message> {
+        val message =
+            MessageBuilder(content).denyMentions(Message.MentionType.EVERYONE, Message.MentionType.HERE).build()
+        return notifyCommandHandler(channel.sendMessage(message))
+    }
 
     /**
      * Sends [embed] into [channel].
