@@ -421,6 +421,9 @@ class TagCommand : AbstractCommand() {
         return if (foundTag != null) foundTag else {
             val similarTag =
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).firstOrNull()
+            if(name.equals(similarTag.name, true) {
+                return similarTag;
+            }
             val similarTagHint = if (similarTag != null) " Meintest du vielleicht `${similarTag.name}`?" else ""
             return context.respond(
                 Embeds.error(
