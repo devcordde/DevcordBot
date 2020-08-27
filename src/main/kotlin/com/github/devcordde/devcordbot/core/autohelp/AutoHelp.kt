@@ -31,6 +31,7 @@ import com.github.devcordde.devcordbot.util.await
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.await
+import net.dv8tion.jda.api.entities.MessageChannel
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -69,16 +70,55 @@ class AutoHelp(
                     || (event.channel.parent?.id !in whitelist || event.channel.id in blacklist)
                     || bypassWord in input)
         ) return
-
         val inputs = fetcher.fetchMessageContents(event.message)
+
+        val messageContents = analyzeCodeBlocks(input)
+        checkMessageLength(event.channel, messageContents)
+
+        if (userLevel >= levelLimit) return
+        val newConversation = { brain.findConversation(event) }
+        val container = ConversationContainer(newConversation)
+
+        for (future in (inputs + CompletableFuture.completedFuture(messageContents.map { it.second }))) {
+            val userInput = future.await()
+            userInput.forEach {
+                if (it != null) {
+                    JVM_EXCEPTION_PATTERN.findAll(it).forEach { match ->
+                        val root = match.groupValues.drop(1)
+                        val rootException = parseException(root)
+                        val cause = root.drop(4)
+                        val finalException = if (cause.isNotEmpty()) {
+                            val causeException = parseException(cause)
+                            rootException.copy(cause = causeException)
+                        } else rootException
+
+                        if (container.conversation.answer.exceptionSet) {
+                            brain.abandon(container.conversation)
+                        }
+                        brain.determinedException(container.conversation, finalException)
+                    }
+
+                    JAVA_CLASS_PATTERN.findAll(it).forEach { match ->
+                        val (_, pakage, name) = match.groupValues
+                        brain.determinedClass(container.conversation, Class(pakage, name, it))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun analyzeCodeBlocks(input: String): List<Pair<String?, String>> {
         val codeblocks =
             Constants.CODE_BLOCK_REGEX.findAll(input).map {
                 val language = it.groupValues.getOrNull(1)
                 language to it.groupValues[2]
             }.toList()
-        val messageContents = if (codeblocks.isEmpty()) {
+        return if (codeblocks.isEmpty()) {
             listOf(null to input)
         } else codeblocks
+    }
+
+    private suspend fun checkMessageLength(channel: MessageChannel, messageContents: List<Pair<String?, String>>) {
 
         val tooLongBlocks =
             messageContents.mapNotNull {
@@ -93,7 +133,7 @@ class AutoHelp(
             }
 
         if (tooLongBlocks.isNotEmpty()) {
-            val message = event.channel.sendMessage(buildTooLongEmbed()).await()
+            val message = channel.sendMessage(buildTooLongEmbed()).await()
             val hasteUrls = tooLongBlocks.map {
                 val rawUrl = beautifier.formatCode(it.second).thenCompose { beautified ->
                     HastebinUtil.postErrorToHastebin(beautified, bot.httpClient)
@@ -103,38 +143,6 @@ class AutoHelp(
                 } else rawUrl
             }
             message.editMessage(buildTooLongEmbed(hasteUrls.joinToString())).queue()
-        }
-
-        if (userLevel >= levelLimit) return
-        val newConversation = { brain.findConversation(event) }
-        val container = ConversationContainer(newConversation)
-
-        for (future in (inputs + CompletableFuture.completedFuture(messageContents.map { it.second }))) {
-            val userInput = future.await()
-            userInput.forEach {
-                if (it != null) {
-                    JVM_EXCEPTION_PATTERN.findAll(it).forEach { match ->
-                        val root = match.groupValues.drop(1)
-                        val rootException = parseException(root)
-                        val cause = root.drop(5).filterNot(String::isNullOrBlank)
-                        val finalException = if (cause.isNotEmpty()) {
-                            val causeException = parseException(cause)
-                            rootException.copy(cause = causeException)
-                        } else rootException
-
-                        if (container.conversation.answer.exceptionSet) {
-                            brain.abandon(container.conversation)
-//                            container.conversation = brain.findConversation(event)
-                        }
-                        brain.determinedException(container.conversation, finalException)
-                    }
-
-                    JAVA_CLASS_PATTERN.findAll(it).forEach { match ->
-                        val (_, pakage, _, name) = match.groupValues
-                        brain.determinedClass(container.conversation, Class(pakage, name, it))
-                    }
-                }
-            }
         }
     }
 
@@ -161,23 +169,23 @@ class AutoHelp(
 
     companion object {
         /**
-         * https://regex101.com/r/vgz86r/17
+         * https://regex101.com/r/vgz86r/21
          */
         val JVM_EXCEPTION_PATTERN: Regex =
-            """(?m)^(?:Exception in thread ".*")?.*?(.+?(?<=Exception|Error:))(?:\: )?(.*)((?:\R+^\s*.*)?(?:\R+^.*at .*)+)(\R)*(Caused by: (.+?(?<=Exception|Error:))(?:\: )?(.*)?((?:\R+^\s*.*)?(?:\R+^.*at .*)+))?""".toRegex()
+            """(?m)^(?:Exception in thread ".*")?.*?(\S+?(?<=Exception|Error:))(?:\: )?(.*)((?:\R+^\s*.*)?(?:\R+^.*at .*)+)\R(.*(?=Caused by:)Caused by: (\S+?(?<=Exception|Error:))(?:\: )?(.*)?((?:\R+^\s*.*)?(?:\R+^.*at .*)+))?""".toRegex()
 
         /**
-         * https://regex101.com/r/xYGH0m/2
+         * https://regex101.com/r/xYGH0m/3
          */
         val STACK_TRACE_ELEMENT_PATTERN: Regex =
-            "at ((?:(?:\\w)+\\.?)+)\\.((?:\\w|<|>)+)\\((\\w+).java:([0-9]+)\\)".toRegex()
+            "at ((?:(?:\\w|\\\$)+\\.?)+)\\.((?:\\w|<|>)+)\\((\\w+).java:([0-9]+)\\)".toRegex()
 
         /**
          * Java class pattern (should match kotlin (maybe))
-         * https://regex101.com/r/uksxY5/3
+         * https://regex101.com/r/uksxY5/4
          */
         val JAVA_CLASS_PATTERN: Regex =
-            """(?m)package ((?:\w+\.?)+);[\s\S]*(public|private|protected) class (\w*) \{([\s\S]*)}""".toRegex()
+            """(?m)package\s*((?:\w+\.?)+);[\s\S]*(?!public|private|protected)\s*class\s*(\w*)\s*(?:\s*(?:implements|extends)\s+[\w,\s]+)*\s*\{([\s\S]*)}""".toRegex()
 
     }
 }

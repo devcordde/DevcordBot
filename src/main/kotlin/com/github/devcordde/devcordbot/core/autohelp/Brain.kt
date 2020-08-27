@@ -113,11 +113,13 @@ class Brain(
     }
 
     private fun buildNpeHint(elements: List<String>, lineNumber: Int): String =
-        """Eines dieser Dinge ${elements.joinToString(
-            prefix = "(`",
-            separator = "`, `",
-            postfix = "`)"
-        )} scheint null zu sein.
+        """Eines dieser Dinge ${
+            elements.joinToString(
+                prefix = "(`",
+                separator = "`, `",
+                postfix = "`)"
+            )
+        } scheint null zu sein.
         |Bitte stelle sicher, dass alle davon einen Wert haben oder füge ein `Null-Check` hinzu.
         |**Tipp**: Füge einen Breakpoint zur Zeile `$lineNumber` hinzu um zu checken was genau `null` ist oder benutze die [Helpful NPEs](https://openjdk.java.net/jeps/358) von Java 14+.
     """.trimMargin()

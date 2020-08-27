@@ -77,19 +77,6 @@ fun Call.executeAsync(): CompletableFuture<Response> {
     return future
 }
 
-/**
- * Returns the Stacktrace as a String.
- */
-fun Throwable.stringify(): String {
-    val stringWriter = StringWriter()
-    val printWriter = PrintWriter(stringWriter)
-    return stringWriter.use {
-        printWriter.use {
-            printStackTrace(printWriter)
-            stringWriter.buffer.toString()
-        }
-    }
-}
 
 /**
  * Limits the length of a string by [amount] and adds [contraction] at the end.
