@@ -208,7 +208,7 @@ private class TestPermissionHandler : PermissionHandler {
     override fun isCovered(
         permission: Permission,
         executor: Member?,
-        devCordUser: DevCordUser,
+        devCordUser: DevCordUser?,
         acknowledgeBlacklist: Boolean
     ): PermissionState {
         return PermissionState.ACCEPTED
