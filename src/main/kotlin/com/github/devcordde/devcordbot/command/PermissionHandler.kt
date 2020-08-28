@@ -32,7 +32,7 @@ interface PermissionHandler {
     fun isCovered(
         permission: Permission,
         executor: Member?,
-        devCordUser: DevCordUser,
+        devCordUser: DevCordUser?,
         acknowledgeBlacklist: Boolean = true
     ): PermissionState
 }

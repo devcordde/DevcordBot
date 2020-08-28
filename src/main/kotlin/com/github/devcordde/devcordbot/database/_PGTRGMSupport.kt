@@ -48,6 +48,13 @@ fun <S1, S2> similarity(
 ): Expression<String?> = CustomStringFunction("similarity", expression, other)
 
 /**
+ * Invokes the UPPER function on [expression].
+ */
+fun <S1> upper(
+    expression: ExpressionWithColumnType<S1>,
+): ExpressionWithColumnType<String?> = CustomStringFunction("UPPER", expression)
+
+/**
  * Invokes the tgrm similarity function on the [expression] with [pattern].
  */
 fun <S1> similarity(

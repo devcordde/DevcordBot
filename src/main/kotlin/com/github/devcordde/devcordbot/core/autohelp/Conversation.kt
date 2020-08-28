@@ -174,7 +174,7 @@ class ConversationAnswer {
 
         if (exceptionSet) {
             addField("Exception", exception.exceptionName)
-            if (!exception.exceptionMessage.isNullOrBlank() && exception.exceptionMessage != null) {
+            if (!exception.exceptionMessage.isNullOrBlank() && exception.exceptionMessage != null && exception.exceptionMessage != "null") {
                 addField("Beschreibung", exception.exceptionMessage)
             }
             addField("Exception Doc", exception.exceptionDoc ?: Emotes.LOADING)

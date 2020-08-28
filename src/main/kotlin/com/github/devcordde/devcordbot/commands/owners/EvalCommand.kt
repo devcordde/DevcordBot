@@ -26,7 +26,6 @@ import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.limit
-import com.github.devcordde.devcordbot.util.stringify
 import net.dv8tion.jda.api.entities.MessageEmbed
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
@@ -89,12 +88,13 @@ class EvalCommand : AbstractCommand() {
                     "Fehler!",
                     "Es ist folgender Fehler aufgetreten: ```${e.message?.limit(1024)}``` Detailierter Fehler: ${Emotes.LOADING}"
                 )
-                HastebinUtil.postErrorToHastebin(e.stringify(), context.bot.httpClient).thenAccept { hasteUrl ->
-                    it.editMessage(result.apply {
-                        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
-                        description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                    }).queue()
-                }
+                HastebinUtil.postErrorToHastebin(e.stackTraceToString(), context.bot.httpClient)
+                    .thenAccept { hasteUrl ->
+                        it.editMessage(result.apply {
+                            @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
+                            description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
+                        }).queue()
+                    }
                 result
             }
             it.editMessage(result)
