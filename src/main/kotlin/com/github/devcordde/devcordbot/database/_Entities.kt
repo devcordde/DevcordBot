@@ -78,6 +78,11 @@ open class DatabaseDevCordUser(id: EntityID<Long>) : LongEntity(id), DevCordUser
  */
 class Tag(name: EntityID<String>) : Entity<String>(name) {
     companion object : EntityClass<String, Tag>(Tags) {
+
+        /**
+         * Finds the first [Tag] by its [name].
+         */
+        fun findByNameId(name: String): Tag? = find { upper(Tags.name) eq name.toUpperCase() }.firstOrNull()
         /**
          * Maximum length of a tag name.
          */
@@ -99,7 +104,12 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
  * @property tag the tag the alias is for
  */
 class TagAlias(alias: EntityID<String>) : Entity<String>(alias) {
-    companion object : EntityClass<String, TagAlias>(TagAliases)
+    companion object : EntityClass<String, TagAlias>(TagAliases) {
+        /**
+         * Finds the first [TagAlias] by its [name].
+         */
+        fun findByNameId(name: String): TagAlias? = find { upper(TagAliases.name) eq name.toUpperCase() }.firstOrNull()
+    }
 
     val name: String
         get() = id.value

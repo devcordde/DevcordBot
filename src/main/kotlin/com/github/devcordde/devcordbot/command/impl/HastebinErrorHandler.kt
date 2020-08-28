@@ -22,7 +22,6 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.util.HastebinUtil
-import com.github.devcordde.devcordbot.util.stringify
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.ChannelType
 import java.time.LocalDateTime
@@ -71,24 +70,25 @@ class HastebinErrorHandler : ErrorHandler {
         val information = StringBuilder()
         val channel = context.channel
         information.append("TextChannel: ").append('#').append(channel.name)
-            .append('(').append(channel.id).appendln(")")
+            .append('(').append(channel.id).appendLine(")")
         val guild = context.guild
         information.append("Guild: ").append(guild.name).append('(').append(guild.id)
-            .appendln(')')
+            .appendLine(')')
         val executor = context.author
         information.append("Executor: ").append('@').append(executor.name).append('#')
-            .append(executor.discriminator).append('(').append(executor.id).appendln(')')
+            .append(executor.discriminator).append('(').append(executor.id).appendLine(')')
         val selfMember = guild.selfMember
-        information.append("Permissions: ").appendln(selfMember.permissions)
+        information.append("Permissions: ").appendLine(selfMember.permissions)
 
         if (context.message.channelType == ChannelType.TEXT) {
-            information.append("Channel permissions: ").appendln(selfMember.getPermissions(context.message.textChannel))
+            information.append("Channel permissions: ")
+                .appendLine(selfMember.getPermissions(context.message.textChannel))
         }
 
-        information.append("Timestamp: ").appendln(LocalDateTime.now())
-        information.append("Thread: ").appendln(thread)
-        information.append("Coroutine: ").appendln(coroutineContext)
-        information.append("Stacktrace: ").appendln().append(e.stringify())
+        information.append("Timestamp: ").appendLine(LocalDateTime.now())
+        information.append("Thread: ").appendLine(thread)
+        information.append("Coroutine: ").appendLine(coroutineContext)
+        information.append("Stacktrace: ").appendLine().append(e.stackTraceToString())
         return information.toString()
     }
 }

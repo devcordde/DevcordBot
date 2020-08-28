@@ -25,11 +25,14 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Colors
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.menu.Paginator
+import com.github.devcordde.devcordbot.util.HastebinUtil
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
@@ -336,11 +339,18 @@ class TagCommand : AbstractCommand() {
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
             val content =
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
+            if (content.length > Message.MAX_CONTENT_LENGTH) {
+                context.respond(Emotes.LOADING).submit()
+                    .thenCombine(HastebinUtil.postErrorToHastebin(content, context.bot.httpClient)) { message, code ->
+                        message.editMessage(code).queue()
+                    }
+                return
+            }
             context.respond(content).queue()
         }
     }
 
-    private fun Tag.Companion.findByName(name: String) = Tag.findById(name) ?: TagAlias.findById(name)?.tag
+    private fun Tag.Companion.findByName(name: String) = Tag.findByNameId(name) ?: TagAlias.findById(name)?.tag
 
     private fun checkPermission(
         tag: Tag,
@@ -431,8 +441,7 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private fun
-            checkNameLength(name: String, context: Context): Boolean {
+    private fun checkNameLength(name: String, context: Context): Boolean {
         if (name.length > Tag.NAME_MAX_LENGTH) {
             context.respond(
                 Embeds.error(

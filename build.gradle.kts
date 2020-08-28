@@ -17,7 +17,7 @@
 plugins {
     id("com.github.johnrengelman.shadow") version "5.2.0"
     application
-    kotlin("jvm") version "1.3.72"
+    kotlin("jvm") version "1.4.0"
 }
 
 group = "com.github.devcord.devcordbot"
@@ -32,11 +32,10 @@ repositories {
 
 dependencies {
     // Kotlin
-    implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
 
     // Scripting Support (For bot owner eval)
-    runtimeOnly(kotlin("scripting-jsr223-embeddable"))
+    runtimeOnly(kotlin("scripting-jsr223"))
 
     // Coroutines
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.3.4")
@@ -57,7 +56,7 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "3.4.2")
 
     // Discord
-    implementation("net.dv8tion", "JDA", "4.2.0_187") {
+    implementation("net.dv8tion", "JDA", "4.2.0_198") {
         exclude(module = "opus-java")
     }
 

@@ -98,6 +98,7 @@ internal class DevCordBotImpl(
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
         .setHttpClient(httpClient)
         .addEventListeners(
+            RatProtector(env["RAT_CHANNEL_ID"]!!.toLong(), env["RAT_ROLE_ID"]!!.toLong()),
             MessageListener(),
             this@DevCordBotImpl,
             SelfMentionListener(this),
