@@ -102,7 +102,7 @@ class CommandClientImpl(
         if (!bot.isInitialized) return
 
         val author = message.author
-        if (message.isWebhookMessage or author.isBot or author.isFake) return
+        if (message.isWebhookMessage or author.isBot) return
 
         bot.guild.getMemberById(author.id) ?: return
 
@@ -132,7 +132,7 @@ class CommandClientImpl(
         if (message.guild.id != bot.guild.id) return
 
         val author = message.author
-        if (message.isWebhookMessage or author.isBot or author.isFake) return
+        if (message.isWebhookMessage or author.isBot) return
 
         return parseCommand(message, event)
     }
