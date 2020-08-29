@@ -62,24 +62,38 @@ class AutoHelp(
     @EventSubscriber
     suspend fun onMessage(event: DevCordGuildMessageReceivedEvent) {
         val input = event.message.contentRaw
+        // Lazy so only fetched if needed
         val userLevel by lazy { transaction { DatabaseDevCordUser.findOrCreateById(event.author.idLong).level } }
 
         if (
+        // Debug mode bypasses restrictions
             !bot.debugMode &&
+            // Ignore bot messages
             (event.author.isBot
+                    // Check for channel parent not being whitelisted or channel being blacklisted
                     || (event.channel.parent?.id !in whitelist || event.channel.id in blacklist)
+                    // Check for bypass word
                     || bypassWord in input)
         ) return
+        // Fetch all possible inputs
         val inputs = fetcher.fetchMessageContents(event.message)
 
+        // Sanitize codeblocks
         val messageContents = analyzeCodeBlocks(input)
+        // Send warning for too long message if needed
         checkMessageLength(event.channel, messageContents)
 
+        // Dont auto-help "expirienced" users
         if (userLevel >= levelLimit) return
+
+        // This is a generator for a new conversation in case the old one gets abandned, because of a new exception
         val newConversation = { brain.findConversation(event) }
         val container = ConversationContainer(newConversation)
 
-        for (future in (inputs + CompletableFuture.completedFuture(messageContents.map { it.second }))) {
+        // Combine old inputs with codelblocks
+        val allMessages = inputs + CompletableFuture.completedFuture(messageContents.map { it.second })
+
+        for (future in allMessages) {
             val userInput = future.await()
             userInput.forEach {
                 if (it != null) {
@@ -87,7 +101,7 @@ class AutoHelp(
                         val root = match.groupValues.drop(1)
                         val rootException = parseException(root)
                         val cause = root.drop(4)
-                        val finalException = if (cause.isNotEmpty()) {
+                        val finalException = if (cause.all(String::isNotBlank)) {
                             val causeException = parseException(cause)
                             rootException.copy(cause = causeException)
                         } else rootException
@@ -169,10 +183,12 @@ class AutoHelp(
 
     companion object {
         /**
-         * https://regex101.com/r/vgz86r/21
+         * https://regex101.com/r/vgz86r/23
          */
         val JVM_EXCEPTION_PATTERN: Regex =
-            """(?m)^(?:Exception in thread ".*")?.*?(\S+?(?<=Exception|Error:))(?:\: )?(.*)((?:\R+^\s*.*)?(?:\R+^.*at .*)+)\R(.*(?=Caused by:)Caused by: (\S+?(?<=Exception|Error:))(?:\: )?(.*)?((?:\R+^\s*.*)?(?:\R+^.*at .*)+))?""".toRegex()
+            """(?:Exception in thread ".*")?.*?(\S+?(?<=Exception|Error:))(?:\: )?(.*)((?:\R+^\s*.*)?(?:\R+^.*at .*)+)(\R.*(?=Caused by:)Caused by: (\S+?(?<=Exception|Error:))(?:\: )?(.*)?((?:\R+^\s*.*)?(?:\R+^.*at .*)+))?""".toRegex(
+                RegexOption.MULTILINE
+            )
 
         /**
          * https://regex101.com/r/xYGH0m/3
