@@ -39,7 +39,7 @@ class RolePermissionHandler(
     ): PermissionState {
         executor ?: return PermissionState.DECLINED
         if (executor.id in botOwners) return PermissionState.ACCEPTED
-        if (acknowledgeBlacklist and devCordUser.blacklisted) return PermissionState.IGNORED
+        if (acknowledgeBlacklist && devCordUser.blacklisted) return PermissionState.IGNORED
         return when (permission) {
             Permission.ANY -> PermissionState.ACCEPTED
             Permission.MODERATOR -> if (executor.roles.any { it.name.matches(moderatorPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED
