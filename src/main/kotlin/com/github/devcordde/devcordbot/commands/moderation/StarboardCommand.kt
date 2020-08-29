@@ -58,7 +58,7 @@ class StarboardCommand : AbstractCommand() {
     private inner class StarCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("star")
         override val displayName: String = "Star"
-        override val description: String = "Lässt den bot eine message starren"
+        override val description: String = "Lässt den Bot eine Message starren"
         override val usage: String = "<messageId>"
 
         override suspend fun execute(context: Context) {
