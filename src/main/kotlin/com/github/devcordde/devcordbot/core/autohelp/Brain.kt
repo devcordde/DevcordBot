@@ -214,7 +214,7 @@ class Brain(
             exceptionName == "arrayindexoutofboundsexception" -> "ArrayIndexOutOfBoundsException"
             else -> null
         } ?: return null
-        val tagContent = transaction { Tag.find { Tags.name eq tag }.firstOrNull() } ?: return null
+        val tagContent = transaction { Tag.findByNameId(tag) } ?: return null
         return tagContent.content
     }
 
