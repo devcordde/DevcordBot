@@ -16,6 +16,8 @@
 
 package com.github.devcordde.devcordbot.core
 
+import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 
@@ -25,14 +27,16 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
  * @param channelId the id of the rat channel
  * @param roleId the id of the rat role with bypass permissions
  */
-class RatProtector(private val channelId: Long, private val roleId: Long) {
+class RatProtector(private val channelId: Long, private val roleId: Long, private val bot: DevCordBot) {
 
     /**
      * Removes "bad" reactions.
      */
     @EventSubscriber
     fun onReactionAdd(event: MessageReactionAddEvent) {
-        if (event.user?.isBot == true || event.channel.idLong != channelId || event.member?.roles?.any { it.idLong == roleId } == true) return
+        if (event.user?.isBot == true || event.channel.idLong != channelId || event.member?.roles?.any { it.idLong == roleId } == true || bot.commandClient.permissionHandler.isCovered(
+                Permission.MODERATOR, event.member, null, false
+            ) == PermissionState.ACCEPTED) return
 
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // We have caching enabled so it cannot be null
         event.reaction.removeReaction(event.user!!).queue()
