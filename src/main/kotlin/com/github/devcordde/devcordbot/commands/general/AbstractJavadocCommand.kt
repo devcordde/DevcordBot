@@ -84,7 +84,7 @@ abstract class AbstractJavadocCommand : AbstractCommand() {
 
         // ClassDoc:TM:
         val classDoc = docs.find(pakage, clazz).firstOrNull() ?: return context.respond(
-            Embeds.error("Nicht gefunden", "Es konnte kein javadoc für `$queryRaw` gefunden werden")
+            Embeds.error("Nicht gefunden", "Es konnte kein Javadoc für `$queryRaw` gefunden werden")
         ).queue()
 
         if (method != null) {
