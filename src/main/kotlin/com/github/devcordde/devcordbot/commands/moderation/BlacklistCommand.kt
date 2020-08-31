@@ -54,7 +54,7 @@ class BlacklistCommand : AbstractCommand() {
             dcUser.blacklisted
         }
 
-        context.respond(Embeds.success(if (blacklisted) "User zur blacklist hinzugefügt." else "User aus der Blacklist entfernt."))
+        context.respond(Embeds.success(if (blacklisted) "User zur Blacklist hinzugefügt." else "User aus der Blacklist entfernt."))
             .queue()
     }
 
