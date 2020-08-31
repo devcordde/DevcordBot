@@ -32,7 +32,7 @@ import com.github.devcordde.devcordbot.util.hasSubCommands
 class SourceCommand : AbstractCommand() {
     override val aliases: List<String> = listOf("source", "skid", "code")
     override val displayName: String = "source"
-    override val description: String = "Displays the source code of the bot"
+    override val description: String = "Displays the source code of the bot."
     override val usage: String = "[command]"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.FUN
