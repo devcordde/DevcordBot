@@ -25,7 +25,6 @@ import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.util.await
-import kotlinx.coroutines.future.await
 import mu.KotlinLogging
 import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.entities.Guild
@@ -40,12 +39,10 @@ import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemove
 import net.dv8tion.jda.api.exceptions.ErrorResponseException
 import net.dv8tion.jda.api.exceptions.ErrorResponseException.ignore
 import net.dv8tion.jda.api.requests.ErrorResponse
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.and
+import net.dv8tion.jda.api.requests.RestAction
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Duration
-import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
 /**
@@ -53,7 +50,7 @@ import kotlin.math.min
  * @param starBoardChannelId id of the logging channel
  */
 @Suppress("unused")
-class Starboard(private val starBoardChannelId: Long) {
+class Starboard(private val starBoardChannelId: Long, private val limit: Int) {
 
     private val logger = KotlinLogging.logger { }
 
@@ -94,7 +91,8 @@ class Starboard(private val starBoardChannelId: Long) {
                 }
         trackingMessageRetriever.queue({
             transaction {
-                it.editMessage(buildMessage(event.message, entry.starrers.count())).queue()
+                val starrers = Starrer.find { Starrers.starredMessage eq event.messageIdLong }
+                it.editMessage(buildMessage(event.message, starrers.count())).queue()
             }
         }, {
             if (it is ErrorResponseException && it.errorResponse == ErrorResponse.UNKNOWN_MESSAGE) {
@@ -110,94 +108,61 @@ class Starboard(private val starBoardChannelId: Long) {
         if (event.reactionEmote.isEmote || event.reactionEmote.emoji != REACTION_EMOJI) return // Check for correct emote
         val potentialEntryMessage =
             event.channel.retrieveMessageById(event.messageIdLong).await()
-        val foundEntry = findEntry(event.messageIdLong) // Search for entry
-        if (foundEntry == null && remove) return // In case "self-starboarding" prevention removed the reaction
-        if (event.user == potentialEntryMessage.author && foundEntry == null && !remove) {
-            event.user?.let {
-                event.reaction.removeReaction(it).queue()
-            }
-            event.channel.sendMessage("Ist da einer Star-süchtig?")
+        val foundEntry = findEntry(event.messageIdLong)
+        if (event.user?.idLong == foundEntry?.authorId) {
+            return event.channel.sendMessage(
+                "Ich weiß es ist wahnsinnig geil nen eigenen Stern zu haben aber hast du mal im Internet nachgeschaut wieviel das überhaupt kostet?? Bist du dir sicher, dass du deinen eigenen willst /cc ${event.user?.asMention}"
+            )
                 .delay(Duration.ofSeconds(10))
                 .flatMap(Message::delete)
                 .queue()
-            return
         }
-        val trackingMessage = when {
-            foundEntry?.botMessageId == event.messageIdLong -> CompletableFuture.completedFuture(
-                potentialEntryMessage
-            ).await()
-            // send a new message in case there is none
-            foundEntry == null -> {
-                event.guild.getTextChannelById(starBoardChannelId)
-                    ?.sendMessage(
-                        Embeds.loading(
-                            "Neuer Starboard Eintrag!",
-                            "Bitte warte noch einen Augenblick."
-                        )
-                    )?.await()
-            }
-            else -> {
-                // Retrieve the old message
-                event.guild.getTextChannelById(starBoardChannelId)?.retrieveMessageById(foundEntry.botMessageId)
-                    ?.await()
-            }
-        }
-        if (trackingMessage == null) {
-            logger.warn { "The starboard channel could not be found! ${event.messageId}" }
-            return
-        }
-        @Suppress("unused") // it is used :D
-        val entry = transaction(statement = fun Transaction.(): StarboardEntry? {
-            return foundEntry
-            // Create new entry if needed
-                ?: return StarboardEntry.new {
-                    messageId = event.messageIdLong
-                    authorId = potentialEntryMessage.author.idLong
-                    botMessageId = trackingMessage.idLong
-                    channelId = potentialEntryMessage.channel.idLong
-                }
-        })
-            ?: return
-        // Register new starrer
         transaction {
-            val foundStarrer =
-                Starrer.find { (Starrers.entry eq entry.id) and (Starrers.authorId eq event.userIdLong) }
-                    .firstOrNull()
+            val foundStarrer = Starrer.find { Starrers.authorId eq event.userIdLong }.firstOrNull()
             if (remove) {
-                //Check if starrer reacted twice
-                if (foundStarrer != null && foundStarrer.emojis > 1) {
-                    foundStarrer.emojis--
-                    return@transaction
-                }
                 foundStarrer?.delete()
             } else {
                 if (foundStarrer != null) {
-                    foundStarrer.emojis++
-                    return@transaction
+                    event.reaction.removeReaction(event.user!!).queue()
+                    return@transaction null
                 }
                 Starrer.new {
                     authorId = event.userIdLong
-                    this.entry = entry
+                    starredMessage = event.messageIdLong
+                    emojis = 1
                 }
             }
-        }
-        val starsTotal = transaction { entry.countStarrers() }
-        if (starsTotal <= 0) {
-            deleteStarboardEntry(potentialEntryMessage.idLong, event.guild)
-            return
-        }
+        } ?: return
+        val starrers = transaction { Starrer.find { Starrers.starredMessage eq potentialEntryMessage.idLong }.toList() }
 
-        val actualMessage = if (potentialEntryMessage == trackingMessage) {
-            event.guild.getTextChannelById(entry.channelId)?.retrieveMessageById(entry.messageId)?.await()
-        } else {
-            CompletableFuture.completedFuture(potentialEntryMessage).await()
-        }
-        if (actualMessage == null) {
-            deleteStarboardEntry(potentialEntryMessage.idLong, event.guild)
-            return
-        }
+        if (starrers.size >= limit) {
+            val channel = event.guild.getTextChannelById(starBoardChannelId) ?: return
+            val trackingMessage: RestAction<Message?> = when {
+                foundEntry != null -> channel.retrieveMessageById(foundEntry.botMessageId)
+                else -> channel.sendMessage(
+                    Embeds.loading(
+                        "Ein neuer Stern wird geboren!",
+                        "Bald ist ein neuer Stern am Himmel."
+                    )
+                )
+            }
 
-        trackingMessage.editMessage(buildMessage(actualMessage, starsTotal)).queue()
+            val message = trackingMessage.await() ?: return
+
+            if (foundEntry == null) {
+                transaction {
+                    StarboardEntry.new {
+                        authorId = potentialEntryMessage.author.idLong
+                        botMessageId = message.idLong
+                        channelId = potentialEntryMessage.channel.idLong
+                        messageId = potentialEntryMessage.idLong
+                    }
+                }
+            }
+            message.editMessage(buildMessage(potentialEntryMessage, starrers.size)).queue()
+        } else if (foundEntry != null) {
+            deleteStarboardEntry(event.messageIdLong, event.guild)
+        }
     }
 
     /**
@@ -226,12 +191,9 @@ class Starboard(private val starBoardChannelId: Long) {
         val entryId = entry.id.value
         if (entryId in entriesToDelete) return
         entriesToDelete.add(entryId)
-        guild.getTextChannelById(entry.channelId)?.clearReactionsById(entry.messageId)
-            ?.queue(null, ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_CHANNEL))
         guild.getTextChannelById(starBoardChannelId)?.retrieveMessageById(entry.botMessageId)
             ?.flatMap { it.delete() }?.queue(null, ignore(ErrorResponse.UNKNOWN_MESSAGE, ErrorResponse.UNKNOWN_CHANNEL))
         transaction {
-            entry.starrers.forEach { it.delete() }
             entry.delete()
         }
         entriesToDelete.remove(entryId)

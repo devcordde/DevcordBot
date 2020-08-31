@@ -26,6 +26,8 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.Starboard
 import com.github.devcordde.devcordbot.database.StarboardEntries
 import com.github.devcordde.devcordbot.database.StarboardEntry
+import com.github.devcordde.devcordbot.database.Starrer
+import com.github.devcordde.devcordbot.database.Starrers
 import com.github.devcordde.devcordbot.menu.Paginator
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.internal.utils.Helpers
@@ -104,7 +106,7 @@ class StarboardCommand : AbstractCommand() {
             val id = validateId(context) ?: return
             val entry = checkEntryExists(id, context) ?: return
             val starrers = transaction {
-                entry.starrers.map {
+                Starrer.find { Starrers.starredMessage eq entry.messageId }.map {
                     context.jda.getUserById(it.authorId)?.asMention ?: "Misteröser Eclipse-Nutzer"
                 }
             }
