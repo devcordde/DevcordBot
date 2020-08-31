@@ -65,7 +65,7 @@ dependencies {
     implementation("com.squareup.okhttp3", "okhttp", "4.4.0")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
     implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
-    implementation("com.github.DRSchlaubi", "javadox", "bd741be")
+    implementation("com.github.johnnyjayjay", "javadox", "adb3613484")
     implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.60.2")
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
     implementation("com.google.cloud", "google-cloud-vision", "1.99.3")
