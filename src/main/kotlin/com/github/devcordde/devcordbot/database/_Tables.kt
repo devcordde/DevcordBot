@@ -24,7 +24,6 @@ import com.github.devcordde.devcordbot.database.StarboardEntries.channelId
 import com.github.devcordde.devcordbot.database.StarboardEntries.messageId
 import com.github.devcordde.devcordbot.database.Starrers.authorId
 import com.github.devcordde.devcordbot.database.Starrers.emojis
-import com.github.devcordde.devcordbot.database.Starrers.entry
 import com.github.devcordde.devcordbot.database.TagAliases.name
 import com.github.devcordde.devcordbot.database.TagAliases.tag
 import com.github.devcordde.devcordbot.database.Tags.author
@@ -126,8 +125,8 @@ object StarboardEntries : LongIdTable() {
  * @property emojis the amount of emojis the starrer added
  * @see StarboardEntries
  */
-object Starrers : LongIdTable() {
+object Starrers : LongIdTable("starrers_new") {
     val authorId: Column<Long> = long("author_id")
-    val entry: Column<EntityID<Long>> = reference("entry_id", StarboardEntries)
+    val starredMessage: Column<Long> = long("starred_message")
     val emojis: Column<Int> = integer("emojis").default(1)
 }

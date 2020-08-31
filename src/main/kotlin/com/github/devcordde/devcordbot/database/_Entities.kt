@@ -18,13 +18,11 @@
 
 package com.github.devcordde.devcordbot.database
 
-import com.github.devcordde.devcordbot.database.Starrers.entry
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.SizedIterable
 import java.time.Instant
 
 /**
@@ -131,12 +129,6 @@ class StarboardEntry(id: EntityID<Long>) : LongEntity(id) {
     var messageId: Long by StarboardEntries.messageId
     var channelId: Long by StarboardEntries.channelId
     var authorId: Long by StarboardEntries.authorId
-    val starrers: SizedIterable<Starrer> by Starrer referrersOn entry
-
-    /**
-     * Counts the amount of starrers
-     */
-    fun countStarrers(): Int = starrers.count()
 }
 
 /**
@@ -150,6 +142,6 @@ class Starrer(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<Starrer>(Starrers)
 
     var authorId: Long by Starrers.authorId
-    var entry: StarboardEntry by StarboardEntry referencedOn Starrers.entry
+    var starredMessage: Long by Starrers.starredMessage
     var emojis: Int by Starrers.emojis
 }
