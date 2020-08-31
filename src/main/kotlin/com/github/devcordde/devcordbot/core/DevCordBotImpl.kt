@@ -78,7 +78,10 @@ internal class DevCordBotImpl(
     override val httpClient: OkHttpClient = OkHttpClient()
     override val github: GithubUtil = GithubUtil(httpClient)
     override val starboard: Starboard =
-        Starboard(env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"))
+        Starboard(
+            env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"),
+            env["STARBOARD_LIMIT"]?.toInt() ?: error("Missing STARBOARD_LIMIT in .env")
+        )
 
     override val googler: Googler = Googler(env["CSE_KEY"]!!, env["CSE_ID"]!!)
 
