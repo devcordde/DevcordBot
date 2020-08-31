@@ -135,9 +135,7 @@ class Starboard(private val starBoardChannelId: Long, private val limit: Int) {
         } ?: return
         val starrers = transaction { Starrer.find { Starrers.starredMessage eq potentialEntryMessage.idLong }.toList() }
 
-        println("limmiting")
         if (starrers.size >= limit) {
-            println("passed limit")
             val channel = event.guild.getTextChannelById(starBoardChannelId) ?: return
             val trackingMessage: RestAction<Message?> = when {
                 foundEntry != null -> channel.retrieveMessageById(foundEntry.botMessageId)
