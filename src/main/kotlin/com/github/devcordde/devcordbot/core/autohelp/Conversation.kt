@@ -101,7 +101,7 @@ data class Conversation(
                 helpMessage = trigger.channel.sendMessage(
                     Embeds.loading(
                         "Ich denke nach!",
-                        "Ich versuche zu helfen bitte warte etwas."
+                        "Ich versuche zu helfen, bitte warte etwas."
                     )
                 ).complete()
             }
@@ -198,7 +198,7 @@ class ConversationAnswer {
         } else {
             addField(
                 "Ursache - Code",
-                "Ich konnte keinen Code finden, bitte schicke die komplette Klasse in der der Fehler auftritt (Am besten via hastebin)"
+                "Ich konnte keinen Code finden, bitte schicke die komplette Klasse, in der der Fehler auftritt (Am besten via hastebin)"
             )
         }
 
