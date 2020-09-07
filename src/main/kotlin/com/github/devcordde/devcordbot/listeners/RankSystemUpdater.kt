@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.listeners
 
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.util.XPUtil
@@ -35,7 +36,7 @@ import java.time.Instant
 /**
  * Updates the Database based on Discord events.
  */
-class DatabaseUpdater {
+class DatabaseUpdater(private val whiteList: List<String>) {
 
     /**
      * Adds a user to the database when a user joins the guild.
@@ -48,7 +49,19 @@ class DatabaseUpdater {
      * Removes a user from the database when the user leaves the guild.
      */
     @SubscribeEvent
-    fun onMemberLeave(event: GuildMemberRemoveEvent): Unit = deleteUser(event.member?.idLong)
+    fun onMemberLeave(event: GuildMemberRemoveEvent) {
+        val id = event.member?.idLong ?: return
+
+        transaction {
+            Tags.update({ Tags.author eq id }) {
+                it[author] = event.jda.selfUser.idLong
+            }
+        }
+
+        transaction {
+            Users.deleteWhere { Users.id eq id }
+        }
+    }
 
     /**
      * Adds XP to a user
@@ -56,6 +69,10 @@ class DatabaseUpdater {
     @SubscribeEvent
     fun onMessageSent(event: DevCordGuildMessageReceivedEvent) {
         if (event.author.isBot) {
+            return
+        }
+
+        if (event.channel.id !in whiteList) {
             return
         }
 
@@ -112,16 +129,6 @@ class DatabaseUpdater {
             guild.addRoleToMember(user, role).queue()
         }
     }
-
-    private fun deleteUser(id: Long?) {
-        if (id == null) {
-            return
-        }
-
-        transaction {
-            Users.deleteWhere { Users.id eq id }
-        }
-    }
 }
 
 /**
@@ -136,12 +143,12 @@ enum class Level(
     val level: Int,
     val previousLevel: Level?
 ) {
-    LEVEL_1(554734490359037996L, 1, null),
-    LEVEL_5(554734613365391361L, 5, LEVEL_1),
-    LEVEL_10(554734631866335233L, 10, LEVEL_5),
-    LEVEL_20(554734647893032962L, 20, LEVEL_10),
-    LEVEL_35(554734662472433677L, 35, LEVEL_20),
-    LEVEL_50(563378794111565861, 50, LEVEL_35),
-    LEVEL_75(696293683254919219, 75, LEVEL_50),
-    LEVEL_100(696294056317157406, 100, LEVEL_75)
+    LEVEL_1(739065032897200228, 1, null),
+    LEVEL_5(739065117702094890, 5, LEVEL_1),
+    LEVEL_10(739065451325423679, 10, LEVEL_5),
+    LEVEL_20(739065355116347434, 20, LEVEL_10),
+    LEVEL_35(739065293808205904, 35, LEVEL_20),
+    LEVEL_50(739064877842432010, 50, LEVEL_35),
+    LEVEL_75(739064774427541514, 75, LEVEL_50),
+    LEVEL_100(739064698498187286, 100, LEVEL_75)
 }

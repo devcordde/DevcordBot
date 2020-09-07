@@ -24,7 +24,6 @@ import com.github.devcordde.devcordbot.database.StarboardEntries.channelId
 import com.github.devcordde.devcordbot.database.StarboardEntries.messageId
 import com.github.devcordde.devcordbot.database.Starrers.authorId
 import com.github.devcordde.devcordbot.database.Starrers.emojis
-import com.github.devcordde.devcordbot.database.Starrers.entry
 import com.github.devcordde.devcordbot.database.TagAliases.name
 import com.github.devcordde.devcordbot.database.TagAliases.tag
 import com.github.devcordde.devcordbot.database.Tags.author
@@ -55,7 +54,7 @@ import java.time.Instant
  */
 object Users : IdTable<Long>() {
     override val id: Column<EntityID<Long>> = long("id").entityId()
-    val level: Column<Int> = integer("level").default(1)
+    val level: Column<Int> = integer("level").default(0)
     val experience: Column<Long> = long("experience").default(0L)
     val lastUpgrade: Column<Instant> = timestamp("last_experience_gained").default(Instant.now())
     val blacklisted: Column<Boolean> = bool("blacklisted").default(false)
@@ -126,8 +125,8 @@ object StarboardEntries : LongIdTable() {
  * @property emojis the amount of emojis the starrer added
  * @see StarboardEntries
  */
-object Starrers : LongIdTable() {
+object Starrers : LongIdTable("starrers_new") {
     val authorId: Column<Long> = long("author_id")
-    val entry: Column<EntityID<Long>> = reference("entry_id", StarboardEntries)
+    val starredMessage: Column<Long> = long("starred_message")
     val emojis: Column<Int> = integer("emojis").default(1)
 }

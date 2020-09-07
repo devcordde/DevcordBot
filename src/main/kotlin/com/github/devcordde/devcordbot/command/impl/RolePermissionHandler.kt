@@ -34,12 +34,12 @@ class RolePermissionHandler(
     override fun isCovered(
         permission: Permission,
         executor: Member?,
-        devCordUser: DevCordUser,
+        devCordUser: DevCordUser?,
         acknowledgeBlacklist: Boolean
     ): PermissionState {
         executor ?: return PermissionState.DECLINED
         if (executor.id in botOwners) return PermissionState.ACCEPTED
-        if (acknowledgeBlacklist and devCordUser.blacklisted) return PermissionState.IGNORED
+        if (acknowledgeBlacklist && requireNotNull(devCordUser) { "Devcorduser must not be null if blacklist ist acknowledged" }.blacklisted) return PermissionState.IGNORED
         return when (permission) {
             Permission.ANY -> PermissionState.ACCEPTED
             Permission.MODERATOR -> if (executor.roles.any { it.name.matches(moderatorPattern) }) PermissionState.ACCEPTED else PermissionState.DECLINED

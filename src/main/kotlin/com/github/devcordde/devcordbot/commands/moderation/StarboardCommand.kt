@@ -26,6 +26,8 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.Starboard
 import com.github.devcordde.devcordbot.database.StarboardEntries
 import com.github.devcordde.devcordbot.database.StarboardEntry
+import com.github.devcordde.devcordbot.database.Starrer
+import com.github.devcordde.devcordbot.database.Starrers
 import com.github.devcordde.devcordbot.menu.Paginator
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.internal.utils.Helpers
@@ -42,7 +44,7 @@ class StarboardCommand : AbstractCommand() {
     override val usage: String = ""
     override val permission: Permission = Permission.MODERATOR
     override val category: CommandCategory = CommandCategory.MODERATION
-    override val commandPlace: CommandPlace = CommandPlace.GM
+    override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
     init {
         registerCommands(
@@ -58,7 +60,7 @@ class StarboardCommand : AbstractCommand() {
     private inner class StarCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("star")
         override val displayName: String = "Star"
-        override val description: String = "Lässt den bot eine message starren"
+        override val description: String = "Lässt den Bot eine Message starren"
         override val usage: String = "<messageId>"
 
         override suspend fun execute(context: Context) {
@@ -104,7 +106,7 @@ class StarboardCommand : AbstractCommand() {
             val id = validateId(context) ?: return
             val entry = checkEntryExists(id, context) ?: return
             val starrers = transaction {
-                entry.starrers.map {
+                Starrer.find { Starrers.starredMessage eq entry.messageId }.map {
                     context.jda.getUserById(it.authorId)?.asMention ?: "Misteröser Eclipse-Nutzer"
                 }
             }

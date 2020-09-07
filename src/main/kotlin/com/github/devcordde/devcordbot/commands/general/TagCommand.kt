@@ -25,11 +25,14 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Colors
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
+import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.menu.Paginator
+import com.github.devcordde.devcordbot.util.HastebinUtil
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
@@ -60,7 +63,8 @@ class TagCommand : AbstractCommand() {
             ListCommand(),
             FromCommand(),
             SearchCommand(),
-            RawCommand()
+            RawCommand(),
+            TransferCommand()
         )
         reservedNames = registeredCommands.flatMap { it.aliases }
     }
@@ -208,7 +212,6 @@ class TagCommand : AbstractCommand() {
     }
 
     private inner class DeleteCommand : AbstractSubCommand(this) {
-
         override val aliases: List<String> = listOf("delete", "del", "d", "remove", "rem", "r")
         override val displayName: String = "delete"
         override val description: String = "Löscht einen Tag"
@@ -234,12 +237,42 @@ class TagCommand : AbstractCommand() {
         }
     }
 
+    private inner class TransferCommand : AbstractSubCommand(this) {
+        override val aliases: List<String> = listOf("transfer")
+        override val displayName: String = "Transfer"
+        override val description: String = "Überschreibt einen Tag an einen anderen Benutzer"
+        override val usage: String = "<@user> <tag>"
+
+        override suspend fun execute(context: Context) {
+            val args = context.args
+            if (args.size < 2) return context.sendHelp().queue()
+
+            val user = args.user(0, true, context) ?: return
+
+            val tagName = args.subList(1, args.size).joinToString(" ")
+            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
+
+            if (checkPermission(tag, context)) return
+
+            transaction {
+                tag.author = user.idLong
+            }
+
+            return context.respond(
+                Embeds.success(
+                    "Tag erfolgreich überschrieben!",
+                    "Der Tag wurde erfolgreich an ${user.asMention} überschrieben."
+                )
+            ).queue()
+        }
+    }
+
     private inner class ListCommand : AbstractSubCommand(this) {
         override val aliases: List<String> = listOf("list", "all")
         override val displayName: String = "List"
         override val description: String = "Gibt eine Liste aller Tags aus"
         override val usage: String = ""
-        override val commandPlace: CommandPlace = CommandPlace.GM
+        override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override suspend fun execute(context: Context) {
             val tags = transaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
@@ -255,7 +288,7 @@ class TagCommand : AbstractCommand() {
         override val displayName: String = "from"
         override val description: String = "Gibt eine Liste aller Tags eines bestimmten Benutzers aus"
         override val usage: String = "<@user>"
-        override val commandPlace: CommandPlace = CommandPlace.GM
+        override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override suspend fun execute(context: Context) {
             val user = context.args.optionalUser(0, jda = context.jda) ?: context.author
@@ -273,7 +306,7 @@ class TagCommand : AbstractCommand() {
         override val displayName: String = "search"
         override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
         override val usage: String = "<query>"
-        override val commandPlace: CommandPlace = CommandPlace.GM
+        override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override suspend fun execute(context: Context) {
             if (context.args.isEmpty()) {
@@ -306,11 +339,18 @@ class TagCommand : AbstractCommand() {
             val tag = transaction { checkNotTagExists(tagName, context) } ?: return
             val content =
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
+            if (content.length > Message.MAX_CONTENT_LENGTH) {
+                context.respond(Emotes.LOADING).submit()
+                    .thenCombine(HastebinUtil.postErrorToHastebin(content, context.bot.httpClient)) { message, code ->
+                        message.editMessage(code).queue()
+                    }
+                return
+            }
             context.respond(content).queue()
         }
     }
 
-    private fun Tag.Companion.findByName(name: String) = Tag.findById(name) ?: TagAlias.findById(name)?.tag
+    private fun Tag.Companion.findByName(name: String) = Tag.findByNameId(name) ?: TagAlias.findById(name)?.tag
 
     private fun checkPermission(
         tag: Tag,
@@ -401,8 +441,7 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private fun
-            checkNameLength(name: String, context: Context): Boolean {
+    private fun checkNameLength(name: String, context: Context): Boolean {
         if (name.length > Tag.NAME_MAX_LENGTH) {
             context.respond(
                 Embeds.error(

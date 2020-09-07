@@ -126,3 +126,7 @@ gradle-app.setting
 *.toml
 
 # End of https://www.gitignore.io/api/gradle,kotlin,intellij+iml
+
+# GCP Vision
+ServiceAccountKey.json
+ocr_usages.json
