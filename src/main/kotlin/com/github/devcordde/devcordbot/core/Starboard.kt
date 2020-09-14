@@ -30,7 +30,7 @@ import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.message.MessageBulkDeleteEvent
-import net.dv8tion.jda.api.events.message.MessageDeleteEvent
+import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent
 import net.dv8tion.jda.api.events.message.guild.react.GenericGuildMessageReactionEvent
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
@@ -182,7 +182,7 @@ class Starboard(private val starBoardChannelId: Long, private val limit: Int) {
      * Listens for message deletions.
      */
     @EventSubscriber
-    fun messageDeleted(event: MessageDeleteEvent): Unit = deleteStarboardEntry(event.messageIdLong, event.guild)
+    fun messageDeleted(event: GuildMessageDeleteEvent  ): Unit = deleteStarboardEntry(event.messageIdLong, event.guild)
 
     /**
      * Deletes a starboard entry on [guild] by [messageId].
