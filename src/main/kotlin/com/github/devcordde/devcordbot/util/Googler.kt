@@ -38,6 +38,7 @@ class Googler(private val apiKey: String, private val engineId: String) {
         return with(search.cse().list(query)) {
             key = apiKey
             cx = engineId
+            safe = "active"
             execute()
         }.items ?: emptyList()
     }
