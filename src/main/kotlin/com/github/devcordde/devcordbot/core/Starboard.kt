@@ -109,7 +109,8 @@ class Starboard(private val starBoardChannelId: Long, private val limit: Int) {
         val potentialEntryMessage =
             event.channel.retrieveMessageById(event.messageIdLong).await()
         val foundEntry = findEntry(event.messageIdLong)
-        if (event.user?.idLong == foundEntry?.authorId) {
+        if ((event.user?.idLong == foundEntry?.authorId || event.user?.idLong == potentialEntryMessage.author.idLong) && !remove) {
+            event.user?.let { event.reaction.removeReaction(it).queue() }
             return event.channel.sendMessage(
                 "Ich weiß es ist wahnsinnig geil nen eigenen Stern zu haben aber hast du mal im Internet nachgeschaut wieviel das überhaupt kostet?? Bist du dir sicher, dass du deinen eigenen willst /cc ${event.user?.asMention}"
             )
@@ -181,7 +182,7 @@ class Starboard(private val starBoardChannelId: Long, private val limit: Int) {
      * Listens for message deletions.
      */
     @EventSubscriber
-    fun messageDeleted(event: GuildMessageDeleteEvent  ): Unit = deleteStarboardEntry(event.messageIdLong, event.guild)
+    fun messageDeleted(event: GuildMessageDeleteEvent): Unit = deleteStarboardEntry(event.messageIdLong, event.guild)
 
     /**
      * Deletes a starboard entry on [guild] by [messageId].
