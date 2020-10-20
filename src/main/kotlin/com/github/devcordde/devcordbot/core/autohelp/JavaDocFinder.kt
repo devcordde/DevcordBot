@@ -39,11 +39,8 @@ class JavaDocFinder(private val googler: Googler) {
         val identifier = if (pakage.startsWith("java")) {
             "java"
         } else {
-            var index = pakage.indexOf('.')
-            if (index == -1) return null
-
-            index = pakage.indexOf('.', index + 1)
-            if (index == -1) return null
+            val index = pakage.indexOf('.', pakage.indexOf('.') + 1)
+            if (index < 0) return null
 
             pakage.take(index)
         }
