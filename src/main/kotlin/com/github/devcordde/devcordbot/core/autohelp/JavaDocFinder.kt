@@ -32,16 +32,24 @@ class JavaDocFinder(private val googler: Googler) {
      * Tries to find the javadoc for [clazz]
      */
     fun findJavadocForClass(clazz: String): DocumentedType? {
+        if (clazz.isBlank()) return null
+
         val pakage = clazz.substringBefore('.')
         val className = clazz.substringAfter('.').trim()
         val identifier = if (pakage.startsWith("java")) {
             "java"
         } else {
-            pakage.take(pakage.indexOf('.', pakage.indexOf('.') + 1))
+            var index = pakage.indexOf('.')
+            if (index == -1) return null
+
+            index = pakage.indexOf('.', index + 1)
+            if (index == -1) return null
+
+            pakage.take(index)
         }
 
         val javadoc = JavaDocManager.javadocPool[identifier] ?: googleJavadoc(className)
-        return javadoc?.find(pakage, className)?.firstOrNull()
+        return javadoc.find(pakage, className).firstOrNull()
 
     }
 
