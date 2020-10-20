@@ -46,7 +46,7 @@ class JavaDocFinder(private val googler: Googler) {
         }
 
         val javadoc = JavaDocManager.javadocPool[identifier] ?: googleJavadoc(className)
-        return javadoc.find(pakage, className).firstOrNull()
+        return javadoc?.find(pakage, className)?.firstOrNull()
 
     }
 
