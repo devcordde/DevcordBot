@@ -51,6 +51,12 @@ object Constants {
         .withZone(ZoneId.of("Europe/Berlin")) // To lazy to set server timezone :P
 
     /**
+     * Regex that matches jdoodle code blocks.
+     */
+    val JDOODLE_REGEX: Regex = "```([A-z]+)\n([^`]*)```".toRegex(RegexOption.MULTILINE)
+
+
+    /**
      * Regex that matches discord code blocks.
      * https://regex101.com/r/SBv5RG/3
      */
