@@ -17,6 +17,7 @@
 package com.github.devcordde.devcordbot.constants
 
 import okhttp3.HttpUrl
+import org.intellij.lang.annotations.Language
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -49,6 +50,12 @@ object Constants {
         .ofLocalizedDateTime(FormatStyle.SHORT)
         .withLocale(Locale.GERMAN)
         .withZone(ZoneId.of("Europe/Berlin")) // To lazy to set server timezone :P
+
+    /**
+     * Regex that matches jdoodle code blocks.
+     */
+    val JDOODLE_REGEX: Regex = "```([A-z]+)\n([^`]*)```".toRegex(RegexOption.MULTILINE)
+
 
     /**
      * Regex that matches discord code blocks.
