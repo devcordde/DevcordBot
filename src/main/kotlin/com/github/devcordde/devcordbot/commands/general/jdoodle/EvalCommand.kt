@@ -63,9 +63,9 @@ class EvalCommand : AbstractCommand() {
         val message = context.respond(Embeds.loading("Lädt.", "Skript wird ausgeführt.")).await()
         val text = context.args.join()
 
-        val blockMatch = Constants.CODE_BLOCK_REGEX.matchEntire(text)
+        val blockMatch = Constants.JDOODLE_REGEX.matchEntire(text)
 
-        if (blockMatch == null || blockMatch.groups.size < 2) {
+        if (blockMatch == null || blockMatch.groups.size != 3) {
             return message.editMessage(example("Das Skript muss in einem Multiline-Codeblock liegen")).queue()
         }
 
