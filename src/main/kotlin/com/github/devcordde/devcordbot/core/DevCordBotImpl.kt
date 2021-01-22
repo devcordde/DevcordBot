@@ -218,13 +218,19 @@ internal class DevCordBotImpl(
             RankCommand(),
             RanksCommand(),
             BlacklistCommand(),
-            InfoCommand(),
-            OracleJavaDocCommand(),
-            SpigotJavaDocCommand(),
-            SpigotLegacyJavaDocCommand(),
+            InfoCommand(),    
             CleanupCommand(),
             GoogleCommand()
         )
+
+        val javadocEnabled = env["JAVADOC_ENABLED"]
+        if(javadocEnabled != null) {
+            commandClient.registerCommands(
+                OracleJavaDocCommand(),
+                SpigotJavaDocCommand(),
+                SpigotLegacyJavaDocCommand()
+            )
+        }
 
         val redeployHost = env["REDEPLOY_HOST"]
         val redeployToken = env["REDEPLOY_TOKEN"]
