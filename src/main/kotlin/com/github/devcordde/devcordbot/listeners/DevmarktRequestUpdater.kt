@@ -9,8 +9,6 @@ import okhttp3.Request
 
 class DevmarktRequestUpdater(val requestChannel: String,val accessToken : String,val baseUrl : String) {
 
-    private val client = OkHttpClient()
-
     @SubscribeEvent
     fun onMessageReceived(event: MessageReceivedEvent) {
         val id = event.member?.id ?: return
@@ -76,7 +74,7 @@ class DevmarktRequestUpdater(val requestChannel: String,val accessToken : String
             .post(formBody)
             .build()
 
-        client.newCall(request).execute()
+        event.jda.httpClient.newCall(request).execute()
 
     }
 }
