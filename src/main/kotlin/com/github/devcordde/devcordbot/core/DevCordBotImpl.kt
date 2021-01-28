@@ -33,6 +33,7 @@ import com.github.devcordde.devcordbot.event.AnnotatedEventManager
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.event.MessageListener
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
+import com.github.devcordde.devcordbot.listeners.DevmarktRequestUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
@@ -115,7 +116,14 @@ internal class DevCordBotImpl(
                 env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(','),
                 env["AUTO_HELP_BYPASS"]!!,
                 Integer.parseInt(env["AUTO_HELP_MAX_LINES"])
-            )
+            ),
+            DevmarktRequestUpdater(
+                env["DEVMARKT_REQUEST_CHANNEL"]!!,
+                env["BOT_ACCESS_TOKEN"]!!,
+                env["DEVMARKT_BASE_URL"]!!,
+                env["EMOTE_CHECK_ID"]!!,
+                env["EMOTE_BLOCK_ID"]!!,
+            ),
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
