@@ -121,6 +121,8 @@ internal class DevCordBotImpl(
                 env["DEVMARKT_REQUEST_CHANNEL"]!!,
                 env["BOT_ACCESS_TOKEN"]!!,
                 env["DEVMARKT_BASE_URL"]!!,
+                env["EMOTE_CHECK_ID"]!!,
+                env["EMOTE_BLOCK_ID"]!!,
             ),
         )
         .build()
