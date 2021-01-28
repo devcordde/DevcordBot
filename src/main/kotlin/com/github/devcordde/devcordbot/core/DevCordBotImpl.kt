@@ -117,7 +117,11 @@ internal class DevCordBotImpl(
                 env["AUTO_HELP_BYPASS"]!!,
                 Integer.parseInt(env["AUTO_HELP_MAX_LINES"])
             ),
-            DevmarktRequestUpdater(),
+            DevmarktRequestUpdater(
+                env["DEVMARKT_REQUEST_CHANNEL"]!!,
+                env["BOT_ACCESS_TOKEN"]!!,
+                env["DEVMARKT_BASE_URL"]!!,
+            ),
         )
         .build()
     override val gameAnimator = GameAnimator(jda, games)
