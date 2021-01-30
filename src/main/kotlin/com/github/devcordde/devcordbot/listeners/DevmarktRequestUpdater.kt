@@ -23,7 +23,6 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 import okhttp3.FormBody
 import okhttp3.Request
-import java.awt.Color
 import java.time.OffsetDateTime
 import javax.annotation.Nullable
 
@@ -110,8 +109,7 @@ class DevmarktRequestUpdater(
      */
     @SubscribeEvent
     fun onReceiveDenyMessage(event: GuildMessageReceivedEvent) {
-        if (event.channel.id != modChannel
-        ) {
+        if (event.channel.id != modChannel) {
             return
         }
 
@@ -120,16 +118,12 @@ class DevmarktRequestUpdater(
         val message = event.message
         val referencedMessage = event.message.referencedMessage ?: return
 
-        if(!isNewEntryMessage(referencedMessage)) {
-            return
-        }
-
-        if (!message.contentRaw.startsWith("deny:")) {
+        if (!isNewEntryMessage(referencedMessage) || !message.contentRaw.startsWith("deny:")) {
             return
         }
 
         val reason = event.message.contentRaw
-        val builder: EmbedBuilder = EmbedBuilder()
+        val builder = EmbedBuilder()
         val user = event.member?.user ?: return
 
         val requestId = getFieldValue(referencedMessage, "Request-ID") ?: return
@@ -158,7 +152,7 @@ class DevmarktRequestUpdater(
      * Sends the event on an incoming reaction.
      */
     @SubscribeEvent
-    fun onReactionOnReasonMessage(event: MessageReactionAddEvent) {
+    fun onReactonOnReasonMessage(event: MessageReactionAddEvent) {
         if (event.channel.id != modChannel
             || event.userId == event.jda.selfUser.id
         ) {
@@ -174,29 +168,30 @@ class DevmarktRequestUpdater(
         val reactionEmoteId = event.reactionEmote.id
         val requestId = getFieldValue(message, "Request-ID") ?: return
 
-        if (reactionEmoteId == emoteCheckId) {
-
-            val reason = getFieldValue(message, "Begründung") ?: return
-
-            val formBody = FormBody.Builder()
-                .add("moderator_id", event.userId)
-                .add("action", "decline")
-                .add("access_token", accessToken)
-                .add("req_id", requestId)
-                .add("reason", reason)
-                .build()
-
-            val request = Request.Builder()
-                .url("$baseUrl/process.php")
-                .post(formBody)
-                .build()
-
-            message.delete().queue()
-            event.jda.httpClient.newCall(request).execute()
-
-        } else if (reactionEmoteId == emoteBlockId) {
+        if (reactionEmoteId == emoteBlockId) {
             message.delete().queue()
         }
+        if (reactionEmoteId != emoteCheckId) {
+            return
+        }
+
+        val reason = getFieldValue(message, "Begründung") ?: return
+
+        val formBody = FormBody.Builder()
+            .add("moderator_id", event.userId)
+            .add("action", "decline")
+            .add("access_token", accessToken)
+            .add("req_id", requestId)
+            .add("reason", reason)
+            .build()
+
+        val request = Request.Builder()
+            .url("$baseUrl/process.php")
+            .post(formBody)
+            .build()
+
+        message.delete().queue()
+        event.jda.httpClient.newCall(request).execute()
 
     }
 }
