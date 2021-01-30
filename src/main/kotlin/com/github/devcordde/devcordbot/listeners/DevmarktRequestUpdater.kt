@@ -47,7 +47,7 @@ class DevmarktRequestUpdater(
         return (embeds.isNotEmpty() && "Begründung" == embeds[0].title)
     }
 
-    private fun getFieldValue(message: Message, name: String): @Nullable String? {
+    private fun getFieldValue(message: Message, name: String): String? {
         return message.embeds[0].fields.stream()
             .filter { field -> name == field.name }
             .findAny()
