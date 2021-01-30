@@ -46,6 +46,11 @@ class DevmarktRequestUpdater(
         return (embeds.isNotEmpty() && "Neue Devmarkt-Anfrage" == embeds[0].title)
     }
 
+    private fun isNewReasonMessage(message: Message): Boolean {
+        val embeds = message.embeds
+        return (embeds.isNotEmpty() && "Begründung" == embeds[0].title)
+    }
+
     /**
      * Reacts if a message is received
      */
@@ -56,34 +61,36 @@ class DevmarktRequestUpdater(
             return
         }
 
+        val check = event.guild.getEmoteById(emoteCheckId) ?: return
+        val block = event.guild.getEmoteById(emoteBlockId) ?: return
+
         if (event.message.member?.idLong == event.jda.selfUser.idLong
             && isNewEntryMessage(event.message)
         ) {
 
-            val check = event.guild.getEmoteById(emoteCheckId) ?: return
-            val block = event.guild.getEmoteById(emoteBlockId) ?: return
             event.message.addReaction(check).queue()
             event.message.addReaction(block).queue()
 
         }
 
-        val member = event.member
-
         val id = event.member?.idLong ?: return
-        println("User-IDddd in Hashmap" + denyRequestQueue[id])
+        println("User-IDddd in Hashmap $id")
         if (denyRequestQueue.contains(id)) {
 
-            denyRequestQueue.remove(event.author.idLong)
             val reason = event.message.contentRaw
             val builder: EmbedBuilder = EmbedBuilder()
 
             builder.setTitle("Begründung")
             builder.addField("Begründung", reason, true)
-            builder.addField("Request-ID", denyRequestQueue[event.member?.idLong], true)
+            builder.addField("Request-ID", "" + denyRequestQueue[id], true)
             builder.setColor(Color.RED)
             builder.setTimestamp(OffsetDateTime.now())
 
-            event.channel.sendMessage(builder.build()).queue()
+            denyRequestQueue.remove(event.author.idLong)
+            val message = event.channel.sendMessage(builder.build()).complete()
+            message.addReaction(check).queue()
+            message.addReaction(block).queue()
+            event.message.delete().queue()
 
         }
     }
@@ -100,11 +107,6 @@ class DevmarktRequestUpdater(
         }
 
         val message = event.retrieveMessage().complete()
-
-        if (!isNewEntryMessage(message)) {
-            return
-        }
-
         val reactionEmoteId = event.reactionEmote.id
 
         val requestId = message.embeds[0].fields.stream()
@@ -112,26 +114,61 @@ class DevmarktRequestUpdater(
             .findAny()
             .orElse(null).value ?: return
 
-        if (reactionEmoteId == emoteCheckId) {
+        if (isNewEntryMessage(message)) {
 
-            val formBody = FormBody.Builder()
-                .add("moderator_id", event.userId)
-                .add("action", "accept")
-                .add("access_token", accessToken)
-                .add("req_id", requestId)
-                .build()
+            if (reactionEmoteId == emoteCheckId) {
 
-            val request = Request.Builder()
-                .url("$baseUrl/process.php")
-                .post(formBody)
-                .build()
+                val formBody = FormBody.Builder()
+                    .add("moderator_id", event.userId)
+                    .add("action", "accept")
+                    .add("access_token", accessToken)
+                    .add("req_id", requestId)
+                    .build()
 
-            event.jda.httpClient.newCall(request).execute()
+                val request = Request.Builder()
+                    .url("$baseUrl/process.php")
+                    .post(formBody)
+                    .build()
 
-        } else if (reactionEmoteId == emoteBlockId) {
-            val id = event.member?.idLong ?: return
-            denyRequestQueue[id] = requestId
-            println("User-ID in Hashmap" + denyRequestQueue[id])
+                event.jda.httpClient.newCall(request).execute()
+
+            } else if (reactionEmoteId == emoteBlockId) {
+                val id = event.member?.idLong ?: return
+                denyRequestQueue[id] = requestId
+                println("User-ID in Hashmap$id")
+            }
+
+        } else if (isNewReasonMessage(message)) {
+
+            if (reactionEmoteId == emoteCheckId) {
+
+                val reason = message.embeds[0].fields.stream()
+                    .filter { field -> "Begründung" == field.name }
+                    .findAny()
+                    .orElse(null).value ?: return
+
+                val formBody = FormBody.Builder()
+                    .add("moderator_id", event.userId)
+                    .add("action", "decline")
+                    .add("access_token", accessToken)
+                    .add("req_id", requestId)
+                    .add("reason", reason)
+                    .build()
+
+                val request = Request.Builder()
+                    .url("$baseUrl/process.php")
+                    .post(formBody)
+                    .build()
+
+                message.delete().queue()
+                event.jda.httpClient.newCall(request).execute()
+
+            } else if(reactionEmoteId == emoteBlockId) {
+
+                message.delete().queue()
+
+            }
+
         }
 
     }
