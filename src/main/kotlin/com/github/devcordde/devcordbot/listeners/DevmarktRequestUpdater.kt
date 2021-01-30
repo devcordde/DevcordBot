@@ -109,7 +109,7 @@ class DevmarktRequestUpdater(
      * Reacts if a message is received
      */
     @SubscribeEvent
-    fun onMessageReceived2(event: GuildMessageReceivedEvent) {
+    fun onReceiveDenyMessage(event: GuildMessageReceivedEvent) {
         if (event.channel.id != modChannel
         ) {
             return
@@ -118,41 +118,40 @@ class DevmarktRequestUpdater(
         val check = event.guild.getEmoteById(emoteCheckId) ?: return
         val block = event.guild.getEmoteById(emoteBlockId) ?: return
         val message = event.message
+        val referencedMessage = event.message.referencedMessage ?: return
+
+        if(!isNewEntryMessage(referencedMessage)) {
+            return
+        }
 
         if (!message.contentRaw.startsWith("deny:")) {
             return
         }
 
-        val referencedMessage = event.message.referencedMessage ?: return
+        val reason = event.message.contentRaw
+        val builder: EmbedBuilder = EmbedBuilder()
+        val user = event.member?.user ?: return
 
-        if (isNewEntryMessage(referencedMessage)) {
+        val requestId = getFieldValue(referencedMessage, "Request-ID") ?: return
+        val requestTitel = getFieldValue(referencedMessage, "Titel") ?: return
+        val requestAuthor = referencedMessage.embeds[0].footer?.text ?: return
+        val requestColor = referencedMessage.embeds[0].color ?: return
 
-            val reason = event.message.contentRaw
-            val builder: EmbedBuilder = EmbedBuilder()
-            val user = event.member?.user ?: return
+        builder.setTitle("Begründung")
+        builder
+            .addField("Titel", "`$requestTitel`", true)
+            .addField("Author", "`$requestAuthor`", true)
+            .addField("Begründung", "`" + reason.replace("deny:", "") + "`", false)
+            .addField("Request-ID", requestId, true)
+            .setFooter(user.name + "#" + user.discriminator, user.effectiveAvatarUrl)
+            .setColor(requestColor)
+            .setTimestamp(OffsetDateTime.now())
 
-            val requestId = getFieldValue(referencedMessage, "Request-ID") ?: return
-            val requestTitel = getFieldValue(referencedMessage, "Titel") ?: return
-            val requestAuthor = referencedMessage.embeds[0].footer?.text ?: return
-            val requestColor = referencedMessage.embeds[0].color ?: return
+        val messageReason = event.channel.sendMessage(builder.build()).complete()
+        messageReason.addReaction(check).queue()
+        messageReason.addReaction(block).queue()
+        event.message.delete().queue()
 
-            builder.setTitle("Begründung")
-            builder
-                .addField("Titel", "`$requestTitel`", true)
-                .addField("Author", "`$requestAuthor`", true)
-                .addField("Begründung", "`" + reason.replace("deny:", "") + "`", false)
-                .addField("Request-ID", requestId, true)
-                .setFooter(user.name + "#" + user.discriminator, user.effectiveAvatarUrl)
-                .setColor(requestColor)
-                .setTimestamp(OffsetDateTime.now())
-
-            //denyRequestQueue.remove(event.author.idLong)
-            val message = event.channel.sendMessage(builder.build()).complete()
-            message.addReaction(check).queue()
-            message.addReaction(block).queue()
-            event.message.delete().queue()
-
-        }
     }
 
     /**
