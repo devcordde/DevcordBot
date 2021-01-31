@@ -24,7 +24,6 @@ import net.dv8tion.jda.api.hooks.SubscribeEvent
 import okhttp3.FormBody
 import okhttp3.Request
 import java.time.OffsetDateTime
-import javax.annotation.Nullable
 
 /**
  * Sends an event to the Devmarkt bot on emote action.
