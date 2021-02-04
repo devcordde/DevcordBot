@@ -117,11 +117,11 @@ class DevmarktRequestUpdater(
         val message = event.message
         val referencedMessage = event.message.referencedMessage ?: return
 
-        if (!isNewEntryMessage(referencedMessage) || !message.contentRaw.startsWith("deny:")) {
+        if (!isNewEntryMessage(referencedMessage) || !message.contentRaw.startsWith("deny: ")) {
             return
         }
 
-        val reason = event.message.contentRaw
+        val reason = event.message.contentRaw.drop(6)
         val builder = EmbedBuilder()
         val user = event.member?.user ?: return
 
@@ -133,8 +133,8 @@ class DevmarktRequestUpdater(
         builder.setTitle("Begründung")
         builder
             .addField("Titel", "`$requestTitel`", true)
-            .addField("Author", "`$requestAuthor`", true)
-            .addField("Begründung", "`" + reason.replace("deny:", "") + "`", false)
+            .addField("Autor", "`$requestAuthor`", true)
+            .addField("Begründung", "`$reason`", false)
             .addField("Request-ID", requestId, true)
             .setFooter(user.name + "#" + user.discriminator, user.effectiveAvatarUrl)
             .setColor(requestColor)
