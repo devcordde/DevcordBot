@@ -121,7 +121,7 @@ class DevmarktRequestUpdater(
             return
         }
 
-        var reason = event.message.contentRaw
+        var reason = event.message.contentRaw.drop(6)
         val builder = EmbedBuilder()
         val user = event.member?.user ?: return
 
@@ -134,7 +134,7 @@ class DevmarktRequestUpdater(
         builder
             .addField("Titel", "`$requestTitel`", true)
             .addField("Author", "`$requestAuthor`", true)
-            .addField("Begründung", "`" + reason.drop(6) + "`", false)
+            .addField("Begründung", "`$reason`", false)
             .addField("Request-ID", requestId, true)
             .setFooter(user.name + "#" + user.discriminator, user.effectiveAvatarUrl)
             .setColor(requestColor)
