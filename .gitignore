@@ -130,3 +130,5 @@ gradle-app.setting
 # GCP Vision
 ServiceAccountKey.json
 ocr_usages.json
+.idea/inspectionProfiles/Project_Default.xml
+.idea/compiler.xml
