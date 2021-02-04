@@ -117,11 +117,11 @@ class DevmarktRequestUpdater(
         val message = event.message
         val referencedMessage = event.message.referencedMessage ?: return
 
-        if (!isNewEntryMessage(referencedMessage) || !message.contentRaw.startsWith("deny:")) {
+        if (!isNewEntryMessage(referencedMessage) || !message.contentRaw.startsWith("deny: ")) {
             return
         }
 
-        val reason = event.message.contentRaw
+        var reason = event.message.contentRaw
         val builder = EmbedBuilder()
         val user = event.member?.user ?: return
 
