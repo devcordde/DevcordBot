@@ -134,7 +134,7 @@ class DevmarktRequestUpdater(
         builder
             .addField("Titel", "`$requestTitel`", true)
             .addField("Author", "`$requestAuthor`", true)
-            .addField("Begründung", "`" + reason.replace("deny:", "") + "`", false)
+            .addField("Begründung", "`" + reason.drop(6) + "`", false)
             .addField("Request-ID", requestId, true)
             .setFooter(user.name + "#" + user.discriminator, user.effectiveAvatarUrl)
             .setColor(requestColor)
