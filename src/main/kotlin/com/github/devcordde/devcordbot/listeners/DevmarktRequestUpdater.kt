@@ -133,7 +133,7 @@ class DevmarktRequestUpdater(
         builder.setTitle("Begründung")
         builder
             .addField("Titel", "`$requestTitel`", true)
-            .addField("Author", "`$requestAuthor`", true)
+            .addField("Autor", "`$requestAuthor`", true)
             .addField("Begründung", "`$reason`", false)
             .addField("Request-ID", requestId, true)
             .setFooter(user.name + "#" + user.discriminator, user.effectiveAvatarUrl)
