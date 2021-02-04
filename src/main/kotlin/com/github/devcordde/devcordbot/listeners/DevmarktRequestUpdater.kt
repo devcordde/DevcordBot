@@ -121,7 +121,7 @@ class DevmarktRequestUpdater(
             return
         }
 
-        var reason = event.message.contentRaw.drop(6)
+        val reason = event.message.contentRaw.drop(6)
         val builder = EmbedBuilder()
         val user = event.member?.user ?: return
 
