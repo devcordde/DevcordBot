@@ -25,9 +25,9 @@ package com.github.devcordde.devcordbot.constants
  */
 @Suppress("KDocMissingDocumentation")
 object Emotes {
-    const val LOADING: String = "<a:loading:547513249835384833>"
-    const val ERROR: String = "<:error:535827110489620500>"
-    const val WARN: String = "<:warn:535832532365737987>"
-    const val INFO: String = "<:info:535828529573789696>"
-    const val SUCCESS: String = "<:success:535827110552666112>"
+    const val LOADING: String = "<a:load:726066964950286336>"
+    const val ERROR: String = "<:block:739219821865992316>"
+    const val WARN: String = "<:warn:739219845706547311>"
+    const val INFO: String = "<:info:806978472153055312>"
+    const val SUCCESS: String = "<:check:739219792476504134>"
 }
