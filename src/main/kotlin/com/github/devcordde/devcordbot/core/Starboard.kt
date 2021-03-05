@@ -92,7 +92,7 @@ class Starboard(private val starBoardChannelId: Long, private val limit: Int) {
         trackingMessageRetriever.queue({
             transaction {
                 val starrers = Starrer.find { Starrers.starredMessage eq event.messageIdLong }
-                it.editMessage(buildMessage(event.message, starrers.count())).queue()
+                it.editMessage(buildMessage(event.message, starrers.count() as Int)).queue()
             }
         }, {
             if (it is ErrorResponseException && it.errorResponse == ErrorResponse.UNKNOWN_MESSAGE) {
