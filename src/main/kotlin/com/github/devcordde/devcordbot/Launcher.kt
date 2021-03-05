@@ -87,7 +87,7 @@ fun main(args: Array<String>) {
         games = listOf(GameAnimator.AnimatedGame("with errors"))
     }
 
-    Constants.hastebinUrl = env["HASTE_HOST"]?.toHttpUrl() ?: "https://hasteb.in".toHttpUrl()
+    Constants.hastebinUrl = env["HASTE_HOST"]?.toHttpUrl() ?: "https://haste.devcord.xyz".toHttpUrl()
 
     logger.info { "Launching DevCordBot..." }
     logger.info { "OCR Available: ${ImageReader.available}" }
