@@ -179,7 +179,6 @@ class CommandTest {
             }
             author = mock {
                 on { isBot }.thenReturn(false)
-                on { isFake }.thenReturn(false)
             }
         }
     }
