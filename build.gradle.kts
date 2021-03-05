@@ -80,7 +80,10 @@ dependencies {
 }
 
 application {
-    mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
+    // Changing this as the deprecation suggests will break the ShadowJar plugin
+    // Alternative code for when it gets updated:
+    // mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
+    mainClassName = "com.github.devcordde.devcordbot.LauncherKt"
 }
 
 tasks {
