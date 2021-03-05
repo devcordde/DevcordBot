@@ -15,9 +15,9 @@
  */
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
     application
-    kotlin("jvm") version "1.4.0"
+    kotlin("jvm") version "1.4.31"
 }
 
 group = "com.github.devcord.devcordbot"
@@ -38,49 +38,49 @@ dependencies {
     runtimeOnly(kotlin("scripting-jsr223"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.3.4")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.4.3")
 
     // Logging
-    implementation("io.github.microutils", "kotlin-logging", "1.7.8")
+    implementation("io.github.microutils", "kotlin-logging", "2.0.4")
     implementation("org.slf4j", "slf4j-api", "2.0.0alpha1")
     implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
-    implementation("io.sentry", "sentry", "1.7.30")
-    implementation("io.sentry", "sentry-logback", "1.7.30")
+    implementation("io.sentry", "sentry", "4.2.0")
+    implementation("io.sentry", "sentry-logback", "4.2.0")
 
     // Database
-    implementation("org.jetbrains.exposed", "exposed-core", "0.21.1")
-    implementation("org.jetbrains.exposed", "exposed-dao", "0.21.1")
-    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.21.1")
-    implementation("org.jetbrains.exposed", "exposed-java-time", "0.21.1")
-    implementation("org.postgresql", "postgresql", "42.2.10")
-    implementation("com.zaxxer", "HikariCP", "3.4.2")
+    implementation("org.jetbrains.exposed", "exposed-core", "0.29.1")
+    implementation("org.jetbrains.exposed", "exposed-dao", "0.29.1")
+    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.29.1")
+    implementation("org.jetbrains.exposed", "exposed-java-time", "0.29.1")
+    implementation("org.postgresql", "postgresql", "42.2.19")
+    implementation("com.zaxxer", "HikariCP", "4.0.3")
 
     // Discord
-    implementation("net.dv8tion", "JDA", "4.2.0_227") {
+    implementation("net.dv8tion", "JDA", "4.2.0_231") {
         exclude(module = "opus-java")
     }
 
     // Util
-    implementation("io.github.cdimascio", "java-dotenv", "5.1.4")
-    implementation("com.squareup.okhttp3", "okhttp", "4.4.0")
+    implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
+    implementation("com.squareup.okhttp3", "okhttp", "4.9.1")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
     implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
     implementation("com.github.johnnyjayjay", "javadox", "adb3613484")
-    implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.60.2")
+    implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.62.2")
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
-    implementation("com.google.cloud", "google-cloud-vision", "1.99.3")
+    implementation("com.google.cloud", "google-cloud-vision", "1.101.1")
 
 
     // Testing
-    testImplementation("org.mockito", "mockito-core", "3.3.3")
+    testImplementation("org.mockito", "mockito-core", "3.8.0")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.6.0")
-    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.6.0")
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.7.1")
+    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.7.1")
 
 }
 
 application {
-    mainClassName = "com.github.devcordde.devcordbot.LauncherKt"
+    mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
 }
 
 tasks {
@@ -89,11 +89,11 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "12"
+        kotlinOptions.jvmTarget = "14"
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "12"
+        kotlinOptions.jvmTarget = "14"
     }
 
     jar {

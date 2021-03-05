@@ -96,7 +96,7 @@ class RankCommand : AbstractCommand() {
             if (offset < 0) offset = 0
             if (offset != 0) {
                 transaction {
-                    maxOffset = DatabaseDevCordUser.all().count()
+                    maxOffset = DatabaseDevCordUser.all().count().toInt()
                     if (maxOffset <= offset) {
                         invalidOffset = true
                         offset = if (maxOffset < 10) {
@@ -109,7 +109,7 @@ class RankCommand : AbstractCommand() {
             }
 
             val users = transaction {
-                DatabaseDevCordUser.all().limit(10, offset)
+                DatabaseDevCordUser.all().limit(10, offset.toLong())
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
                     .mapIndexed { index, it ->
                         val name = context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"
