@@ -72,15 +72,15 @@ dependencies {
 
 
     // Testing
-    testImplementation("org.mockito", "mockito-core", "3.3.3")
+    testImplementation("org.mockito", "mockito-core", "3.8.0")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.6.0")
-    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.6.0")
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.7.1")
+    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.7.1")
 
 }
 
 application {
-    mainClassName = "com.github.devcordde.devcordbot.LauncherKt"
+    mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
 }
 
 tasks {
