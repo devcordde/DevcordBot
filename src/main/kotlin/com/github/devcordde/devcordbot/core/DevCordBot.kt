@@ -58,11 +58,6 @@ interface DevCordBot {
     val debugMode: Boolean
 
     /**
-     * The starboard instance.
-     */
-    val starboard: Starboard
-
-    /**
      * The guild that the bot is operating on.
      */
     val guild: Guild
