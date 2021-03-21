@@ -23,7 +23,6 @@ import com.github.devcordde.devcordbot.commands.`fun`.SourceCommand
 import com.github.devcordde.devcordbot.commands.general.*
 import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
 import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
-import com.github.devcordde.devcordbot.commands.moderation.StarboardCommand
 import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
 import com.github.devcordde.devcordbot.constants.Constants
@@ -78,11 +77,6 @@ internal class DevCordBotImpl(
         CommandClientImpl(this, Constants.prefix, RolePermissionHandler(env["BOT_OWNERS"]!!.split(',')))
     override val httpClient: OkHttpClient = OkHttpClient()
     override val github: GithubUtil = GithubUtil(httpClient)
-    override val starboard: Starboard =
-        Starboard(
-            env["STARBOARD_CHANNEL_ID"]?.toLong() ?: error("STARBOARD_CHANNEL_ID is required in .env"),
-            env["STARBOARD_LIMIT"]?.toInt() ?: error("Missing STARBOARD_LIMIT in .env")
-        )
 
     override val googler: Googler = Googler(env["CSE_KEY"]!!, env["CSE_ID"]!!)
 
@@ -108,7 +102,6 @@ internal class DevCordBotImpl(
             SelfMentionListener(this),
             DatabaseUpdater(env["XP_WHITELIST"]!!.split(",")),
             commandClient,
-            starboard,
             AutoHelp(
                 this,
                 env["AUTO_HELP_WHITELIST"]!!.split(','),
@@ -201,7 +194,7 @@ internal class DevCordBotImpl(
         }
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases, StarboardEntries, Starrers)
+            SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases)
             //language=PostgreSQL
             exec("SELECT * FROM pg_extension WHERE extname = 'pg_trgm'") { rs ->
                 //language=text
@@ -221,7 +214,6 @@ internal class DevCordBotImpl(
             TagCommand(),
             EvalCommand(),
             OwnerEvalCommand(),
-            StarboardCommand(),
             SourceCommand(),
             RankCommand(),
             RanksCommand(),

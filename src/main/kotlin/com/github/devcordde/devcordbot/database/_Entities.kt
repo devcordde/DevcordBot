@@ -113,35 +113,3 @@ class TagAlias(alias: EntityID<String>) : Entity<String>(alias) {
         get() = id.value
     var tag: Tag by Tag referencedOn TagAliases.tag
 }
-
-/**
- * Representation of starboard entry.
- * @property botMessageId the id of the bot's tracking message
- * @property messageId the id of the starred message
- * @property channelId the id of the channel the message was sent in
- * @property authorId the id of the author who sent the message
- * @property starrers starrers of this entry
- */
-class StarboardEntry(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<StarboardEntry>(StarboardEntries)
-
-    var botMessageId: Long by StarboardEntries.botMessageId
-    var messageId: Long by StarboardEntries.messageId
-    var channelId: Long by StarboardEntries.channelId
-    var authorId: Long by StarboardEntries.authorId
-}
-
-/**
- * Representation of the Starrers table.
- * @property authorId id of the user who starred
- * @property entry the starred starboardentry
- * @property emojis the amount of emojis the starrer added
- * @see StarboardEntry
- */
-class Starrer(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<Starrer>(Starrers)
-
-    var authorId: Long by Starrers.authorId
-    var starredMessage: Long by Starrers.starredMessage
-    var emojis: Int by Starrers.emojis
-}
