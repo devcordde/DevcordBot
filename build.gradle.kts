@@ -57,6 +57,7 @@ dependencies {
 
     // Discord
     implementation("com.github.dv8fromtheworld", "jda", "e3d2bd7398")
+    implementation("com.fasterxml.jackson.core", "jackson-databind", "2.9.9.2")
 
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
@@ -86,6 +87,7 @@ tasks {
         kotlinOptions {
             jvmTarget = "14"
             useIR = true
+            freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
         }
     }
 

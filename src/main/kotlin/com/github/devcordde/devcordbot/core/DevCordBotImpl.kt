@@ -22,7 +22,6 @@ import com.github.devcordde.devcordbot.command.impl.RolePermissionHandler
 import com.github.devcordde.devcordbot.commands.`fun`.SourceCommand
 import com.github.devcordde.devcordbot.commands.general.*
 import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
-import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
 import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
@@ -58,6 +57,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 
 /**
  * General class to manage the Discord bot.
@@ -73,8 +73,12 @@ internal class DevCordBotImpl(
     private val restActionLogger = KotlinLogging.logger("RestAction")
     private lateinit var dataSource: HikariDataSource
 
+    private val modRoleId = env["MOD_ROLE"]!!.toLong()
+    private val adminRoleId = env["ADMIN_ROLE"]!!.toLong()
+    private val botOwners = env["BOT_OWNERS"]!!.split(',').map { it.toLong() }
+
     override val commandClient: CommandClient =
-        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(env["BOT_OWNERS"]!!.split(',')))
+        CommandClientImpl(this, Constants.prefix, modRoleId, adminRoleId, botOwners, RolePermissionHandler(botOwners))
     override val httpClient: OkHttpClient = OkHttpClient()
     override val github: GithubUtil = GithubUtil(httpClient)
 
@@ -229,6 +233,6 @@ internal class DevCordBotImpl(
             commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
         }
 
-        (commandClient as CommandClientImpl).updateCommands()
+        (commandClient as CommandClientImpl).updateCommands().queue()
     }
 }

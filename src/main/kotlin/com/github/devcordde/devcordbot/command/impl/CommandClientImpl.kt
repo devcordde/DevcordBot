@@ -24,6 +24,7 @@ import com.github.devcordde.devcordbot.command.context.Arguments
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
+import com.github.devcordde.devcordbot.command.slashcommands.permissions.updatePermissions
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
@@ -38,8 +39,10 @@ import mu.KotlinLogging
 import net.dv8tion.jda.api.commands.CommandHook
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.requests.RestAction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.Executors
+import javax.annotation.CheckReturnValue
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -50,6 +53,9 @@ import kotlin.coroutines.CoroutineContext
 class CommandClientImpl(
     private val bot: DevCordBot,
     private val prefix: Regex,
+    private val modRole: Long,
+    private val adminRole: Long,
+    private val botOwners: List<Long>,
     override val permissionHandler: PermissionHandler,
     override val executor: CoroutineContext =
         Executors.newFixedThreadPool(
@@ -63,13 +69,27 @@ class CommandClientImpl(
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
 
-    fun updateCommands() {
+    @CheckReturnValue
+    fun updateCommands(): RestAction<Unit> {
         val commandUpdate = bot.guild.updateCommands()
 
         val commands = commandAssociations.values.distinct().map(AbstractCommand::toSlashCommand)
         commandUpdate.addCommands(commands)
+        return commandUpdate
+            .flatMap { bot.guild.retrieveCommands() }
+            .flatMap {
+                val registeredCommands =
+                    it.map { registeredCommand -> registeredCommand to commandAssociations[registeredCommand.name]!! }
 
-        commandUpdate.queue()
+                val actions = registeredCommands.map { (slashCommand, command) ->
+                    slashCommand.updatePermissions(bot.guild.id) {
+                        addAll(command.myPermissions(botOwners, modRole, adminRole))
+                    }
+                }
+
+                RestAction.allOf(actions)
+            }
+            .map { /* Unit */ }
     }
 
     /**
@@ -96,7 +116,8 @@ class CommandClientImpl(
         val permissionState = permissionHandler.isCovered(
             command.permission,
             member,
-            user
+            user,
+            isSlashCommand = true
         )
 
         val arguments = Arguments(event.options.associateBy { it.name })

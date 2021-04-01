@@ -26,7 +26,7 @@ import net.dv8tion.jda.api.entities.Member
  * Implementation of [PermissionHandler] that checks the users roles.
  */
 class RolePermissionHandler(
-    private val botOwners: List<String>
+    private val botOwners: List<Long>
 ) : PermissionHandler {
     private val moderatorPattern = "(?i)moderator|admin(istrator)?".toRegex()
     private val adminPattern = "(?i)admin(istrator)?".toRegex()
@@ -35,10 +35,12 @@ class RolePermissionHandler(
         permission: Permission,
         executor: Member?,
         devCordUser: DevCordUser?,
-        acknowledgeBlacklist: Boolean
+        acknowledgeBlacklist: Boolean,
+        isSlashCommand: Boolean
     ): PermissionState {
         executor ?: return PermissionState.DECLINED
-        if (executor.id in botOwners) return PermissionState.ACCEPTED
+        if (isSlashCommand) return PermissionState.ACCEPTED // Slash commands have discord perm handling
+        if (executor.idLong in botOwners) return PermissionState.ACCEPTED
         if (acknowledgeBlacklist && requireNotNull(devCordUser) { "Devcorduser must not be null if blacklist ist acknowledged" }.blacklisted) return PermissionState.IGNORED
         return when (permission) {
             Permission.ANY -> PermissionState.ACCEPTED

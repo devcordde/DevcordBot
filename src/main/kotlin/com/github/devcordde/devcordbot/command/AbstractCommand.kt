@@ -19,6 +19,8 @@ package com.github.devcordde.devcordbot.command
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.slashcommands.OptionsBuilder
+import com.github.devcordde.devcordbot.command.slashcommands.permissions.DiscordApplicationCommandPermission
+import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveCommandData
 
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
@@ -59,9 +61,10 @@ abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
 
     internal fun toSlashCommand(): CommandUpdateAction.CommandData {
         try {
-            val command = CommandUpdateAction.CommandData(
+            val command = PermissiveCommandData(
                 name, description
             )
+            command.defaultPermission = permission == Permission.ANY
             options.forEach(command::addOption)
             commandAssociations.values
                 .asSequence()
@@ -77,6 +80,39 @@ abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
             )
         }
     }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun myPermissions(botOwners: List<Long>, modId: Long, adminId: Long): List<DiscordApplicationCommandPermission> =
+        when (permission) {
+            Permission.ANY -> emptyList()
+            Permission.BOT_OWNER -> botOwners.map {
+                DiscordApplicationCommandPermission(
+                    it,
+                    DiscordApplicationCommandPermission.Type.USER,
+                    true
+                )
+            }
+            Permission.MODERATOR -> listOf(
+                DiscordApplicationCommandPermission(
+                    modId,
+                    DiscordApplicationCommandPermission.Type.ROLE,
+                    true
+                )
+            )
+            Permission.ADMIN -> listOf(
+                DiscordApplicationCommandPermission(
+                    modId,
+                    DiscordApplicationCommandPermission.Type.ROLE,
+                    true
+                ),
+                DiscordApplicationCommandPermission(
+                    adminId,
+                    DiscordApplicationCommandPermission.Type.ROLE,
+                    true
+                )
+            )
+        }
+
 
     @OptIn(ExperimentalStdlibApi::class)
     protected fun buildOptions(builder: OptionsBuilder.() -> Unit): List<CommandUpdateAction.OptionData> {
