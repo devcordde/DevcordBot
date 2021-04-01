@@ -25,6 +25,7 @@ import com.github.devcordde.devcordbot.command.slashcommands.permissions.updateP
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
+import com.github.devcordde.devcordbot.dsl.editOriginal
 import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.util.DefaultThreadFactory
@@ -182,7 +183,7 @@ class CommandClientImpl(
             Embeds.error(
                 "Keine Berechtigung!",
                 "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"
-            ).toEmbedBuilder().build()
+            )
         ).queue()
     }
 }

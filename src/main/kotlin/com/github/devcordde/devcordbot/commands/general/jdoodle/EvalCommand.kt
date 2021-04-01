@@ -25,6 +25,7 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.dsl.editOriginal
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.await
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -51,12 +52,12 @@ class EvalCommand : AbstractRootCommand() {
     private fun example(title: String) = Embeds.error(
         title,
         "`Beispiel`\n${MarkdownSanitizer.escape("```kotlin\nfun main() = print(\"Hello World\")\n```")}"
-    ).toEmbedBuilder().build()
+    )
 
     private fun internalError() = Embeds.error(
         "Ein interner Fehler ist aufgetreten",
         "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
-    ).toEmbedBuilder().build()
+    )
 
     private inner class ExecuteCommand : AbstractSubCommand.Command(this) {
         override val name: String = "execute"
@@ -89,7 +90,7 @@ class EvalCommand : AbstractRootCommand() {
                     Embeds.error(
                         "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
                         languageList()
-                    ).toEmbedBuilder().build()
+                    )
                 ).queue()
             }
 
@@ -118,7 +119,7 @@ class EvalCommand : AbstractRootCommand() {
                 }
             } else {
                 context.ack.editOriginal(
-                    Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```").toEmbedBuilder().build()
+                    Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```")
                 ).queue()
             }
         }

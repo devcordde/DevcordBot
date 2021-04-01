@@ -20,6 +20,8 @@ import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.dsl.editMessage
+import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.util.asMention
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -61,7 +63,7 @@ class SelfMentionListener(private val bot: DevCordBot) {
             )
             addField("User", bot.guild.memberCount.toString(), inline = true)
             addField("Prefix", "`${Constants.firstPrefix}`", inline = true)
-        }.toEmbedBuilder().build()
+        }
 
         /**
          * Send Bot-Information to given channel

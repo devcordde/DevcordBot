@@ -21,6 +21,7 @@ import com.github.devcordde.devcordbot.constants.Colors
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.dsl.embed
+import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -74,7 +75,7 @@ class Paginator(
         pages = ceil(items.size.toDouble() / itemsPerPage).toInt()
         require(firstPage <= pages) { "First page must exist" }
         if (pages > 1) {
-            message = context.ack.sendMessage(Embeds.loading(loadingTitle, loadingDescription).toEmbedBuilder().build())
+            message = context.ack.sendMessage(Embeds.loading(loadingTitle, loadingDescription))
                 .complete()
             context.jda.addEventListener(this)
             CompletableFuture.allOf(*listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).map {
@@ -90,7 +91,7 @@ class Paginator(
                 }
             rescheduleTimeout()
         } else {
-            message = context.ack.sendMessage(renderEmbed(items).toEmbedBuilder().build()).complete()
+            message = context.ack.sendMessage(renderEmbed(items)).complete()
         }
     }
 

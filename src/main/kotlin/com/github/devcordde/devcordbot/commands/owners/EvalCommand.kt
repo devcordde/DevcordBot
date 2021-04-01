@@ -23,6 +23,7 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.dsl.editOriginal
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.limit
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -78,7 +79,7 @@ class EvalCommand : AbstractSingleCommand() {
                         context.ack.editOriginal(result.apply {
                             @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
                             description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                        }.toEmbedBuilder().build()).queue()
+                        }).queue()
                     }
                     result
                 } else {
@@ -94,11 +95,11 @@ class EvalCommand : AbstractSingleCommand() {
                         context.ack.editOriginal(result.apply {
                             @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
                             description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                        }.toEmbedBuilder().build()).queue()
+                        }).queue()
                     }
                 result
             }
-            context.ack.editOriginal(result.toEmbedBuilder().build())
+            context.ack.editOriginal(result)
         }.queue()
     }
 }

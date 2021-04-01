@@ -20,6 +20,7 @@ import com.github.devcordde.devcordbot.command.ErrorHandler
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.dsl.editOriginal
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.ChannelType
@@ -56,7 +57,7 @@ class HastebinErrorHandler : ErrorHandler {
                 Embeds.error(
                     "Es ist ein Fehler aufgetreten!",
                     "Bitte zeige einem Entwickler [diesen]($url) Link um Hilfe zu erhalten."
-                ).toEmbedBuilder().build()
+                )
             ).queue()
         }
     }

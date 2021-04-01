@@ -19,9 +19,11 @@
 package com.github.devcordde.devcordbot.dsl
 
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.commands.CommandHook
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.requests.restaction.InteractionWebhookAction
 import net.dv8tion.jda.api.requests.restaction.MessageAction
 import java.awt.Color
 import java.time.Instant
@@ -68,8 +70,7 @@ fun embed(builder: EmbedCreator): EmbedConvention = EmbedConvention().apply(buil
  * @property timeStamp timestamp of the embed
  */
 @Suppress("MemberVisibilityCanBePrivate") // Is supposed to be accessible as DSL
-class
-EmbedConvention {
+class EmbedConvention {
 
     private val fields = mutableListOf<MessageEmbed.Field>()
     private var author: AuthorConvention? = null
@@ -215,3 +216,17 @@ fun MessageChannel.sendMessage(embedConvention: EmbedConvention): MessageAction 
  */
 fun Message.editMessage(embedConvention: EmbedConvention): MessageAction =
     editMessage(embedConvention.toEmbedBuilder().build())
+
+/**
+ * Edits message to embed defined by an [EmbedConvention] into the channel.
+ * @see embed
+ */
+fun CommandHook.editOriginal(embedConvention: EmbedConvention): InteractionWebhookAction =
+    editOriginal(embedConvention.toEmbedBuilder().build())
+
+/**
+ * Sends a message to embed defined by an [EmbedConvention] into the channel.
+ * @see embed
+ */
+fun CommandHook.sendMessage(embedConvention: EmbedConvention): InteractionWebhookAction =
+    sendMessage(embedConvention.toEmbedBuilder().build())
