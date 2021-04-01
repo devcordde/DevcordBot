@@ -25,6 +25,7 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
@@ -38,14 +39,18 @@ class BlacklistCommand : AbstractCommand() {
     override val permission: Permission = Permission.ADMIN
     override val category: CommandCategory = CommandCategory.MODERATION
     override val commandPlace: CommandPlace = CommandPlace.ALL
+    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+        user("target", "Der Nutzer der zur/von der Schwarzen Liste hinzugefügt/entfernt werden soll") {
+            isRequired = true
+        }
+    }
 
     init {
-        registerCommands(BlacklistListCommand())
+//        registerCommands(BlacklistListCommand())
     }
 
     override suspend fun execute(context: Context) {
-        val user = context.args.optionalUser(0, jda = context.jda)
-            ?: return context.sendHelp().queue()
+        val user = context.args.user("target")
 
         val blacklisted = transaction {
             val dcUser = DatabaseDevCordUser.findOrCreateById(user.idLong)

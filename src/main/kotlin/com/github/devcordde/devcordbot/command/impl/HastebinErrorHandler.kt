@@ -20,10 +20,10 @@ import com.github.devcordde.devcordbot.command.ErrorHandler
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
-import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.ChannelType
+import net.dv8tion.jda.api.entities.TextChannel
 import java.time.LocalDateTime
 import kotlin.coroutines.CoroutineContext
 
@@ -52,11 +52,11 @@ class HastebinErrorHandler : ErrorHandler {
             val error = collectErrorInformation(exception, context, thread, coroutineContext)
             HastebinUtil.postErrorToHastebin(error, context.jda.httpClient).thenApply { it to message }
         }.thenAccept { (url, message) ->
-            message.editMessage(
+            context.ack.editOriginal(
                 Embeds.error(
                     "Es ist ein Fehler aufgetreten!",
                     "Bitte zeige einem Entwickler [diesen]($url) Link um Hilfe zu erhalten."
-                )
+                ).toEmbedBuilder().build()
             ).queue()
         }
     }
@@ -80,9 +80,9 @@ class HastebinErrorHandler : ErrorHandler {
         val selfMember = guild.selfMember
         information.append("Permissions: ").appendLine(selfMember.permissions)
 
-        if (context.message.channelType == ChannelType.TEXT) {
+        if (context.channel.type == ChannelType.TEXT) {
             information.append("Channel permissions: ")
-                .appendLine(selfMember.getPermissions(context.message.textChannel))
+                .appendLine(selfMember.getPermissions(context.channel as TextChannel))
         }
 
         information.append("Timestamp: ").appendLine(LocalDateTime.now())

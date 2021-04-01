@@ -16,9 +16,6 @@
 
 package com.github.devcordde.devcordbot.core
 
-import com.github.devcordde.devcordbot.commands.general.AbstractJavadocCommand
-import com.github.devcordde.devcordbot.commands.general.DocumentedVersion
-import com.github.johnnyjayjay.javadox.JavadocParser
 import com.github.johnnyjayjay.javadox.Javadocs
 import mu.KotlinLogging
 import org.jsoup.HttpStatusException
@@ -31,34 +28,15 @@ import org.jsoup.nodes.Document
 object JavaDocManager {
 
     private val LOG = KotlinLogging.logger { }
-    private val parser: JavadocParser = JavadocParser(AbstractJavadocCommand.htmlRenderer::convert)
 
     /**
      * Pool of javadocs
      */
     val javadocPool: Map<String, Javadocs> = mutableMapOf()
 
-    init {
-        makeJavadoc("java", DocumentedVersion.V_10.url)
-        val spigot = makeJavadoc("org.bukkit", DocumentedVersion.V_1_16.url)
-        makeJavadoc("spigot-legacy", DocumentedVersion.V_1_8_8.url)
-        if (spigot != null) {
-            (javadocPool as MutableMap<String, Javadocs>)["org.spigotmc"] = spigot
-        }
-    }
 
     internal fun makeJavadoc(pakage: String, url: String, register: Boolean = true): Javadocs? {
-        return try {
-            val docs = Javadocs(
-                tree = url,
-                parser = parser,
-                scrape = ::scrape
-            )
-            if (register) (javadocPool as MutableMap<String, Javadocs>)[pakage] = docs
-            docs
-        } catch (ignored: IllegalStateException) {
-            null
-        }
+        return null
     }
 
     private fun scrape(url: String) = scrape(url, 1)

@@ -15,9 +15,8 @@
  */
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "6.1.0"
     application
-    kotlin("jvm") version "1.4.31"
+    kotlin("jvm") version "1.4.32"
 }
 
 group = "com.github.devcord.devcordbot"
@@ -27,6 +26,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven("https://kotlin.bintray.com/kotlinx")
+    maven("https://m2.dv8tion.net/releases")
     maven("https://jitpack.io")
 }
 
@@ -56,9 +56,7 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "4.0.3")
 
     // Discord
-    implementation("net.dv8tion", "JDA", "4.2.0_231") {
-        exclude(module = "opus-java")
-    }
+    implementation("com.github.dv8fromtheworld", "jda", "e3d2bd7398")
 
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
@@ -80,27 +78,15 @@ dependencies {
 }
 
 application {
-    // Changing this as the deprecation suggests will break the ShadowJar plugin
-    // Alternative code for when it gets updated:
-    // mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
-    mainClassName = "com.github.devcordde.devcordbot.LauncherKt"
+    mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
 }
 
 tasks {
-    shadowJar {
-        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
-    }
-
-    compileKotlin {
-        kotlinOptions.jvmTarget = "14"
-    }
-
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "14"
-    }
-
-    jar {
-        archiveClassifier.value = "original"
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "14"
+            useIR = true
+        }
     }
 
     test {

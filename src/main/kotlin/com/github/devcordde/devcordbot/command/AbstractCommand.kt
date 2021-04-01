@@ -18,6 +18,9 @@ package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.slashcommands.OptionsBuilder
+
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
 /**
  * Skeleton of a command.
@@ -46,6 +49,7 @@ abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
     abstract val permission: Permission
     abstract val category: CommandCategory
     abstract val commandPlace: CommandPlace
+    open val options: List<CommandUpdateAction.OptionData> = emptyList()
 
     /**
      * Invokes the command.
@@ -53,4 +57,31 @@ abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
      */
     abstract suspend fun execute(context: Context)
 
+    internal fun toSlashCommand(): CommandUpdateAction.CommandData {
+        try {
+            val command = CommandUpdateAction.CommandData(
+                name, description
+            )
+            options.forEach(command::addOption)
+            commandAssociations.values
+                .asSequence()
+                .distinct()
+                .map(AbstractSubCommand::toSubSlashCommand)
+                .forEach(command::addSubcommand)
+
+            return command
+        } catch (e: Exception) {
+            throw IllegalStateException(
+                "Could not process command with name $name",
+                e
+            )
+        }
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    protected fun buildOptions(builder: OptionsBuilder.() -> Unit): List<CommandUpdateAction.OptionData> {
+        return buildList {
+            OptionsBuilder(this).apply(builder)
+        }
+    }
 }

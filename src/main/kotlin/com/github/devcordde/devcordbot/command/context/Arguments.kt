@@ -16,11 +16,8 @@
 
 package com.github.devcordde.devcordbot.command.context
 
-import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.dsl.EmbedConvention
-import com.github.devcordde.devcordbot.util.EntityResolver
-import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.*
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 
 /**
  * A converter that converts a command argument.
@@ -36,103 +33,86 @@ typealias ArgumentConverter<T> = (String) -> T
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Arguments(
-    private val list: List<String>,
-    private val raw: String
-) :
-    List<String> by list {
+    private val options: Map<String, SlashCommandEvent.OptionData>
+) {
 
     /**
-     * Joins the arguments back to their original String.
+     * Returns the argument with [name].
      */
-    fun join(): String = raw
+    fun argument(name: String): SlashCommandEvent.OptionData =
+        optionalArgument(name) ?: error("Argument $name not found")
 
-    /**
-     * Split's the arguments by the specified [delimiter].
-     * @see join
-     * @return a new instance of [Arguments] containing the new split arguments
-     */
-    fun split(delimiter: String): Arguments = Arguments(raw.split(delimiter), raw)
+    fun string(name: String): String = argument(name).asString
+
+    fun optionalString(name: String): String? = optionalArgument(name)?.asString
 
     /**
      * Return the argument at the specified [index] or `null` if there is no argument at that position.
      */
-    fun optionalArgument(index: Int): String? = getOrNull(index)
+    fun optionalArgument(name: String): SlashCommandEvent.OptionData? = options[name]
 
     /**
      * Return the argument at the specified [index] as an [Int] or `null` if there is no argument at that position, or it is not an [Int].
      */
-    fun optionalInt(index: Int): Int? = optionalArgument(index, String::toIntOrNull)
+    fun optionalInt(name: String): Int? = optionalArgument(name)?.asLong?.toInt()
 
     /**
      * Return the argument at the specified [index] as a [Long] or `null` if there is no argument at that position, or it is not a [Long].
      */
-    fun optionalLong(index: Int): Long? = optionalArgument(index, String::toLongOrNull)
+    fun optionalLong(name: String): Long? = optionalArgument(name)?.asLong
 
     /**
      * Return the argument at the specified [index] as a [User] or `null` if there is no argument at that position, or it is not a [User].
      * @param ignoreCase whether the case of the name should be ignored or not
      */
-    fun optionalUser(index: Int, ignoreCase: Boolean = false, jda: JDA): User? =
-        optionalArgument(index) { EntityResolver.resolveUser(jda, it, ignoreCase) }
+    fun optionalUser(name: String): User? =
+        optionalArgument(name)?.asUser
 
     /**
      * Return the argument at the specified [index] as a [Member] or `null` if there is no argument at that position, or it is not a [Member].
      * @param ignoreCase whether the case of the name should be ignored or not
      */
-    fun optionalMember(index: Int, ignoreCase: Boolean = false, guild: Guild): Member? =
-        optionalArgument(index) { EntityResolver.resolveMember(guild, it, ignoreCase) }
+    fun optionalMember(name: String): Member? =
+        optionalArgument(name)?.asMember
 
     /**
      * Return the argument at the specified [index] as a [Role] or `null` if there is no argument at that position, or it is not a [Role].
      * @param ignoreCase whether the case of the name should be ignored or not
      */
-    fun optionalRole(index: Int, ignoreCase: Boolean = false, guild: Guild): Role? =
-        optionalArgument(index) { EntityResolver.resolveRole(guild, it, ignoreCase) }
+    fun optionalRole(name: String): Role? =
+        optionalArgument(name)?.asRole
 
     /**
      * Return the argument at the specified [index] as a [TextChannel] or `null` if there is no argument at that position, or it is not a [TextChannel].
      * @param ignoreCase whether the case of the name should be ignored or not
      */
     fun optionalChannel(
-        index: Int,
-        ignoreCase: Boolean = false,
-        guild: Guild
-    ): TextChannel? =
-        optionalArgument(index) { EntityResolver.resolveTextChannel(guild, it, ignoreCase) }
+        name: String
+    ): MessageChannel? =
+        optionalArgument(name)?.asMessageChannel
+
 
     /**
      * Return the argument at the specified [index] or `null` if there is no argument at that position.
      * And sends a command help if there is no argument at that position.
      * @param context the context that executed the command
      */
-    fun requiredArgument(index: Int, context: Context): String? =
-        requiredArgument(index, context, this::optionalArgument) {
-            Embeds.command(context.command)
-        }
+    fun requiredArgument(name: String): SlashCommandEvent.OptionData =
+        optionalArgument(name) ?: error("Could not find argument $name")
 
     /**
      * Return the argument at the specified [index] as an [Int] or `null` if there is no argument at that position.
      * If there is no [Int] at that position it sends a help message.
      * @param context the context that executed the command
      */
-    fun int(index: Int, context: Context): Int? = requiredArgument(index, context, this::optionalInt) {
-        Embeds.error(
-            "Ungültiger Zahlenwert!",
-            "Bitte gebe einen gültigen Zahlenwert an"
-        )
-    }
+    fun int(name: String): Int = requiredArgument(name).asLong.toInt()
 
     /**
      * Return the argument at the specified [index] as a [Long] or `null` if there is no argument at that position.
      * If there is no [Long] at that position it sends a help message.
      * @param context the context that executed the command
      */
-    fun long(index: Int, context: Context): Long? = requiredArgument(index, context, this::optionalLong) {
-        Embeds.error(
-            "Ungültiger Zahlenwert!",
-            "Bitte gebe einen gültigen Zahlenwert an"
-        )
-    }
+    fun long(name: String): Long = requiredArgument(name).asLong
 
     /**
      * Return the argument at the specified [index] as a [User] or `null` if there is no argument at that position.
@@ -140,10 +120,7 @@ data class Arguments(
      * @param ignoreCase whether the case of the name should be ignored or not
      * @param context the context that executed the command
      */
-    fun user(index: Int, ignoreCase: Boolean = false, context: Context): User? =
-        requiredArgument(index, context, { optionalUser(index, ignoreCase, context.jda) }) {
-            Embeds.error("Ungültiger Benutzer!", "Der von dir angegebene Benutzer scheint nicht zu existieren.")
-        }
+    fun user(name: String): User = requiredArgument(name).asUser!!
 
     /**
      * Return the argument at the specified [index] as a [Member] or `null` if there is no argument at that position.
@@ -151,10 +128,7 @@ data class Arguments(
      * @param ignoreCase whether the case of the name should be ignored or not
      * @param context the context that executed the command
      */
-    fun member(index: Int, ignoreCase: Boolean = false, context: Context): Member? =
-        requiredArgument(index, context, { optionalMember(index, ignoreCase, context.guild) }) {
-            Embeds.error("Ungültiger Benutzer!", "Der von dir angegebene Benutzer scheint nicht zu existieren.")
-        }
+    fun member(name: String): Member = requiredArgument(name).asMember!!
 
     /**
      * Return the argument at the specified [index] as a [Role] or `null` if there is no argument at that position.
@@ -162,10 +136,7 @@ data class Arguments(
      * @param ignoreCase whether the case of the name should be ignored or not
      * @param context the context that executed the command
      */
-    fun role(index: Int, ignoreCase: Boolean = false, context: Context): Role? =
-        requiredArgument(index, context, { optionalRole(index, ignoreCase, context.guild) }) {
-            Embeds.error("Ungültige Rolle!", "Die von dir angegebene Rolle scheint nicht zu existieren.")
-        }
+    fun role(name: String): Role = requiredArgument(name).asRole!!
 
     /**
      * Return the argument at the specified [index] as a [TextChannel] or `null` if there is no argument at that position.
@@ -173,22 +144,6 @@ data class Arguments(
      * @param ignoreCase whether the case of the name should be ignored or not
      * @param context the context that executed the command
      */
-    fun channel(index: Int, ignoreCase: Boolean = false, context: Context): TextChannel? =
-        requiredArgument(index, context, { optionalChannel(index, ignoreCase, context.guild) }) {
-            Embeds.error("Ungültige Text-Kanal!", "Der von dir angegebene Text-Kanal scheint nicht zu existieren.")
-        }
+    fun channel(name: String): MessageChannel = requiredArgument(name).asMessageChannel!!
 
-    private fun <T> optionalArgument(index: Int, transform: ArgumentConverter<T>): T? =
-        optionalArgument(index)?.let(transform)
-
-    private fun <T> requiredArgument(
-        index: Int,
-        context: Context,
-        provider: (Int) -> T?,
-        lazyError: () -> EmbedConvention
-    ): T? {
-        val found = provider(index)
-        if (found == null) context.respond(lazyError()).queue()
-        return found
-    }
 }

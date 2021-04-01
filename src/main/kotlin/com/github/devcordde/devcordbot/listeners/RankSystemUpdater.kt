@@ -42,7 +42,7 @@ class DatabaseUpdater(private val whiteList: List<String>) {
      * Adds a user to the database when a user joins the guild.
      */
     @SubscribeEvent
-    fun onMemberJoin(event: GuildMemberJoinEvent): DevCordUser? =
+    fun onMemberJoin(event: GuildMemberJoinEvent): DevCordUser =
         transaction { DatabaseDevCordUser.findOrCreateById(event.user.idLong) }
 
     /**

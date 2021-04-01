@@ -18,19 +18,19 @@ package com.github.devcordde.devcordbot.command.context
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.CommandClient
-import com.github.devcordde.devcordbot.command.impl.CommandClientImpl
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
-import com.github.devcordde.devcordbot.dsl.sendMessage
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.MessageBuilder
+import net.dv8tion.jda.api.commands.CommandHook
 import net.dv8tion.jda.api.entities.*
-import net.dv8tion.jda.api.requests.RestAction
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.requests.restaction.InteractionWebhookAction
 import net.dv8tion.jda.api.requests.restaction.MessageAction
 
 /**
@@ -47,45 +47,47 @@ data class Context(
     val bot: DevCordBot,
     val command: AbstractCommand,
     val args: Arguments,
-    val message: Message,
+    val event: SlashCommandEvent,
     val commandClient: CommandClient,
-    val devCordUser: DevCordUser
+    val devCordUser: DevCordUser,
+    var ack: CommandHook
 ) {
+
     /**
      * The [JDA] instance.
      */
     val jda: JDA
-        get() = message.jda
+        get() = event.jda
 
     /**
      * The id of [message].
      */
-    val messageId: Long
-        get() = message.idLong
+    val interactionId: Long
+        get() = event.interactionIdLong
 
     /**
      * The [TextChannel] of [message].
      */
     val channel: MessageChannel
-        get() = message.channel
+        get() = event.channel
 
     /**
      * The author of the [message].
      */
     val author: User
-        get() = message.author
+        get() = event.user
 
     /**
      * The member of the [author].
      */
     val member: Member?
-        get() = if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(author.id)
+        get() = if (event.isFromGuild) event.member else bot.guild.getMemberById(author.id)
 
     /**
      * The guild of the [channel].
      */
     val guild: Guild
-        get() = if (message.channelType == ChannelType.TEXT) message.guild else bot.guild
+        get() = if (event.isFromGuild) event.guild!! else bot.guild
 
     /**
      * The [self member][Member] of the bot.
@@ -103,36 +105,36 @@ data class Context(
      * Sends [content] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(content: String): RestAction<Message> {
+    fun respond(content: String): InteractionWebhookAction {
         val message =
             MessageBuilder(content).denyMentions(Message.MentionType.EVERYONE, Message.MentionType.HERE).build()
-        return notifyCommandHandler(channel.sendMessage(message))
+        return ack.editOriginal(message)
     }
 
     /**
      * Sends [embed] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(embed: MessageEmbed): RestAction<Message> = notifyCommandHandler(channel.sendMessage(embed))
+    fun respond(embed: MessageEmbed): InteractionWebhookAction = ack.editOriginal(embed)
 
     /**
      * Sends [embedBuilder] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(embedBuilder: EmbedBuilder): RestAction<Message> =
-        notifyCommandHandler(channel.sendMessage(embedBuilder.build()))
+    fun respond(embedBuilder: EmbedBuilder): InteractionWebhookAction =
+        ack.editOriginal(embedBuilder.build())
 
     /**
      * Sends [embed] into [channel].
      * @return a [MessageAction] that sends the message
      */
-    fun respond(embed: EmbedConvention): RestAction<Message> = notifyCommandHandler(channel.sendMessage(embed))
+    fun respond(embed: EmbedConvention): InteractionWebhookAction = respond(embed.toEmbedBuilder())
 
     /**
      * Sends a help embed for [command].
      * @see Embeds.command
      */
-    fun sendHelp(): RestAction<Message> = respond(Embeds.command(command))
+    fun sendHelp(): InteractionWebhookAction = respond(Embeds.command(command))
 
     /**
      * Checks whether the [member] has [Permission.ADMIN] or not.
@@ -151,7 +153,7 @@ data class Context(
         commandClient.permissionHandler.isCovered(permission, member, devCordUser) == PermissionState.ACCEPTED
 
     private fun notifyCommandHandler(action: MessageAction) = action.map {
-        (commandClient as CommandClientImpl).acknowledgeResponse(message.idLong, it.channel.idLong, it.idLong); it
+//        (commandClient as CommandClientImpl).acknowledgeResponse(message.idLong, it.channel.idLong, it.idLong); it
     }
 
 }

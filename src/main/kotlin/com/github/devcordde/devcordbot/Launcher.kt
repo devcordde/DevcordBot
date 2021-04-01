@@ -16,24 +16,24 @@
 
 package com.github.devcordde.devcordbot
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.core.GameAnimator
+import com.github.devcordde.devcordbot.core.JavaDocManager
+import com.github.devcordde.devcordbot.core.autohelp.ImageReader
 import io.github.cdimascio.dotenv.dotenv
 import io.sentry.Sentry
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlin.system.exitProcess
 import mu.KotlinLogging
-import org.slf4j.event.Level as SLF4JLevel
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
-import com.github.devcordde.devcordbot.constants.Constants
-import com.github.devcordde.devcordbot.core.JavaDocManager
-import com.github.devcordde.devcordbot.core.autohelp.ImageReader
 import net.dv8tion.jda.api.entities.Activity
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.LoggerFactory
+import kotlin.system.exitProcess
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
+import org.slf4j.event.Level as SLF4JLevel
 
 private val logger = KotlinLogging.logger {}
 
@@ -61,7 +61,7 @@ fun main(args: Array<String>) {
 
     val env = dotenv()
     if (debugMode) {
-        Sentry.init() // Initilizing sentry with null does mute sentry
+        Sentry.init("") // Initilizing sentry with null does mute sentry
     } else {
         env["SENTRY_DSN"]?.let {
             Sentry.init("$it?stacktrace.app.packages=com.github.devcordde.devcordbot")

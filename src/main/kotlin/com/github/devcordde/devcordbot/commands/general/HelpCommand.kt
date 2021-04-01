@@ -23,6 +23,7 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
 /**
  * Help command.
@@ -35,9 +36,12 @@ class HelpCommand : AbstractCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
+    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+        string("command", "Der Name eines Commands für den Hilfe angezeigt werden soll")
+    }
 
     override suspend fun execute(context: Context) {
-        val commandName = context.args.optionalArgument(0)
+        val commandName = context.args.optionalString("command")
         if (commandName == null) {
             sendCommandList(context)
         } else {
@@ -63,7 +67,7 @@ class HelpCommand : AbstractCommand() {
             ).queue()
         }
 
-        if (!command.commandPlace.matches(context.message)) {
+        if (!command.commandPlace.matches(context.event)) {
             return context.respond(
                 Embeds.error(
                     "Falscher Context!",
@@ -88,7 +92,7 @@ class HelpCommand : AbstractCommand() {
                         context.member,
                         context.devCordUser,
                         acknowledgeBlacklist = false // Ignore BL to save DB Query since BLed users cannot execute help anyways
-                    ) == PermissionState.ACCEPTED && it.commandPlace.matches(context.message)
+                    ) == PermissionState.ACCEPTED && it.commandPlace.matches(context.event)
                 }
                 CommandCategory.values().forEach { category ->
                     val categoryCommands = commands.filter { it.category == category }.map { it.name }

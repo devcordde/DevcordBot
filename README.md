@@ -22,7 +22,7 @@
 - run `docker-compose up -d`
 
 ## setup redeploy command
-We recommend [this library](https://github.com/adnanh/webhook) for the redeployment of the bot. Simply setup the 
+We recommend [this library](https://github.com/adnanh/webhook) for the redeployment of the bot. Simply set up the 
 webhook for executing `docker-compose pull && docker-compose up -d` in the directory where you have the 
 `docker-compose.yml` and `.env` file. Then enter the webhook URL at `REDEPLOY_HOST` and the Token at `REDEPLOY_TOKEN`.
 Example Config:

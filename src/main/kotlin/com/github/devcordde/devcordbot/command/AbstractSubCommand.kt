@@ -17,6 +17,7 @@
 package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.permission.Permission
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
 /**
  * Skeleton of a sub command.
@@ -33,4 +34,14 @@ abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand
         get() = parent.permission
     override val commandPlace: CommandPlace
         get() = parent.commandPlace
+
+    internal fun toSubSlashCommand(): CommandUpdateAction.SubcommandData {
+        val command = CommandUpdateAction.SubcommandData(
+            name, description
+        )
+
+        options.forEach(command::addOption)
+        require(commandAssociations.isEmpty()) { "No sub sub slash commands :(" }
+        return command
+    }
 }

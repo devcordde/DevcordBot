@@ -22,6 +22,7 @@ import com.github.devcordde.devcordbot.command.impl.RolePermissionHandler
 import com.github.devcordde.devcordbot.commands.`fun`.SourceCommand
 import com.github.devcordde.devcordbot.commands.general.*
 import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
+import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
 import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
@@ -57,7 +58,6 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
-import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 
 /**
  * General class to manage the Discord bot.
@@ -218,24 +218,17 @@ internal class DevCordBotImpl(
             RankCommand(),
             RanksCommand(),
             BlacklistCommand(),
-            InfoCommand(),    
+            InfoCommand(),
             CleanupCommand(),
             GoogleCommand()
         )
-
-        val javadocEnabled = env["JAVADOC_ENABLED"]
-        if(javadocEnabled != null) {
-            commandClient.registerCommands(
-                OracleJavaDocCommand(),
-                SpigotJavaDocCommand(),
-                SpigotLegacyJavaDocCommand()
-            )
-        }
 
         val redeployHost = env["REDEPLOY_HOST"]
         val redeployToken = env["REDEPLOY_TOKEN"]
         if (redeployHost != null && redeployToken != null && redeployHost.isNotBlank() && redeployToken.isNotBlank()) {
             commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
         }
+
+        (commandClient as CommandClientImpl).updateCommands()
     }
 }

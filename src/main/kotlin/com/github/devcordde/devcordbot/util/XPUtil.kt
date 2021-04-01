@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot.util
 
+import com.github.devcordde.devcordbot.util.XPUtil.xpMap
 import kotlin.math.pow
 
 /**
@@ -29,9 +30,9 @@ object XPUtil {
      *
      * http://fooplot.com/#W3sidHlwZSI6MCwiZXEiOiIoMip4KV4xLjgrMjAwIiwiY29sb3IiOiIjMDAwMDAwIn0seyJ0eXBlIjoxMDAwLCJ3aW5kb3ciOlsiLTAiLCIyMDAiLCItMCIsIjUwMDAwIl0sInNpemUiOlsxMTAwLDQwMF19XQ--
      */
-    fun getXpToLevelup(level: Int): Long = xpMap[level] ?: {
+    fun getXpToLevelup(level: Int): Long = xpMap[level] ?: run {
         val requiredXp = (2.0 * level).pow(1.8).toLong() + 200
         xpMap[level] = requiredXp
         requiredXp
-    }()
+    }
 }

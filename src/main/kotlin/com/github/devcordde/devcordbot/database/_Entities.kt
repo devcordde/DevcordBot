@@ -81,6 +81,7 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
          * Finds the first [Tag] by its [name].
          */
         fun findByNameId(name: String): Tag? = find { upper(Tags.name) eq name.toUpperCase() }.firstOrNull()
+
         /**
          * Maximum length of a tag name.
          */

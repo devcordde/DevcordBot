@@ -36,6 +36,11 @@ class InfoCommand : AbstractCommand() {
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
-        SelfMentionListener.sendInfo(context.channel, context.jda.users.size, context.bot)
+        val devCordBot = context.bot
+        val contributors = SelfMentionListener.fetchContributors(devCordBot)
+
+        context.respond(SelfMentionListener.makeEmbed(devCordBot)).flatMap {
+            context.ack.editOriginal(SelfMentionListener.makeEmbed(devCordBot, contributors.join()))
+        }.queue()
     }
 }

@@ -74,7 +74,8 @@ class Paginator(
         pages = ceil(items.size.toDouble() / itemsPerPage).toInt()
         require(firstPage <= pages) { "First page must exist" }
         if (pages > 1) {
-            message = context.respond(Embeds.loading(loadingTitle, loadingDescription)).complete()
+            message = context.ack.sendMessage(Embeds.loading(loadingTitle, loadingDescription).toEmbedBuilder().build())
+                .complete()
             context.jda.addEventListener(this)
             CompletableFuture.allOf(*listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).map {
                 message.addReaction(it).submit()
@@ -89,7 +90,7 @@ class Paginator(
                 }
             rescheduleTimeout()
         } else {
-            message = context.respond(renderEmbed(items)).complete()
+            message = context.ack.sendMessage(renderEmbed(items).toEmbedBuilder().build()).complete()
         }
     }
 
@@ -106,7 +107,8 @@ class Paginator(
         title(title)
         val rowBuilder = StringBuilder()
         rows.indices.forEach {
-            rowBuilder.append('`').append(it + (itemsPerPage * (currentPage - 1)) + 1).append("`. ").appendLine(rows[it])
+            rowBuilder.append('`').append(it + (itemsPerPage * (currentPage - 1)) + 1).append("`. ")
+                .appendLine(rows[it])
         }
         description = rowBuilder
         footer("Seite $currentPage/$pages (${rows.size} Einträge)")

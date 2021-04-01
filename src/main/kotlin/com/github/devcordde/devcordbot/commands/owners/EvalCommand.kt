@@ -23,10 +23,10 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
-import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.limit
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
@@ -41,6 +41,9 @@ class EvalCommand : AbstractCommand() {
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
+    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+        string("code", "Der auszuführende Code")
+    }
 
     override suspend fun execute(context: Context) {
         context.respond(
@@ -50,7 +53,7 @@ class EvalCommand : AbstractCommand() {
             )
         ).flatMap {
             val scriptEngine = ScriptEngineManager().getEngineByName("kotlin")
-            val script = context.args.join()
+            val script = context.args.string("code")
             //language=kotlin
             scriptEngine.eval(
                 """
@@ -74,10 +77,10 @@ class EvalCommand : AbstractCommand() {
                         "Ergebnis: ${Emotes.LOADING}"
                     )
                     HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient).thenAccept { hasteUrl ->
-                        it.editMessage(result.apply {
+                        context.ack.editOriginal(result.apply {
                             @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
                             description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                        }).queue()
+                        }.toEmbedBuilder().build()).queue()
                     }
                     result
                 } else {
@@ -90,14 +93,14 @@ class EvalCommand : AbstractCommand() {
                 )
                 HastebinUtil.postErrorToHastebin(e.stackTraceToString(), context.bot.httpClient)
                     .thenAccept { hasteUrl ->
-                        it.editMessage(result.apply {
+                        context.ack.editOriginal(result.apply {
                             @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
                             description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                        }).queue()
+                        }.toEmbedBuilder().build()).queue()
                     }
                 result
             }
-            it.editMessage(result)
+            context.ack.editOriginal(result.toEmbedBuilder().build())
         }.queue()
     }
 }

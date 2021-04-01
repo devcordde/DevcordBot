@@ -33,7 +33,6 @@ import com.github.devcordde.devcordbot.database.Users.level
 import net.dv8tion.jda.api.entities.Message
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.`java-time`.timestamp
 import java.time.Instant

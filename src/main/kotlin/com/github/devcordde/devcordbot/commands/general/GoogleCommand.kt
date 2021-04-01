@@ -23,6 +23,7 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.menu.Paginator
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
 /**
  * Google command.
@@ -38,8 +39,14 @@ class GoogleCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
+    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+        string("query", "Die Query nach der gesucht werden soll") {
+            isRequired = true
+        }
+    }
+
     override suspend fun execute(context: Context) {
-        val query = context.args.join()
+        val query = context.args.string("query")
 
         if (query.isBlank()) return context.sendHelp().queue()
 

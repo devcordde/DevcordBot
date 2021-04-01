@@ -25,11 +25,11 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
-import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.await
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.exceptions.ParsingException
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import net.dv8tion.jda.api.utils.data.DataObject
 
@@ -44,74 +44,77 @@ class EvalCommand : AbstractCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
+    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+        string("codeblock", "Der auszuführende Codeblock")
+    }
 
     init {
-        registerCommands(ListCommand())
+//        registerCommands(ListCommand())
     }
 
     private fun example(title: String) = Embeds.error(
         title,
         "`Beispiel`\n${MarkdownSanitizer.escape("```kotlin\nfun main() = print(\"Hello World\")\n```")}"
-    )
+    ).toEmbedBuilder().build()
 
     private fun internalError() = Embeds.error(
         "Ein interner Fehler ist aufgetreten",
         "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
-    )
+    ).toEmbedBuilder().build()
 
     override suspend fun execute(context: Context) {
         val message = context.respond(Embeds.loading("Lädt.", "Skript wird ausgeführt.")).await()
-        val text = context.args.join()
+        val text = context.args.string("codeblock")
 
         val blockMatch = Constants.JDOODLE_REGEX.matchEntire(text)
 
         if (blockMatch == null || blockMatch.groups.size != 3) {
-            return message.editMessage(example("Das Skript muss in einem Multiline-Codeblock liegen")).queue()
+            return context.ack.editOriginal(example("Das Skript muss in einem Multiline-Codeblock liegen")).queue()
         }
 
         val languageString = blockMatch.groupValues[1]
         val script = blockMatch.groupValues[2].trim()
 
         if (script.isEmpty()) {
-            return message.editMessage(example("Benutze ein Skript")).queue()
+            return context.ack.editOriginal(example("Benutze ein Skript")).queue()
         }
 
         val language = try {
             Language.valueOf(languageString.toUpperCase())
         } catch (e: IllegalArgumentException) {
-            return message.editMessage(
+            return context.ack.editOriginal(
                 Embeds.error(
                     "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
                     languageList()
-                )
+                ).toEmbedBuilder().build()
             ).queue()
         }
 
         val response = JDoodle.execute(language, script)
-            ?: return message.editMessage(internalError()).queue()
+            ?: return context.ack.editOriginal(internalError()).queue()
 
         val output = try {
             DataObject.fromJson(response)["output"].toString()
         } catch (p: ParsingException) {
-            return message.editMessage(internalError()).queue()
+            return context.ack.editOriginal(internalError()).queue()
         }
 
         if (output.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
             val result = Embeds.info(
                 "Erfolgreich ausgeführt!",
                 "Ergebnis: ${Emotes.LOADING}"
-            )
+            ).toEmbedBuilder()
 
-            message.editMessage(result)
+            context.ack.editOriginal(result.build())
 
             HastebinUtil.postErrorToHastebin(output, context.bot.httpClient).thenAccept { hasteUrl ->
-                message.editMessage(result.apply {
+                context.ack.editOriginal(result.apply {
                     @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
-                    description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                }).queue()
+                    setDescription(description.replace(Emotes.LOADING.toRegex(), hasteUrl))
+                }.build()).queue()
             }
         } else {
-            message.editMessage(Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```")).queue()
+            context.ack.editOriginal(Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```").toEmbedBuilder().build()).queue()
         }
     }
 

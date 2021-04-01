@@ -27,6 +27,7 @@ import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.XPUtil
 import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -42,12 +43,16 @@ class RankCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
+    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+        user("target", "Der User für den die Statistik angezeigt werden soll")
+    }
+
     init {
-        registerCommands(TopCommand())
+//        registerCommands(TopCommand())
     }
 
     override suspend fun execute(context: Context) {
-        val user = context.args.optionalUser(0, jda = context.jda)
+        val user = context.args.optionalUser("target")
             ?: return sendRankInformation(context.author, context, true)
         sendRankInformation(user, context)
     }
@@ -75,7 +80,7 @@ class RankCommand : AbstractCommand() {
         ).queue()
     }
 
-    private fun buildProgressBar(current: Long, next: Long): String? {
+    private fun buildProgressBar(current: Long, next: Long): String {
         val stringBuilder = StringBuilder()
         val barProgress = (current.toDouble() / next * 20).toInt()
         stringBuilder.append("█".repeat(barProgress))
@@ -88,9 +93,13 @@ class RankCommand : AbstractCommand() {
         override val displayName: String = "Top"
         override val description: String = "Zeigt die 10 User mit dem höchsten Rang an."
         override val usage: String = "[offset]"
+        override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+            int("offset", "Der Index um den die Liste verschoben werden soll") {
+            }
+        }
 
         override suspend fun execute(context: Context) {
-            var offset = context.args.optionalInt(0) ?: 0
+            var offset = context.args.optionalInt("offset") ?: 0
             var invalidOffset = false
             var maxOffset = 0
             if (offset < 0) offset = 0

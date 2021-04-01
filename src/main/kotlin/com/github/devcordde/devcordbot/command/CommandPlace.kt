@@ -16,8 +16,7 @@
 
 package com.github.devcordde.devcordbot.command
 
-import net.dv8tion.jda.api.entities.ChannelType
-import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 
 /**
  * CommandPlace defines the places where the command may be executed.
@@ -42,11 +41,11 @@ enum class CommandPlace {
     /**
      * Check if the message matches the CommandPlace.
      */
-    fun matches(message: Message): Boolean {
+    fun matches(interaction: SlashCommandEvent): Boolean {
         return when (this) {
             ALL -> true
-            PRIVATE_MESSAGE -> message.channelType == ChannelType.PRIVATE
-            GUILD_MESSAGE -> message.channelType == ChannelType.TEXT
+            PRIVATE_MESSAGE -> !interaction.isFromGuild
+            GUILD_MESSAGE -> interaction.isFromGuild
         }
     }
 }

@@ -20,11 +20,11 @@ import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
-import com.github.devcordde.devcordbot.command.context.Arguments
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.util.hasSubCommands
+import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
 /**
  * Source command.
@@ -38,8 +38,13 @@ class SourceCommand : AbstractCommand() {
     override val category: CommandCategory = CommandCategory.FUN
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
+    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+        string("command", "Der Name des Commands für den der SourceCode angezeigt werden soll")
+    }
+
     override suspend fun execute(context: Context) {
-        val command = findCommand(context) ?: return context.respond(
+        val commandName = context.args.optionalString("command")
+        val command = commandName?.let { findCommand(it, context) } ?: return context.respond(
             Embeds.info(
                 "Quellcode:", "Den code vom Bot findest du [hier]($GITHUB_BASE)"
             )
@@ -50,8 +55,10 @@ class SourceCommand : AbstractCommand() {
 
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // All command classes are not anonymous or local
         val classUrl =
-            "$GITHUB_BASE$GITHUB_FILE_APPENDIX${parentCommand::class.qualifiedName!!.replace(".", "/")
-                .replace(".", "/")}.kt#L$definitionLine"
+            "$GITHUB_BASE$GITHUB_FILE_APPENDIX${
+                parentCommand::class.qualifiedName!!.replace(".", "/")
+                    .replace(".", "/")
+            }.kt#L$definitionLine"
         context.respond(
             Embeds.info(
                 "${command.name} - Source",
@@ -60,9 +67,9 @@ class SourceCommand : AbstractCommand() {
         ).queue()
     }
 
-    private fun findCommand(context: Context): AbstractCommand? {
+    private fun findCommand(argument: String, context: Context): AbstractCommand? {
         tailrec fun find(
-            args: Arguments,
+            args: List<String>,
             index: Int,
             commandAssociations: Map<String, AbstractCommand> = context.commandClient.commandAssociations
         ): AbstractCommand? {
@@ -76,7 +83,8 @@ class SourceCommand : AbstractCommand() {
                 return find(args, index + 1, currentCommand.commandAssociations)
             return currentCommand
         }
-        return find(context.args, 0)
+
+        return find(argument.split("\\s+".toRegex()), 0)
     }
 
     private fun getParent(abstractCommand: AbstractCommand): AbstractCommand =
