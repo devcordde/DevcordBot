@@ -16,8 +16,10 @@
 
 package com.github.devcordde.devcordbot.command
 
+import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveSubCommandData
+import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveSubCommandGroupData
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
 /**
@@ -27,7 +29,7 @@ import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
  * @see AbstractCommand
  */
 @Suppress("MemberVisibilityCanBePrivate")
-abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
+sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
     override val callback: Exception = Exception()
     override val category: CommandCategory
         get() = parent.category
@@ -36,14 +38,46 @@ abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand
     override val commandPlace: CommandPlace
         get() = parent.commandPlace
 
-    internal fun toSubSlashCommand(): CommandUpdateAction.SubcommandData {
-        val command = PermissiveSubCommandData(
-            name, description
-        )
+    abstract fun CommandUpdateAction.CommandData.addMe()
 
-        command.defaultPermission = permission == Permission.ANY
-        options.forEach(command::addOption)
-        require(commandAssociations.isEmpty()) { "No sub sub slash commands :(" }
-        return command
+    abstract class Command(parent: AbstractCommand) : AbstractSubCommand(parent) {
+
+        open val options: List<CommandUpdateAction.OptionData> = emptyList()
+
+        abstract suspend fun execute(context: Context)
+
+        override fun CommandUpdateAction.CommandData.addMe() {
+            addSubcommand(toCommandData())
+        }
+
+        internal fun toCommandData(): CommandUpdateAction.SubcommandData {
+            try {
+                val command = PermissiveSubCommandData(
+                    name, description
+                )
+                command.defaultPermission = permission == Permission.ANY
+                options.forEach(command::addOption)
+
+                return command
+            } catch (e: Exception) {
+                throw IllegalStateException(
+                    "Could not process command with name $name",
+                    e
+                )
+            }
+        }
+    }
+
+    abstract class Group(parent: AbstractCommand) : AbstractSubCommand(parent),
+        CommandRegistry<Command> {
+        override fun CommandUpdateAction.CommandData.addMe() {
+            val data = PermissiveSubCommandGroupData(name, description)
+            data.defaultPermission = permission == Permission.ANY
+            commandAssociations.values
+                .map(Command::toCommandData)
+                .forEach(data::addSubcommand)
+
+            addSubcommandGroup(data)
+        }
     }
 }

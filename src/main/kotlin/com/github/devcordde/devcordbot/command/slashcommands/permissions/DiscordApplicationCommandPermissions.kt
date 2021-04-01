@@ -19,14 +19,27 @@ package com.github.devcordde.devcordbot.command.slashcommands.permissions
 import net.dv8tion.jda.api.entities.ISnowflake
 import net.dv8tion.jda.api.utils.data.DataObject
 
+/**
+ * Representation of the permissions of a slash command.
+ *
+ * @property applicationId the id of the application owning the command
+ * @property guildId the id of the guild the permissions are for
+ * @property permissions the list of [permissions][DiscordApplicationCommandPermission]
+ */
 class DiscordApplicationCommandPermissions(
     private val id: Long,
     val applicationId: Long,
     val guildId: Long,
     val permissions: List<DiscordApplicationCommandPermission>
 ) : ISnowflake {
+    /**
+     * Returns the id of slash commands the permissions are for
+     */
     override fun getIdLong(): Long = id
 
+    /**
+     * Converts this into a [DataObject] which can be sent to Discord.
+     */
     fun toDataObject(): DataObject = DataObject.empty()
         .put("id", id)
         .put("application_id", applicationId)
@@ -34,6 +47,9 @@ class DiscordApplicationCommandPermissions(
         .put("permissions", permissions.toDataArray())
 
     companion object {
+        /**
+         * Converts a [DataObject] into [DiscordApplicationCommandPermissions].
+         */
         fun fromDataObject(json: DataObject): DiscordApplicationCommandPermissions =
             DiscordApplicationCommandPermissions(
                 json.getLong("id"),

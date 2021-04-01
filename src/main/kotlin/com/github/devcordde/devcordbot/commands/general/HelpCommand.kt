@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
@@ -28,11 +28,9 @@ import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 /**
  * Help command.
  */
-class HelpCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("help", "h", "hilfe")
-    override val displayName: String = "help"
+class HelpCommand : AbstractSingleCommand() {
+    override val name: String = "help"
     override val description: String = "Zeigt eine Liste aller Befehle"
-    override val usage: String = "[command]"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL

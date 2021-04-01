@@ -215,7 +215,9 @@ internal class DevCordBotImpl(
     private fun registerCommands(env: Dotenv) {
         commandClient.registerCommands(
             HelpCommand(),
-            TagCommand(),
+            TagCommand().apply {
+                registerReadCommand(commandClient)
+            },
             EvalCommand(),
             OwnerEvalCommand(),
             SourceCommand(),

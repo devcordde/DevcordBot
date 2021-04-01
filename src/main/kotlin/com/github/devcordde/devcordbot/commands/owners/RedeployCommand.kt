@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.owners
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
@@ -27,11 +27,9 @@ import okhttp3.Request
 /**
  * RedeployCommand.
  */
-class RedeployCommand(private val host: String, private val token: String) : AbstractCommand() {
-    override val aliases: List<String> = listOf("redeploy")
-    override val displayName: String = "redeploy"
+class RedeployCommand(private val host: String, private val token: String) : AbstractSingleCommand() {
+    override val name: String = "redeploy"
     override val description: String = "Erlaubt dem Bot sich zu updaten und neu zu starten."
-    override val usage: String = ""
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL

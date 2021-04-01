@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.moderation
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractRootCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
@@ -31,43 +31,46 @@ import org.jetbrains.exposed.sql.transactions.transaction
 /**
  * BlacklistCommand
  */
-class BlacklistCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("blacklist", "bl")
-    override val displayName: String = "blacklist"
+class BlacklistCommand : AbstractRootCommand() {
+    override val name: String = "blacklist"
     override val description: String = "Hindert einen User daran Commands auszuführen."
-    override val usage: String = "<playerid>"
     override val permission: Permission = Permission.ADMIN
     override val category: CommandCategory = CommandCategory.MODERATION
     override val commandPlace: CommandPlace = CommandPlace.ALL
-    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
-        user("target", "Der Nutzer der zur/von der Schwarzen Liste hinzugefügt/entfernt werden soll") {
-            isRequired = true
-        }
-    }
 
     init {
-//        registerCommands(BlacklistListCommand())
+        registerCommands(BlacklistListCommand())
+        registerCommands(BlacklistToggleCommand())
     }
 
-    override suspend fun execute(context: Context) {
-        val user = context.args.user("target")
+    private inner class BlacklistToggleCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "toggle"
+        override val description: String = "Fügt hinzu/Entfernt einen Nutzer von der blacklist"
 
-        val blacklisted = transaction {
-            val dcUser = DatabaseDevCordUser.findOrCreateById(user.idLong)
-
-            dcUser.blacklisted = !dcUser.blacklisted
-            dcUser.blacklisted
+        override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+            user("target", "Der Nutzer der zur/von der Schwarzen Liste hinzugefügt/entfernt werden soll") {
+                isRequired = true
+            }
         }
 
-        context.respond(Embeds.success(if (blacklisted) "User zur Blacklist hinzugefügt." else "User aus der Blacklist entfernt."))
-            .queue()
+        override suspend fun execute(context: Context) {
+            val user = context.args.user("target")
+
+            val blacklisted = transaction {
+                val dcUser = DatabaseDevCordUser.findOrCreateById(user.idLong)
+
+                dcUser.blacklisted = !dcUser.blacklisted
+                dcUser.blacklisted
+            }
+
+            context.respond(Embeds.success(if (blacklisted) "User zur Blacklist hinzugefügt." else "User aus der Blacklist entfernt."))
+                .queue()
+        }
     }
 
-    private inner class BlacklistListCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("list", "l")
-        override val displayName: String = "list"
+    private inner class BlacklistListCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "list"
         override val description: String = "Listet geblacklistete User auf."
-        override val usage: String = ""
 
         override suspend fun execute(context: Context) {
             val userNames = transaction {
@@ -79,7 +82,7 @@ class BlacklistCommand : AbstractCommand() {
             }
 
             if (userNames.isEmpty()) {
-                return
+                return context.respond(Embeds.warn("Niemand da!", "Es ist niemand auf der blacklist")).queue()
             }
             context.respond(Embeds.success("Blacklisted Users", userNames.joinToString(", "))).queue()
         }

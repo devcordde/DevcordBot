@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.owners
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
@@ -33,11 +33,9 @@ import javax.script.ScriptException
 /**
  * Eval command for bot owners.
  */
-class EvalCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("ev")
-    override val displayName: String = "eval"
+class EvalCommand : AbstractSingleCommand() {
+    override val name: String = "ev"
     override val description: String = "Führt Kotlin Code über den Bot aus"
-    override val usage: String = "<code>"
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL

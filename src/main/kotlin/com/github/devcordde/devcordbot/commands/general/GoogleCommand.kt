@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
@@ -28,13 +28,11 @@ import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 /**
  * Google command.
  */
-class GoogleCommand : AbstractCommand() {
+class GoogleCommand : AbstractSingleCommand() {
 
-    override val aliases: List<String> = listOf("google", "search", "g")
-    override val displayName: String = "google"
+    override val name: String = "google"
     override val description: String =
         "Sucht nach der angegebenen Query bei Google und zeigt die ersten 10 Ergebnisse an."
-    override val usage: String = "<query>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE

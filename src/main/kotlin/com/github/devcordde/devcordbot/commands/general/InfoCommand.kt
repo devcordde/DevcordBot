@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
@@ -26,11 +26,9 @@ import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 /**
  * InfoCommand.
  */
-class InfoCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("info")
-    override val displayName: String = "info"
+class InfoCommand : AbstractSingleCommand() {
+    override val name: String = "info"
     override val description: String = "Zeigt Bot-Informationen an."
-    override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL

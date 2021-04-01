@@ -16,11 +16,20 @@
 
 package com.github.devcordde.devcordbot.command.slashcommands
 
+import com.github.devcordde.devcordbot.command.context.Arguments
 import net.dv8tion.jda.api.entities.Command
+import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
+/**
+ * Builder for slash command options.
+ */
 class OptionsBuilder(private val options: MutableList<CommandUpdateAction.OptionData>) {
 
+    /**
+     * Adds an option of [type] with [name] and [description] and applied [builder] to id.
+     */
     fun option(
         type: Command.OptionType,
         name: String,
@@ -30,44 +39,61 @@ class OptionsBuilder(private val options: MutableList<CommandUpdateAction.Option
         options.add(CommandUpdateAction.OptionData(type, name, description).apply(builder))
     }
 
+    /**
+     * Adds an option of type [Command.OptionType.STRING] with [name] and [description] and applied [builder] to id.
+     */
     fun string(
         name: String,
         description: String,
         builder: CommandUpdateAction.OptionData.() -> Unit = {}
-    ) = option(Command.OptionType.STRING, name, description, builder)
+    ): Unit = option(Command.OptionType.STRING, name, description, builder)
 
+    /**
+     * Adds an option of type [Command.OptionType.INTEGER] with [name] and [description] and applied [builder] to id.
+     *
+     * This covers both [Int] and [Long] (see [Arguments.long] and [Arguments.int])
+     */
     fun int(
         name: String,
         description: String,
         builder: CommandUpdateAction.OptionData.() -> Unit = {}
-    ) = option(Command.OptionType.INTEGER, name, description, builder)
+    ): Unit = option(Command.OptionType.INTEGER, name, description, builder)
 
+    /**
+     * Adds an option of type [Command.OptionType.BOOLEAN] with [name] and [description] and applied [builder] to id.
+     */
     fun boolean(
         name: String,
         description: String,
         builder: CommandUpdateAction.OptionData.() -> Unit = {}
-    ) = option(Command.OptionType.BOOLEAN, name, description, builder)
+    ): Unit = option(Command.OptionType.BOOLEAN, name, description, builder)
 
+    /**
+     * Adds an option of type [Command.OptionType.STRING] with [name] and [description] and applied [builder] to id.
+     *
+     * This covers both [User] and [Member] (see [Arguments.user] and [Arguments.member])
+     */
     fun user(
         name: String,
         description: String,
         builder: CommandUpdateAction.OptionData.() -> Unit = {}
-    ) = option(Command.OptionType.USER, name, description, builder)
+    ): Unit = option(Command.OptionType.USER, name, description, builder)
 
+    /**
+     * Adds an option of type [Command.OptionType.CHANNEL] with [name] and [description] and applied [builder] to id.
+     */
     fun channel(
         name: String,
         description: String,
         builder: CommandUpdateAction.OptionData.() -> Unit = {}
-    ) = option(Command.OptionType.CHANNEL, name, description, builder)
+    ): Unit = option(Command.OptionType.CHANNEL, name, description, builder)
 
+    /**
+     * Adds an option of type [Command.OptionType.ROLE] with [name] and [description] and applied [builder] to id.
+     */
     fun role(
         name: String,
         description: String,
         builder: CommandUpdateAction.OptionData.() -> Unit = {}
-    ) = option(Command.OptionType.ROLE, name, description, builder)
-
-    fun test() {
-        string("dsa", "das") {
-        }
-    }
+    ): Unit = option(Command.OptionType.ROLE, name, description, builder)
 }

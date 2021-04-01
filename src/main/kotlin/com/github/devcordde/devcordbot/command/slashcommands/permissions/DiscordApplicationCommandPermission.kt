@@ -16,37 +16,72 @@
 
 package com.github.devcordde.devcordbot.command.slashcommands.permissions
 
+import com.github.devcordde.devcordbot.command.slashcommands.permissions.DiscordApplicationCommandPermission.Type
 import net.dv8tion.jda.api.entities.ISnowflake
 import net.dv8tion.jda.api.utils.data.DataArray
 import net.dv8tion.jda.api.utils.data.DataObject
 
+/**
+ * Representation of a slash command permission
+ *
+ * @param id the id of the entity the permission is for
+ * @property type the [Type] of the entity the permission is for
+ * @property permission whether the permission should allow execution or not
+ */
 data class DiscordApplicationCommandPermission(
     private val id: Long, val type: Type, val permission: Boolean
 ) : ISnowflake {
 
+    /**
+     * The Type of an entity which can have a pemrission
+     *
+     * @property value the value in which discord stores this
+     */
     enum class Type(val value: Int) {
+        /**
+         * A role
+         */
         ROLE(1),
+
+        /**
+         * A user
+         */
         USER(2);
 
         companion object {
-            fun fromValue(value: Int) = values().first { it.value == value }
+            /**
+             * Maps [Type.value] to a [Type].
+             */
+            fun fromValue(value: Int): Type = values().first { it.value == value }
         }
     }
 
+    /**
+     * the id of the entity the permission is for.
+     */
     override fun getIdLong(): Long = id
 
+    /**
+     * Converts this into a [DataObject] which can be sent to Discord.
+     */
     fun toDataObject(): DataObject = DataObject.empty()
         .put("id", id)
         .put("type", type.value)
         .put("permission", permission)
 
     companion object {
+        /**
+         * Converts a [DataObject] to [DiscordApplicationCommandPermission]
+         */
         fun fromDataObject(json: DataObject): DiscordApplicationCommandPermission = DiscordApplicationCommandPermission(
             json.getLong("id"),
             Type.fromValue(json.getInt("type")),
             json.getBoolean("permission")
         )
 
+        /**
+         * Converts a [DataArray] to a list of [DiscordApplicationCommandPermission]
+         */
         fun fromDataArray(array: DataArray): List<DiscordApplicationCommandPermission> =
             array.map {
                 when (it) {
@@ -64,9 +99,15 @@ data class DiscordApplicationCommandPermission(
     }
 }
 
+/**
+ * Maps the list to a list of [DataObjects][DataObject].
+ */
 fun List<DiscordApplicationCommandPermission>.toDataObject(): List<DataObject> =
     map(DiscordApplicationCommandPermission::toDataObject)
 
+/**
+ * Maps the List into a [DataArray].
+ */
 fun List<DiscordApplicationCommandPermission>.toDataArray(): DataArray =
     DataArray.fromCollection(toDataObject())
 

@@ -43,11 +43,6 @@ fun String.isNumeric(): Boolean = all(Char::isDigit)
 fun String.isNotNumeric(): Boolean = !isNumeric()
 
 /**
- * Checks whether a command has subcommands or not.
- */
-fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()
-
-/**
  * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
  */
 fun Member.asMention(): Regex = "<@!?$id>\\s?".toRegex()

@@ -25,6 +25,11 @@ import net.dv8tion.jda.internal.JDAImpl
 import net.dv8tion.jda.internal.requests.RestActionImpl
 import net.dv8tion.jda.internal.utils.Checks
 
+/**
+ * Overwrites the Permissions of this command on the guild with [guildId].
+ *
+ * @return a [RestAction] returning the updated [DiscordApplicationCommandPermissions]
+ */
 fun Command.updatePermissions(
     guildId: String,
     permissionBuilder: PermissionsBuilder.() -> Unit
@@ -51,6 +56,9 @@ fun Command.updatePermissions(
     }
 }
 
+/**
+ * Retrieves all [DiscordApplicationCommandPermissions] for this guild.
+ */
 fun Guild.retrieveApplicationCommandPermissions(): RestAction<DiscordApplicationCommandPermissions> {
     val jda = jda as JDAImpl
 
@@ -65,9 +73,15 @@ fun Guild.retrieveApplicationCommandPermissions(): RestAction<DiscordApplication
     ) { response, _ -> DiscordApplicationCommandPermissions.fromDataObject(response.`object`) }
 }
 
+/**
+ * Retrieves the [DiscordApplicationCommandPermissions] for [command] on this guild
+ */
 fun Guild.retrieveApplicationCommandPermissions(command: Command): RestAction<DiscordApplicationCommandPermissions> =
     retrieveApplicationCommandPermissions(command.id)
 
+/**
+ * Retrieves the [DiscordApplicationCommandPermissions] for the command with [commandId] on this guild
+ */
 fun Guild.retrieveApplicationCommandPermissions(commandId: String): RestAction<DiscordApplicationCommandPermissions> {
     val jda = jda as JDAImpl
 

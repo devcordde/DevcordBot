@@ -19,13 +19,34 @@ package com.github.devcordde.devcordbot.command.slashcommands.permissions
 import com.fasterxml.jackson.annotation.JsonProperty
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
+/**
+ * Extension of [CommandUpdateAction.CommandData] adding permission support.
+ *
+ * @property defaultPermission whether users can use this command by default or not.
+ */
 class PermissiveCommandData(name: String, description: String) : CommandUpdateAction.CommandData(name, description) {
     @get:JsonProperty("default_permission")
     var defaultPermission: Boolean = true
 }
 
+/**
+ * Extension of [CommandUpdateAction.SubcommandData] adding permission support.
+ *
+ * @property defaultPermission whether users can use this command by default or not.
+ */
 class PermissiveSubCommandData(name: String, description: String) :
     CommandUpdateAction.SubcommandData(name, description) {
+    @get:JsonProperty("default_permission")
+    var defaultPermission: Boolean = true
+}
+
+/**
+ * Extension of [CommandUpdateAction.SubcommandGroupData] adding permission support.
+ *
+ * @property defaultPermission whether users can use this command by default or not.
+ */
+class PermissiveSubCommandGroupData(name: String, description: String) :
+    CommandUpdateAction.SubcommandGroupData(name, description) {
     @get:JsonProperty("default_permission")
     var defaultPermission: Boolean = true
 }

@@ -16,71 +16,42 @@
 
 package com.github.devcordde.devcordbot.command
 
-import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.slashcommands.OptionsBuilder
 import com.github.devcordde.devcordbot.command.slashcommands.permissions.DiscordApplicationCommandPermission
-import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveCommandData
-
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
 /**
- * Skeleton of a command.
- * @property aliases list of strings that invoke the command
- * @property name the name used in usage messages
- * @property displayName name that is used on help messages
+ * Base class for all commands.
+ * **DO NOT INHERIT FROM THISE** Use [AbstractSingleCommand] and [AbstractRootCommand] instead
+ *
+ * @property name the name of the command
  * @property description the description of the command
- * @property usage the full usage of the command
- * @property permission the command permissions
- * @property commandAssociations all alias-command associations of sub-commands
- * @property category the [CommandCategory] of the command
- * @property commandPlace th [CommandPlace] of the command
- * @property callback an [Exception] that is supposed to highlight class defention line
+ * @property permission the [Permission] required to execute this command
+ * @property category the [CommandCategory] of this command
+ * @property commandPlace the [CommandPlace] in which this command can be executed
  */
-abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
+abstract class AbstractCommand {
+    /**
+     * Internal field.
+     */
     open val callback: Exception = Exception()
 
-    override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
-
-    abstract val aliases: List<String>
-    val name: String
-        get() = aliases.first()
-    abstract val displayName: String
+    abstract val name: String
     abstract val description: String
-    abstract val usage: String
     abstract val permission: Permission
     abstract val category: CommandCategory
-    abstract val commandPlace: CommandPlace
-    open val options: List<CommandUpdateAction.OptionData> = emptyList()
+    open val commandPlace: CommandPlace = CommandPlace.ALL
+
 
     /**
-     * Invokes the command.
-     * @param context the [Context] in which the command is invoked
+     * Generates a list of [DiscordApplicationCommandPermissions][DiscordApplicationCommandPermission]
+     * required to register slash command permissions
+     *
+     * @param botOwners a list of ids which can bypass [Permission.BOT_OWNER]
+     * @param modId the id of the role for [Permission.MODERATOR]
+     * @param adminId the id of the role for [Permission.ADMIN]
      */
-    abstract suspend fun execute(context: Context)
-
-    internal fun toSlashCommand(): CommandUpdateAction.CommandData {
-        try {
-            val command = PermissiveCommandData(
-                name, description
-            )
-            command.defaultPermission = permission == Permission.ANY
-            options.forEach(command::addOption)
-            commandAssociations.values
-                .asSequence()
-                .distinct()
-                .map(AbstractSubCommand::toSubSlashCommand)
-                .forEach(command::addSubcommand)
-
-            return command
-        } catch (e: Exception) {
-            throw IllegalStateException(
-                "Could not process command with name $name",
-                e
-            )
-        }
-    }
-
     @OptIn(ExperimentalStdlibApi::class)
     fun myPermissions(botOwners: List<Long>, modId: Long, adminId: Long): List<DiscordApplicationCommandPermission> =
         when (permission) {
@@ -114,6 +85,11 @@ abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
         }
 
 
+    /**
+     * Utility function to create slash command options.
+     *
+     * @see OptionsBuilder
+     */
     @OptIn(ExperimentalStdlibApi::class)
     protected fun buildOptions(builder: OptionsBuilder.() -> Unit): List<CommandUpdateAction.OptionData> {
         return buildList {

@@ -16,10 +16,7 @@
 
 package com.github.devcordde.devcordbot.command.impl
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
-import com.github.devcordde.devcordbot.command.CommandClient
-import com.github.devcordde.devcordbot.command.ErrorHandler
-import com.github.devcordde.devcordbot.command.PermissionHandler
+import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Arguments
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
@@ -73,7 +70,13 @@ class CommandClientImpl(
     fun updateCommands(): RestAction<Unit> {
         val commandUpdate = bot.guild.updateCommands()
 
-        val commands = commandAssociations.values.distinct().map(AbstractCommand::toSlashCommand)
+        val commands = commandAssociations.values.distinct().map {
+            when (it) {
+                is AbstractSingleCommand -> it.toSlashCommand()
+                is AbstractRootCommand -> it.toSlashCommand()
+                else -> error("Invalid command: $it")
+            }
+        }
         commandUpdate.addCommands(commands)
         return commandUpdate
             .flatMap { bot.guild.retrieveCommands() }
@@ -141,16 +144,26 @@ class CommandClientImpl(
         }
         GlobalScope.launch(executor + exceptionHandler) {
             logger.info { "Command $command was executed by ${context.member}" }
-            command.execute(context)
+            when (command) {
+                is AbstractSingleCommand -> command.execute(context)
+                is AbstractSubCommand.Command -> command.execute(context)
+            }
         }
     }
 
     private fun resolveCommand(event: SlashCommandEvent): AbstractCommand? {
         val rootCommandName = event.name
         val rootCommand = commandAssociations[rootCommandName] ?: return null
+        if (rootCommand is AbstractSingleCommand) return rootCommand
+        val command = rootCommand as AbstractRootCommand
+        val base = if (event.subcommandGroup != null) {
+            (command.commandAssociations[event.subcommandGroup] as AbstractSubCommand.Group).commandAssociations
+        } else {
+            rootCommand.commandAssociations
+        }
         val subCommandName = event.subcommandName
         if (subCommandName != null) {
-            return rootCommand.commandAssociations[subCommandName]
+            return base[subCommandName]
         }
         return rootCommand
     }

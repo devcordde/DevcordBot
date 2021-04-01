@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractRootCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
@@ -34,27 +34,30 @@ import org.jetbrains.exposed.sql.transactions.transaction
 /**
  * Rank command.
  */
-class RankCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("rank", "r", "level", "chrank")
-    override val displayName: String = "Rank"
+class RankCommand : AbstractRootCommand() {
+    override val name: String = "rank"
     override val description: String = "Zeigt die Ränge von Usern an."
-    override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
-        user("target", "Der User für den die Statistik angezeigt werden soll")
-    }
-
     init {
-//        registerCommands(TopCommand())
+        registerCommands(StatsCommand())
+        registerCommands(TopCommand())
     }
 
-    override suspend fun execute(context: Context) {
-        val user = context.args.optionalUser("target")
-            ?: return sendRankInformation(context.author, context, true)
-        sendRankInformation(user, context)
+    private inner class StatsCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "stats"
+        override val description: String = "Zeigt die Statistik eines Users an"
+        override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+            string("codeblock", "Der auszuführende Codeblock")
+        }
+
+        override suspend fun execute(context: Context) {
+            val user = context.args.optionalUser("target")
+                ?: return sendRankInformation(context.author, context, true)
+            sendRankInformation(user, context)
+        }
     }
 
     private fun sendRankInformation(user: User, context: Context, default: Boolean = false) {
@@ -88,11 +91,9 @@ class RankCommand : AbstractCommand() {
         return stringBuilder.toString()
     }
 
-    private inner class TopCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("top", "t", "leaderboard", "thebest")
-        override val displayName: String = "Top"
+    private inner class TopCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "top"
         override val description: String = "Zeigt die 10 User mit dem höchsten Rang an."
-        override val usage: String = "[offset]"
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
             int("offset", "Der Index um den die Liste verschoben werden soll") {
             }
@@ -137,6 +138,5 @@ class RankCommand : AbstractCommand() {
             }
             context.respond(Embeds.info("Rangliste", users.joinToString("\n"))).queue()
         }
-
     }
 }

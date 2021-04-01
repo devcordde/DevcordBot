@@ -21,10 +21,20 @@ import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.utils.data.DataObject
 
-class PermissionsBuilder(private val permissions: MutableList<DiscordApplicationCommandPermission> = mutableListOf()): MutableList<DiscordApplicationCommandPermission> by permissions {
+/**
+ * Builder for slash command permissions.
+ */
+class PermissionsBuilder(private val permissions: MutableList<DiscordApplicationCommandPermission> = mutableListOf()) :
+    MutableList<DiscordApplicationCommandPermission> by permissions {
 
-    fun role(role: Role, allow: Boolean = true) = role(role.idLong, allow)
+    /**
+     * Set's the permission for [role] to [allow].
+     */
+    fun role(role: Role, allow: Boolean = true): Unit = role(role.idLong, allow)
 
+    /**
+     * Set's the permission for the role with [id] to [allow].
+     */
     fun role(id: Long, allow: Boolean = true) {
         permissions.add(
             DiscordApplicationCommandPermission(
@@ -35,10 +45,19 @@ class PermissionsBuilder(private val permissions: MutableList<DiscordApplication
         )
     }
 
-    fun member(member: Member, allow: Boolean = true) = user(member.user, allow)
+    /**
+     * Set's the permission for [member] to [allow].
+     */
+    fun member(member: Member, allow: Boolean = true): Unit = user(member.user, allow)
 
-    fun user(user: User, allow: Boolean = true) = user(user.idLong, allow)
+    /**
+     * Set's the permission for [user] to [allow].
+     */
+    fun user(user: User, allow: Boolean = true): Unit = user(user.idLong, allow)
 
+    /**
+     * Set's the permission for the user with [id] to [allow].
+     */
     fun user(id: Long, allow: Boolean = true) {
         permissions.add(
             DiscordApplicationCommandPermission(
@@ -49,6 +68,9 @@ class PermissionsBuilder(private val permissions: MutableList<DiscordApplication
         )
     }
 
+    /**
+     * Converts this builder to a [DataObject] which can be sent to Discord.
+     */
     fun build(): DataObject = DataObject.empty()
         .put("permissions", permissions.toDataArray())
 }

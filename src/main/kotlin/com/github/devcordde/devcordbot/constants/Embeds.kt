@@ -17,7 +17,7 @@
 package com.github.devcordde.devcordbot.constants
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
-import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.command.AbstractRootCommand
 import com.github.devcordde.devcordbot.dsl.EmbedConvention
 import com.github.devcordde.devcordbot.dsl.EmbedCreator
 
@@ -91,29 +91,15 @@ object Embeds {
      * Creates a help embed for [command].
      */
     fun command(command: AbstractCommand): EmbedConvention {
-        return info("${command.displayName} - Hilfe", command.description) {
-            addField("Aliases", command.aliases.joinToString(prefix = "`", separator = "`, `", postfix = "`"))
-            addField("Usage", formatCommandUsage(command))
+        return info("${command.name} - Hilfe", command.description) {
+            addField("Name", command.name)
             addField("Permission", command.permission.name)
-            val subCommands = command.registeredCommands.map(::formatSubCommandUsage)
-            if (subCommands.isNotEmpty()) {
+            val subCommands =
+                (command as? AbstractRootCommand)?.registeredCommands?.map(AbstractCommand::name)
+            if (!subCommands.isNullOrEmpty()) {
                 addField("Sub commands", subCommands.joinToString("\n"))
             }
         }
-    }
-
-    private fun formatCommandUsage(command: AbstractCommand): String =
-        "${Constants.firstPrefix} ${command.name} ${command.usage}"
-
-    private fun formatSubCommandUsage(command: AbstractSubCommand): String {
-        val builder = StringBuilder(Constants.firstPrefix)
-        builder.append(' ').append(command.name).append(' ').append(command.usage.replace("\n", "\\n"))
-
-        val prefix = " ${command.parent.name} "
-        builder.insert(Constants.firstPrefix.length, prefix)
-        builder.append(" - ").append(command.description)
-
-        return builder.toString()
     }
 
     private fun EmbedConvention.title(emote: String, title: String) = title("$emote $title")

@@ -16,10 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
-import com.github.devcordde.devcordbot.command.AbstractSubCommand
-import com.github.devcordde.devcordbot.command.CommandCategory
-import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Colors
@@ -42,53 +39,60 @@ import org.jetbrains.exposed.sql.transactions.transaction
 /**
  * Tag command.
  */
-class TagCommand : AbstractCommand() {
+class TagCommand : AbstractRootCommand() {
     private val reservedNames: List<String>
-    override val aliases: List<String> = listOf("tag", "tags", "t")
-    override val displayName: String = "Tag"
+    override val name: String = "tag"
     override val description: String = "Zeigt dir einen Tag an"
-    override val usage: String = "<tagname>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
-    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
-        string("tag", "Der Name des Tags welcher angezeigt werden soll") {
-            isRequired = true
-        }
-    }
+
 
     init {
         registerCommands(
-//            CreateCommand(),
-//            AliasCommand(),
-//            EditCommand(),
-//            InfoCommand(),
-//            DeleteCommand(),
-//            ListCommand(),
-//            FromCommand(),
-//            SearchCommand(),
-//            RawCommand(),
-//            TransferCommand()
+            CreateCommand(),
+            AliasCommand(),
+            EditCommand(),
+            InfoCommand(),
+            DeleteCommand(),
+            ListCommand(),
+            FromCommand(),
+            SearchCommand(),
+            RawCommand(),
+            TransferCommand()
         )
-        reservedNames = registeredCommands.flatMap { it.aliases }
+        reservedNames = registeredCommands.map(AbstractCommand::name)
     }
 
-    override suspend fun execute(context: Context) {
-        val tagName = context.args.string("tag")
-        val tag = transaction { checkNotTagExists(tagName, context) } ?: return
-        context.respond(tag.content)
-            .allowedMentions(listOf(MentionType.ROLE, MentionType.EMOTE, MentionType.CHANNEL))
-            .queue()
-        transaction {
-            tag.usages++
+    fun registerReadCommand(commandClient: CommandClient) = commandClient.registerCommands(TagReadCommand())
+
+    private inner class TagReadCommand : AbstractSingleCommand() {
+        override val name: String = "t"
+        override val description: String = "Zeigt dir einen Tag an"
+        override val permission: Permission = Permission.ANY
+        override val category: CommandCategory = CommandCategory.GENERAL
+        override val commandPlace: CommandPlace = CommandPlace.ALL
+        override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+            string("tag", "Der Name des Tags welcher angezeigt werden soll") {
+                isRequired = true
+            }
+        }
+
+        override suspend fun execute(context: Context) {
+            val tagName = context.args.string("tag")
+            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
+            context.respond(tag.content)
+                .allowedMentions(listOf(MentionType.ROLE, MentionType.EMOTE, MentionType.CHANNEL))
+                .queue()
+            transaction {
+                tag.usages++
+            }
         }
     }
 
-    private inner class CreateCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("create", "c", "add", "a")
-        override val displayName: String = "Add"
+    private inner class CreateCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "create"
         override val description: String = "Erstellt einen neuen Tag"
-        override val usage: String = "<name> \n <text>"
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
             string("name", "Der Name des zu erstellenden Tags") {
                 isRequired = true
@@ -117,11 +121,9 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private inner class AliasCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("alias")
-        override val displayName: String = "Add"
+    private inner class AliasCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "alias"
         override val description: String = "Erstellt einen neuen Tag Alias"
-        override val usage: String = """<alias> <tag> / "<alias>" "<tag>""""
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
             string("alias", "Der Name der Alias für den Tag") {
                 isRequired = true
@@ -153,11 +155,9 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private inner class EditCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("edit", "e")
-        override val displayName: String = "Edit"
+    private inner class EditCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "edit"
         override val description: String = "Editiert einen existierenden Tag"
-        override val usage: String = "<tagname> \n <newcontent>"
 
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
             string("name", "Der Name des zu berarbeitenden Tags") {
@@ -185,12 +185,9 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private inner class InfoCommand : AbstractSubCommand(this) {
-
-        override val aliases: List<String> = listOf("info", "i")
-        override val displayName: String = "Info"
+    private inner class InfoCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "info"
         override val description: String = "Zeigt Informationen über einen Tag an"
-        override val usage: String = "<tag>"
 
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
             string("tag", "Der Name des Tags für den eine Info angezeigt werden soll") {
@@ -238,11 +235,9 @@ class TagCommand : AbstractCommand() {
 
     }
 
-    private inner class DeleteCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("delete", "del", "d", "remove", "rem", "r")
-        override val displayName: String = "delete"
+    private inner class DeleteCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "delete"
         override val description: String = "Löscht einen Tag"
-        override val usage: String = "<tag>"
 
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
             string("tag", "Der Name des Tags der gelöscht soll") {
@@ -268,11 +263,9 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private inner class TransferCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("transfer")
-        override val displayName: String = "Transfer"
+    private inner class TransferCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "transfer"
         override val description: String = "Überschreibt einen Tag an einen anderen Benutzer"
-        override val usage: String = "<@user> <tag>"
 
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
             user("target", "Der neue Besitzer des Tags") {
@@ -306,11 +299,9 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private inner class ListCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("list", "all")
-        override val displayName: String = "List"
+    private inner class ListCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "list"
         override val description: String = "Gibt eine Liste aller Tags aus"
-        override val usage: String = ""
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override suspend fun execute(context: Context) {
@@ -322,11 +313,9 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private inner class FromCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("from", "by")
-        override val displayName: String = "from"
+    private inner class FromCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "from"
         override val description: String = "Gibt eine Liste aller Tags eines bestimmten Benutzers aus"
-        override val usage: String = "<@user>"
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
@@ -344,11 +333,9 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private inner class SearchCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("search", "find")
-        override val displayName: String = "search"
+    private inner class SearchCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "search"
         override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
-        override val usage: String = "<query>"
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
@@ -371,11 +358,9 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private inner class RawCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("raw")
-        override val displayName: String = "Raw"
+    private inner class RawCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "raw"
         override val description: String = "Zeigt dir einen Tag ohne Markdown an"
-        override val usage: String = "<tagname>"
 
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
             string("tag", "Der Name des Tags der unformatiert angezeigt werden soll") {
@@ -390,7 +375,7 @@ class TagCommand : AbstractCommand() {
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
             if (content.length > Message.MAX_CONTENT_LENGTH) {
                 context.respond(Emotes.LOADING).submit()
-                    .thenCombine(HastebinUtil.postErrorToHastebin(content, context.bot.httpClient)) { message, code ->
+                    .thenCombine(HastebinUtil.postErrorToHastebin(content, context.bot.httpClient)) { _, code ->
                         context.ack.editOriginal(code).queue()
                     }
                 return

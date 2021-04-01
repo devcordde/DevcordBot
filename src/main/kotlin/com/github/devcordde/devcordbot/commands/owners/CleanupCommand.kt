@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.owners
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
@@ -32,11 +32,9 @@ import org.jetbrains.exposed.sql.transactions.transaction
 /**
  * Cleanup Command
  */
-class CleanupCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("cleanup")
-    override val displayName: String = "Cleanup"
+class CleanupCommand : AbstractSingleCommand() {
+    override val name: String = "cleanup"
     override val description: String = "Entfernt die Level von ungültigen Membern"
-    override val usage: String = "<tagname>"
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val permission: Permission = Permission.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
