@@ -57,10 +57,10 @@ class BlacklistCommand : AbstractRootCommand() {
             val user = context.args.user("target")
 
             val blacklisted = transaction {
-                val dcUser = DatabaseDevCordUser.findOrCreateById(user.idLong)
+                val devcordUser = DatabaseDevCordUser.findOrCreateById(user.idLong)
 
-                dcUser.blacklisted = !dcUser.blacklisted
-                dcUser.blacklisted
+                devcordUser.blacklisted = !devcordUser.blacklisted
+                devcordUser.blacklisted
             }
 
             context.respond(Embeds.success(if (blacklisted) "User zur Blacklist hinzugefügt." else "User aus der Blacklist entfernt."))

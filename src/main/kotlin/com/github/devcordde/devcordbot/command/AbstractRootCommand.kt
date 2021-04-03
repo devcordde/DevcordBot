@@ -20,11 +20,16 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveCommandData
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 
+/**
+ * Abstract implementation of a slash command with subcommands.
+ */
 abstract class AbstractRootCommand : AbstractCommand(), CommandRegistry<AbstractSubCommand> {
 
     override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
-    open val options: List<CommandUpdateAction.OptionData> = emptyList()
 
+    /**
+     * Generates the nessasary [CommandUpdateAction.CommandData] for slash commands registration.
+     */
     fun toSlashCommand(): CommandUpdateAction.CommandData {
         try {
             val command = PermissiveCommandData(
@@ -36,7 +41,7 @@ abstract class AbstractRootCommand : AbstractCommand(), CommandRegistry<Abstract
                 .distinct()
                 .forEach {
                     with(it) {
-                        command.addMe()
+                        command.register()
                     }
                 }
 

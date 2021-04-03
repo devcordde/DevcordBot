@@ -38,15 +38,28 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
     override val commandPlace: CommandPlace
         get() = parent.commandPlace
 
-    abstract fun CommandUpdateAction.CommandData.addMe()
+    /**
+     * Registers this command to a [CommandUpdateAction.CommandData].
+     */
+    abstract fun CommandUpdateAction.CommandData.register()
 
+    /**
+     * Abstract implementation of a slash sub-command.
+     */
     abstract class Command(parent: AbstractCommand) : AbstractSubCommand(parent) {
 
+        /**
+         * A List of [CommandUpdateAction.OptionData] required for slash command registration.
+         */
         open val options: List<CommandUpdateAction.OptionData> = emptyList()
 
+        /**
+         * Invokes the command.
+         * @param context the [Context] in which the command is invoked
+         */
         abstract suspend fun execute(context: Context)
 
-        override fun CommandUpdateAction.CommandData.addMe() {
+        override fun CommandUpdateAction.CommandData.register() {
             addSubcommand(toCommandData())
         }
 
@@ -68,9 +81,12 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
         }
     }
 
+    /**
+     * Representation of a [sub commands group](https://discord.com/developers/docs/interactions/slash-commands#subcommands-and-subcommand-groups).
+     */
     abstract class Group(parent: AbstractCommand) : AbstractSubCommand(parent),
         CommandRegistry<Command> {
-        override fun CommandUpdateAction.CommandData.addMe() {
+        override fun CommandUpdateAction.CommandData.register() {
             val data = PermissiveSubCommandGroupData(name, description)
             data.defaultPermission = permission == Permission.ANY
             commandAssociations.values

@@ -40,7 +40,6 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.requests.RestAction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.Executors
-import javax.annotation.CheckReturnValue
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -67,7 +66,9 @@ class CommandClientImpl(
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
 
-    @CheckReturnValue
+    /**
+     * Updates the slash commands definitions.
+     */
     fun updateCommands(): RestAction<Unit> {
         val commandUpdate = bot.guild.updateCommands()
 
@@ -87,7 +88,7 @@ class CommandClientImpl(
 
                 val actions = registeredCommands.map { (slashCommand, command) ->
                     slashCommand.updatePermissions(bot.guild.id) {
-                        addAll(command.myPermissions(botOwners, modRole, adminRole))
+                        addAll(command.generatePermissions(botOwners, modRole, adminRole))
                     }
                 }
 

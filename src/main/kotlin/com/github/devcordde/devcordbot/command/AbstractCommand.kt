@@ -53,7 +53,7 @@ abstract class AbstractCommand {
      * @param adminId the id of the role for [Permission.ADMIN]
      */
     @OptIn(ExperimentalStdlibApi::class)
-    fun myPermissions(botOwners: List<Long>, modId: Long, adminId: Long): List<DiscordApplicationCommandPermission> =
+    fun generatePermissions(botOwners: List<Long>, modId: Long, adminId: Long): List<DiscordApplicationCommandPermission> =
         when (permission) {
             Permission.ANY -> emptyList()
             Permission.BOT_OWNER -> botOwners.map {
