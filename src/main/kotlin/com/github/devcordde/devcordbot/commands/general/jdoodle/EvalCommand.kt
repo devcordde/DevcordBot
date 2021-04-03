@@ -22,12 +22,14 @@ import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
-import com.github.devcordde.devcordbot.dsl.editOriginal
+import com.github.devcordde.devcordbot.dsl.editMessage
+import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.await
+import com.github.devcordde.devcordbot.util.readSafe
+import com.github.devcordde.devcordbot.util.timeout
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.exceptions.ParsingException
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
@@ -63,44 +65,46 @@ class EvalCommand : AbstractRootCommand() {
         override val name: String = "execute"
         override val description: String = "Führt den angegebenen Code aus."
         override val options: List<CommandUpdateAction.OptionData> = buildOptions {
-            string("codeblock", "Der auszuführende Codeblock")
+            int("language", "Die Sprache in der das Codesnippet ist") {
+                isRequired = true
+                Language.values().forEach {
+                    addChoice(it.humanReadable, it.ordinal)
+                }
+            }
         }
 
         override suspend fun execute(context: Context) {
-            context.respond(Embeds.loading("Lädt.", "Skript wird ausgeführt.")).await()
-            val text = context.args.string("codeblock")
+            val origin = context.respond(
+                Embeds.info(
+                    "Bitte gebe Code an",
+                    "Bitte sende den Code der ausgeführt werden soll in einer neuen Nachricht"
+                )
+            ).await()
 
-            val blockMatch = Constants.JDOODLE_REGEX.matchEntire(text)
+            val language = Language.values()[context.args.int("language")]
+            val script = context.readSafe()?.contentRaw ?: return origin.timeout().queue()
 
-            if (blockMatch == null || blockMatch.groups.size != 3) {
-                return context.ack.editOriginal(example("Das Skript muss in einem Multiline-Codeblock liegen")).queue()
-            }
+            origin.editMessage(
+                Embeds.info(
+                    "Code erhalten!",
+                    "Dein Code wird nun ausgeführt."
+                )
+            ).queue()
 
-            val languageString = blockMatch.groupValues[1]
-            val script = blockMatch.groupValues[2].trim()
-
-            if (script.isEmpty()) {
-                return context.ack.editOriginal(example("Benutze ein Skript")).queue()
-            }
-
-            val language = try {
-                Language.valueOf(languageString.toUpperCase())
-            } catch (e: IllegalArgumentException) {
-                return context.ack.editOriginal(
-                    Embeds.error(
-                        "Sprache `$languageString` nicht gefunden. Verfügbare Sprachen",
-                        languageList()
-                    )
-                ).queue()
-            }
+            val loading = context.ack.sendMessage(
+                Embeds.loading(
+                    "Code wird ausgeführt.",
+                    "Bitte warten"
+                )
+            ).await()
 
             val response = JDoodle.execute(language, script)
-                ?: return context.ack.editOriginal(internalError()).queue()
+                ?: return loading.editMessage(internalError()).queue()
 
             val output = try {
                 DataObject.fromJson(response)["output"].toString()
             } catch (p: ParsingException) {
-                return context.ack.editOriginal(internalError()).queue()
+                return loading.editMessage(internalError()).queue()
             }
 
             if (output.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
@@ -109,7 +113,7 @@ class EvalCommand : AbstractRootCommand() {
                     "Ergebnis: ${Emotes.LOADING}"
                 ).toEmbedBuilder()
 
-                context.ack.editOriginal(result.build())
+                loading.editMessage(result.build())
 
                 HastebinUtil.postErrorToHastebin(output, context.bot.httpClient).thenAccept { hasteUrl ->
                     context.ack.editOriginal(result.apply {
@@ -118,7 +122,7 @@ class EvalCommand : AbstractRootCommand() {
                     }.build()).queue()
                 }
             } else {
-                context.ack.editOriginal(
+                loading.editMessage(
                     Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```")
                 ).queue()
             }

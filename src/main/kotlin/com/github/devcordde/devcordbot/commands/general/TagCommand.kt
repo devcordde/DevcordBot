@@ -25,9 +25,9 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed
+import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.menu.Paginator
-import com.github.devcordde.devcordbot.util.HastebinUtil
-import com.github.devcordde.devcordbot.util.MentionType
+import com.github.devcordde.devcordbot.util.*
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
@@ -35,6 +35,8 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlin.time.ExperimentalTime
+import kotlin.time.minutes
 
 /**
  * Tag command.
@@ -97,22 +99,28 @@ class TagCommand : AbstractRootCommand() {
             string("name", "Der Name des zu erstellenden Tags") {
                 isRequired = true
             }
-
-            string("content", "Der Inhalt des zu erstellenden Tags") {
-                isRequired = true
-            }
         }
 
+        @OptIn(ExperimentalTime::class)
         override suspend fun execute(context: Context) {
-            val (name, content) = parseTag(context) ?: return
+            val name = context.args.string("name")
             if (transaction { checkTagExists(name, context) }) return
+            val status = context.respond(
+                Embeds.info(
+                    "Bitte gebe den Inhalt an!",
+                    "Bitte gebe den Inhalt des Tags in einer neuen Nachricht an."
+                )
+            ).await()
+
+            val content = context.readSafe(3.minutes)?.contentRaw ?: return status.timeout().queue()
+
             val tag = transaction {
                 Tag.new(name) {
                     this.content = content
                     author = context.author.idLong
                 }
             }
-            context.respond(
+            context.ack.sendMessage(
                 Embeds.success(
                     "Erfolgreich erstellt!",
                     "Der Tag mit dem Namen `${tag.name}` wurde erfolgreich erstellt."

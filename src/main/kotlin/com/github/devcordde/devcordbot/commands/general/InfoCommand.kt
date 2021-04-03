@@ -21,6 +21,7 @@ import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.dsl.editOriginal
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 
 /**
