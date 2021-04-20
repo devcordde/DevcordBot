@@ -16,6 +16,12 @@
 
 package com.github.devcordde.devcordbot.constants
 
-const val TEXT_MAX_LENGTH = 2048
+/**
+ * The maximum length the description and footer of an embed can have
+ */
+const val TEXT_MAX_LENGTH: Int = 2048
 
-const val MAX_CONTENT_LENGTH = 1048
+/**
+ * The maximum amount of characters sendable in one message.
+ */
+const val MAX_CONTENT_LENGTH: Int = 1048

@@ -14,19 +14,12 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.dsl
+package com.github.devcordde.devcordbot.config.helpers
 
-import dev.kord.rest.builder.message.EmbedBuilder
-
-
-/**
- * Lambda that applies onto an [EmbedBuilder].
- *
- * @see embed
- */
-typealias EmbedCreator = EmbedBuilder.() -> Unit
+import com.github.devcordde.devcordbot.core.GameAnimator
 
 /**
- * Creates a new [EmbedBuilder].
+ * Wrapper class for Lists of [GameAnimator.AnimatedGame] to avoid type erasure.
  */
-fun embed(creator: EmbedCreator): EmbedBuilder = EmbedBuilder().apply(creator)
+class AnimatedGameList(private val delegate: List<GameAnimator.AnimatedGame>) :
+    List<GameAnimator.AnimatedGame> by delegate

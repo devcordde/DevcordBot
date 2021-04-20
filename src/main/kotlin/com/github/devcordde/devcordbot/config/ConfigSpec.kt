@@ -16,13 +16,14 @@
 
 package com.github.devcordde.devcordbot.config
 
+import com.github.devcordde.devcordbot.config.helpers.SnowflakeList
 import com.github.devcordde.devcordbot.core.GameAnimator
 import dev.kord.common.entity.Snowflake
 import io.ktor.http.*
 import com.uchuhimo.konf.ConfigSpec as KonfigSpec
 
 internal object ConfigSpec : KonfigSpec() {
-    val xpWhielist by optional<List<String>>(emptyList(), "XP_WHITELIST")
+    val xpWhielist by optional(SnowflakeList(emptyList()), "XP_WHITELIST")
     val hasteHost by optional(Url("https://haste.devcord.xyz"), "HASTE_HOST")
 
     object Discord : KonfigSpec() {
@@ -73,8 +74,8 @@ internal object ConfigSpec : KonfigSpec() {
     }
 
     object Permissions {
-        val botOwners by optional<List<Snowflake>>(emptyList(), "BOT_OWNERS")
-        val modId by required<Snowflake>("BOT_OWNERS")
-        val adminId by required<Snowflake>("BOT_OWNERS")
+        val botOwners by optional(SnowflakeList(emptyList()), "BOT_OWNERS")
+        val modId by required<Snowflake>("MOD_ROLE_ID")
+        val adminId by required<Snowflake>("ADMIN_ROLE_ID")
     }
 }

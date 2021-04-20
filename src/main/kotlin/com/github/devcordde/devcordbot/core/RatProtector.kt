@@ -26,21 +26,25 @@ import dev.kord.core.on
 /**
  * Listener that protects #rat-chat from reactions of non-members.
  *
- * @param channelId the id of the rat channel
- * @param roleId the id of the rat role with bypass permissions
+ * @param bot the bot instance
  */
 class RatProtector(private val bot: DevCordBot) {
 
-    fun Kord.onReactionAdd() = on<ReactionAddEvent> {
-        val user = user.asUser()
-        val member = getUserAsMember()
-        if (user.isBot || channelId != bot.config.devrat.channelId || member?.roles?.any { it.id == bot.config.devrat.roleId } == true || bot.commandClient.permissionHandler.isCovered(
-                Permission.MODERATOR, member, null, false
-            ) == PermissionState.ACCEPTED) return@on
+    /**
+     * Adds the listener for the [ReactionAddEvent].
+     */
+    fun Kord.onReactionAdd() {
+        on<ReactionAddEvent> {
+            val user = user.asUser()
+            val member = getUserAsMember()
+            if (user.isBot || channelId != bot.config.devrat.channelId || member?.roles?.any { it.id == bot.config.devrat.roleId } == true || bot.commandClient.permissionHandler.isCovered(
+                    Permission.MODERATOR, member, null, false
+                ) == PermissionState.ACCEPTED) return@on
 
-        message.deleteReaction(
-            userId,
-            emoji
-        )
+            message.deleteReaction(
+                userId,
+                emoji
+            )
+        }
     }
 }

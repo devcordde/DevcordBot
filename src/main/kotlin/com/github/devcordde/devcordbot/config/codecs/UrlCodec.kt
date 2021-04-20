@@ -21,6 +21,12 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import io.ktor.http.*
 
+/**
+ * Implementation of [JsonDeserializer] to deserialize [Url].
+ */
 object UrlCodec : JsonDeserializer<Url>() {
+    /**
+     * @see JsonDeserializer.deserialize
+     */
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Url = Url(p.valueAsString)
 }

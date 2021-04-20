@@ -43,7 +43,6 @@ import kotlin.math.min
 /**
  * Creates a new [Paginator].
  *
- * @param bot the [DevCordBot] instance
  * @param items the list of items to paginate
  * @param user the user that is allowed to paginate
  * @param context the context to send the paginatable list to

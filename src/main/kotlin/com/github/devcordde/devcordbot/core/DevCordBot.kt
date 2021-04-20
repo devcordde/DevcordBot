@@ -21,6 +21,7 @@ import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import dev.kord.core.Kord
+import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.entity.Guild
 import io.ktor.client.*
 import kotlinx.coroutines.CoroutineScope
@@ -46,7 +47,7 @@ interface DevCordBot : CoroutineScope {
     val gameAnimator: GameAnimator
 
     /**
-     * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
+     * Whether the bot received the [ReadyEvent] or not.
      */
     val isInitialized: Boolean
 
@@ -80,5 +81,9 @@ interface DevCordBot : CoroutineScope {
      */
     val json: Json
 
+    /**
+     * The bots central configuration.
+     * @see Config
+     */
     val config: Config
 }

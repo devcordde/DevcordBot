@@ -21,6 +21,12 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import dev.kord.common.entity.Snowflake
 
+/**
+ * Implementation of [JsonDeserializer] to deserialize [Snowflake] from a [Long].
+ */
 object SnowflakeCodec : JsonDeserializer<Snowflake>() {
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Snowflake = Snowflake(p.longValue)
+    /**
+     * @see JsonDeserializer.deserialize
+     */
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Snowflake = Snowflake(p.valueAsLong)
 }

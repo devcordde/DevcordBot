@@ -27,7 +27,7 @@ abstract class AbstractRootCommand : AbstractCommand(), CommandRegistry<Abstract
     override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
 
     /**
-     * Generates the nessasary [CommandUpdateAction.CommandData] for slash commands registration.
+     * Adds this command to the [ApplicationCommandsCreateBuilder].
      */
     final override fun ApplicationCommandsCreateBuilder.applyCommand() {
         command(name, description) {

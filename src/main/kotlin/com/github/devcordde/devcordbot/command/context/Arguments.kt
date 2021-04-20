@@ -24,16 +24,8 @@ import dev.kord.core.entity.interaction.OptionValue
 
 
 /**
- * A converter that converts a command argument.
- * @param T the type of the converted argument
- */
-typealias ArgumentConverter<T> = (String) -> T
-
-/**
  * Representation of a commands' arguments.
- * @param list the list of arguments
- * @property raw plain arguments string
- * @see List
+ * @property options a map storing a [OptionValue]s with their keys
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Arguments(
@@ -49,12 +41,18 @@ data class Arguments(
     @Suppress("unchecked_cast")
     private fun <T> typedArgument(name: String): OptionValue<T> = requiredArgument(name) as OptionValue<T>
 
+    /**
+     * Retrieves the string option by [name].
+     */
     fun string(name: String): String = typedArgument<String>(name).value
 
+    /**
+     * Retrieves the optional string option by [name].
+     */
     fun optionalString(name: String): String? = optionalTypedArgument<String>(name)?.value
 
     /**
-     * Return the argument at the specified [index] or `null` if there is no argument at that position.
+     * Retrieves the an optional option by [name].
      */
     fun optionalArgument(name: String): OptionValue<*>? = options[name]
 
@@ -63,39 +61,35 @@ data class Arguments(
     private fun <T> optionalTypedArgument(name: String): OptionValue<T>? = optionalArgument(name) as OptionValue<T>?
 
     /**
-     * Return the argument at the specified [index] as an [Int] or `null` if there is no argument at that position, or it is not an [Int].
+     * Retrieves the an optional [Int] option by [name].
      */
     fun optionalInt(name: String): Int? = optionalLong(name)?.toInt()
 
     /**
-     * Return the argument at the specified [index] as a [Long] or `null` if there is no argument at that position, or it is not a [Long].
+     * Retrieves the an optional [Long] option by [name].
      */
     fun optionalLong(name: String): Long? = optionalTypedArgument<Long>(name)?.value
 
     /**
-     * Return the argument at the specified [index] as a [User] or `null` if there is no argument at that position, or it is not a [User].
-     * @param ignoreCase whether the case of the name should be ignored or not
+     * Retrieves the an optional [User] option by [name].
      */
     fun optionalUser(name: String): User? =
         optionalTypedArgument<User>(name)?.value
 
     /**
-     * Return the argument at the specified [index] as a [Member] or `null` if there is no argument at that position, or it is not a [Member].
-     * @param ignoreCase whether the case of the name should be ignored or not
+     * Retrieves the an optional [Member] option by [name].
      */
     fun optionalMember(name: String): Member? =
         optionalTypedArgument<Member>(name)?.value
 
     /**
-     * Return the argument at the specified [index] as a [Role] or `null` if there is no argument at that position, or it is not a [Role].
-     * @param ignoreCase whether the case of the name should be ignored or not
+     * Retrieves the an optional [Role] option by [name].
      */
     fun optionalRole(name: String): Role? =
         optionalTypedArgument<Role>(name)?.value
 
     /**
-     * Return the argument at the specified [index] as a [TextChannel] or `null` if there is no argument at that position, or it is not a [TextChannel].
-     * @param ignoreCase whether the case of the name should be ignored or not
+     * Retrieves the an optional [MessageChannel] option by [name].
      */
     fun optionalChannel(
         name: String
@@ -104,57 +98,38 @@ data class Arguments(
 
 
     /**
-     * Return the argument at the specified [index] or `null` if there is no argument at that position.
-     * And sends a command help if there is no argument at that position.
-     * @param context the context that executed the command
+     * Retrieves the an required option by [name].
      */
     fun requiredArgument(name: String): OptionValue<*> =
         optionalArgument(name) ?: error("Could not find argument $name")
 
     /**
-     * Return the argument at the specified [index] as an [Int] or `null` if there is no argument at that position.
-     * If there is no [Int] at that position it sends a help message.
-     * @param context the context that executed the command
+     * Retrieves the an required [Int] option by [name].
      */
     fun int(name: String): Int = long(name).toInt()
 
     /**
-     * Return the argument at the specified [index] as a [Long] or `null` if there is no argument at that position.
-     * If there is no [Long] at that position it sends a help message.
-     * @param context the context that executed the command
+     * Retrieves the an required [Long] option by [name].
      */
     fun long(name: String): Long = typedArgument<Long>(name).value
 
     /**
-     * Return the argument at the specified [index] as a [User] or `null` if there is no argument at that position.
-     * If there is no [User] at that position it sends a help message.
-     * @param ignoreCase whether the case of the name should be ignored or not
-     * @param context the context that executed the command
+     * Retrieves the an required [User] option by [name].
      */
     fun user(name: String): User = typedArgument<User>(name).value
 
     /**
-     * Return the argument at the specified [index] as a [Member] or `null` if there is no argument at that position.
-     * If there is no [Member] at that position it sends a help message.
-     * @param ignoreCase whether the case of the name should be ignored or not
-     * @param context the context that executed the command
+     * Retrieves the an required [Member] option by [name].
      */
     fun member(name: String): Member = typedArgument<Member>(name).value
 
     /**
-     * Return the argument at the specified [index] as a [Role] or `null` if there is no argument at that position.
-     * If there is no [Role] at that position it sends a help message.
-     * @param ignoreCase whether the case of the name should be ignored or not
-     * @param context the context that executed the command
+     * Retrieves the an required [Role] option by [name].
      */
     fun role(name: String): Role = typedArgument<Role>(name).value
 
     /**
-     * Return the argument at the specified [index] as a [TextChannel] or `null` if there is no argument at that position.
-     * If there is no [TextChannel] at that position it sends a help message.
-     * @param ignoreCase whether the case of the name should be ignored or not
-     * @param context the context that executed the command
+     * Retrieves the an required [MessageChannel] option by [name].
      */
     fun channel(name: String): MessageChannel = typedArgument<MessageChannel>(name).value
-
 }

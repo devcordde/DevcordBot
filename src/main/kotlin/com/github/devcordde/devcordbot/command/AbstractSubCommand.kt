@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.command
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
 import dev.kord.rest.builder.interaction.SubCommandBuilder
 
 /**
@@ -38,7 +39,7 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
         get() = parent.commandPlace
 
     /**
-     * Registers this command to a [CommandUpdateAction.CommandData].
+     * Adds this command to the [ApplicationCommandsCreateBuilder].
      */
     abstract fun ApplicationCommandCreateBuilder.applyCommand()
 

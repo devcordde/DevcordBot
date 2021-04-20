@@ -19,14 +19,38 @@ package com.github.devcordde.devcordbot.config.codecs
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
+import com.github.devcordde.devcordbot.config.codecs.ListCodec.ListContentMapper
 
-class ListCodec<T>(private val separator: String = ";", private val contentMapper: ListContentMapper<T>) :
-    JsonDeserializer<List<T>>() {
+/**
+ * Implementation of [JsonDeserializer] to deserialize delimited lists.
+ *
+ * @param separator the delimiter
+ * @param contentMapper the [ListContentMapper] which converts the contents to [T]
+ * @param L the wrapper list type like SnowflakeList
+ */
+abstract class ListCodec<L : List<T>, T>(
+    private val separator: String = ";",
+    private val contentMapper: ListContentMapper<T>
+) : JsonDeserializer<L>() {
 
+    /**
+     * Functional interfaces to convert the contents of a list.
+     */
     fun interface ListContentMapper<T> {
+        /**
+         * Creates [T] from [string].
+         */
         fun fromString(string: String): T
     }
 
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): List<T> =
-        p.valueAsString.split(separator).map(contentMapper::fromString)
+    /**
+     * @see JsonDeserializer.deserialize
+     */
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): L =
+        p.valueAsString.split(separator).map(contentMapper::fromString).map()
+
+    /**
+     * Converts this into the wrapper type [L].
+     */
+    abstract fun List<T>.map(): L
 }

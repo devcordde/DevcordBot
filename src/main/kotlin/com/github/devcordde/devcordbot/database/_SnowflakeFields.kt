@@ -26,8 +26,18 @@ import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
+/**
+ * Adds a column of type [Snowflake] to the table
+ *
+ * @see SnowflakeColumnType
+ */
 fun Table.snowflake(name: String): Column<Snowflake> = registerColumn(name, SnowflakeColumnType)
 
+/**
+ * Implementation of [ColumnType] which wraps a [Snowflake] in a [Long]
+ * @see Snowflake
+ * @see Snowflake.value
+ */
 object SnowflakeColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
@@ -40,7 +50,13 @@ object SnowflakeColumnType : ColumnType() {
     }
 }
 
+/**
+ * Shorhand for [Entity<Snowflake>][Entity].
+ */
 abstract class SnowflakeEntity(id: EntityID<Snowflake>) : Entity<Snowflake>(id)
 
+/**
+ * Shorhand for [EntityClass<Snowflake>][EntityClass].
+ */
 abstract class SnowflakeEntityClass<out E : SnowflakeEntity>(table: IdTable<Snowflake>, entityType: Class<E>? = null) :
     EntityClass<Snowflake, E>(table, entityType)

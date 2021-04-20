@@ -25,7 +25,9 @@ import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
 import dev.kord.core.behavior.interaction.edit
 import dev.kord.core.behavior.interaction.followUp
 import dev.kord.core.entity.Member
+import dev.kord.core.entity.Message
 import dev.kord.core.entity.User
+import dev.kord.core.entity.interaction.PublicFollowupMessage
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.EmbedBuilder
 
@@ -53,18 +55,37 @@ fun MemberBehavior.asMention(): Regex = "<@!?$id>\\s?".toRegex()
 fun String.limit(amount: Int, contraction: String = "..."): String =
     if (length < amount) this else "${substring(0, amount - contraction.length)}$contraction"
 
-suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder) = createMessage { embed = embedBuilder }
+/**
+ * Creates a new message in this channel containing [embedBuilder].
+ */
+suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder): Message =
+    createMessage { embed = embedBuilder }
 
-suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder) =
+/**
+ * Edits this [public slash command ack][PublicInteractionResponseBehavior] to contain [embedBuilder].
+ */
+suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder): Message =
     edit { embeds = mutableListOf(embedBuilder) }
 
-suspend fun PublicInteractionResponseBehavior.followUp(embedBuilder: EmbedBuilder) =
+/**
+ * Follows up in the interaction thread with [embedBuilder].
+ */
+suspend fun PublicInteractionResponseBehavior.followUp(embedBuilder: EmbedBuilder): PublicFollowupMessage =
     followUp { embeds = mutableListOf(embedBuilder.toRequest()) }
 
-suspend fun MessageBehavior.edit(embedBuilder: EmbedBuilder) = edit { embed = embedBuilder }
+/**
+ * Edits this message to contain [embedBuilder].
+ */
+suspend fun MessageBehavior.edit(embedBuilder: EmbedBuilder): Message = edit { embed = embedBuilder }
 
+/**
+ * This uses [User.Avatar.defaultUrl] if [User.Avatar.isCustom] is `false` otherwhise it uses [User.Avatar.getUrl]
+ */
 val User.effectiveAvatarUrl: String
     get() = with(avatar) { if (isCustom) getUrl(Image.Size.Size64) else defaultUrl }
 
+/**
+ * The users nick name if specified, otherwise the username, effectivly the name that is rendered in the Discord UI.
+ */
 val Member.effictiveName: String
     get() = nickname ?: username

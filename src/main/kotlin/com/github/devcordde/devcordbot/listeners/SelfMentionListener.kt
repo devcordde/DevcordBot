@@ -39,12 +39,14 @@ class SelfMentionListener(private val bot: DevCordBot) {
     /**
      * Listens for new Guild messages.
      */
-    fun Kord.onMessageReceive() = on<MessageCreateEvent> {
-        if (message.author?.isBot == true) return@on
-        val guild = getGuild() ?: return@on
-        if (message.content.matches(guild.getMember(kord.selfId).asMention())) {
-            bot.launch {
-                sendInfo(message.channel, bot)
+    fun Kord.onMessageReceive() {
+        on<MessageCreateEvent> {
+            if (message.author?.isBot == true) return@on
+            val guild = getGuild() ?: return@on
+            if (message.content.matches(guild.getMember(kord.selfId).asMention())) {
+                bot.launch {
+                    sendInfo(message.channel, bot)
+                }
             }
         }
     }

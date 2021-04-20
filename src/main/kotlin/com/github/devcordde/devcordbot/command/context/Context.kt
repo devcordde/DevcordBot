@@ -50,6 +50,7 @@ import dev.kord.rest.builder.message.EmbedBuilder
  * it acts like a communication point between the bot and the interaction thread, all message sending should be
  * handles using this [respond] and [sendHelp] methods will also refer to this
  * @property devCordUser User storing database settings. See [DevCordUser]
+ * @property member the [Member] which executed the command
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Context(

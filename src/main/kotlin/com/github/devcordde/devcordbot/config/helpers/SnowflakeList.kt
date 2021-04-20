@@ -14,19 +14,11 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.dsl
+package com.github.devcordde.devcordbot.config.helpers
 
-import dev.kord.rest.builder.message.EmbedBuilder
-
-
-/**
- * Lambda that applies onto an [EmbedBuilder].
- *
- * @see embed
- */
-typealias EmbedCreator = EmbedBuilder.() -> Unit
+import dev.kord.common.entity.Snowflake
 
 /**
- * Creates a new [EmbedBuilder].
+ * Wrapper class for Lists of [Snowflake] to avoid type erasure.
  */
-fun embed(creator: EmbedCreator): EmbedBuilder = EmbedBuilder().apply(creator)
+class SnowflakeList(private val delegate: List<Snowflake>) : List<Snowflake> by delegate

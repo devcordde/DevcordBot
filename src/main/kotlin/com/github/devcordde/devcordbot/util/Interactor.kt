@@ -36,7 +36,7 @@ import kotlin.time.minutes
 /**
  * Updates a message to a timed out message.
  */
-suspend fun MessageBehavior.timeout() = edit {
+suspend fun MessageBehavior.timeout(): Message = edit {
     Embeds.error("Timed out", "Du hast zu lange gebraucht.")
 }
 

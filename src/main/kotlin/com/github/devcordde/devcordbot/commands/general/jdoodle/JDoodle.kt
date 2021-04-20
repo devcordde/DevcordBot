@@ -16,27 +16,14 @@
 
 package com.github.devcordde.devcordbot.commands.general.jdoodle
 
-import io.github.cdimascio.dotenv.dotenv
-import io.ktor.client.*
+import com.github.devcordde.devcordbot.core.DevCordBot
 import io.ktor.client.request.*
 import kotlinx.serialization.Serializable
-
 
 /**
  * JDoodle Api wrapper
  */
 object JDoodle {
-    private val clientId: String
-    private val clientSecret: String
-
-    /**
-     * Init the values for execution.
-     */
-    init {
-        val env = dotenv()
-        clientId = env["JDOODLE_CLIENTID"].orEmpty()
-        clientSecret = env["JDOODLE_CLIENTSECRET"].orEmpty()
-    }
 
     /**
      * Executes the given script in the given language
@@ -44,11 +31,13 @@ object JDoodle {
      * @param language the script's language
      * @param script the script
      */
-    suspend fun execute(httpClient: HttpClient, language: Language, script: String): JDoodleResponse {
+    suspend fun execute(bot: DevCordBot, language: Language, script: String): JDoodleResponse {
+        val config = bot.config.jdoodle
+        val httpClient = bot.httpClient
         return httpClient.post("https://api.jdoodle.com/v1/execute") {
             body = JDoodleRequest(
-                clientId,
-                clientSecret,
+                config.clientId,
+                config.clientSecret,
                 script,
                 language.lang,
                 language.code
@@ -66,5 +55,10 @@ private data class JDoodleRequest(
     val versionIndex: Int
 )
 
+/**
+ * Response from a JDoodle execute request.
+ *
+ * @property output the output of the code executed
+ */
 @Serializable
 data class JDoodleResponse(val output: String)

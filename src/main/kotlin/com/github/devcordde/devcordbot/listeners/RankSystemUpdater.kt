@@ -39,6 +39,9 @@ import java.time.Instant
  */
 class DatabaseUpdater(private val bot: DevCordBot) {
 
+    /**
+     * Registers all required listeners.
+     */
     fun Kord.registerListeners() {
         onMemberJoin()
         onMemberLeave()
@@ -75,7 +78,9 @@ class DatabaseUpdater(private val bot: DevCordBot) {
             return@on
         }
 
-        val user = DatabaseDevCordUser.findOrCreateById(message.author!!.id.value)
+        val author = message.author ?: return@on
+
+        val user = DatabaseDevCordUser.findOrCreateById(author.id.value)
 
         if (user.blacklisted) {
             return@on

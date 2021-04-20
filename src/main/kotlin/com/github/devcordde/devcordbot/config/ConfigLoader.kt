@@ -19,16 +19,23 @@ package com.github.devcordde.devcordbot.config
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.github.devcordde.devcordbot.config.codecs.AnimatedGameListCodec
 import com.github.devcordde.devcordbot.config.codecs.SnowflakeCodec
+import com.github.devcordde.devcordbot.config.codecs.SnowflakeListCodec
 import com.github.devcordde.devcordbot.config.codecs.UrlCodec
 import com.uchuhimo.konf.BaseConfig
 import io.github.cdimascio.dotenv.dotenv
 
+/**
+ * Loads a new Config from the .env file.
+ */
 fun Config(): Config {
     val objectMapper = jacksonObjectMapper().apply {
         val module = SimpleModule().apply {
             addDeserializer(SnowflakeCodec)
             addDeserializer(UrlCodec)
+            addDeserializer(AnimatedGameListCodec)
+            addDeserializer(SnowflakeListCodec)
         }
 
         registerModule(module)
