@@ -30,7 +30,7 @@ import kotlin.time.seconds
  * Animates the bot's activity status.
  */
 @Suppress("EXPERIMENTAL_API_USAGE")
-class GameAnimator(private val bot: DevCordBot, private val games: List<AnimatedGame>) : Closeable {
+class GameAnimator(private val bot: DevCordBot) : Closeable {
 
     private lateinit var job: Job
 
@@ -58,7 +58,7 @@ class GameAnimator(private val bot: DevCordBot, private val games: List<Animated
     }
 
     private suspend fun animate() {
-        games.random().animate(bot.kord)
+        bot.config.discord.games.random().animate(bot.kord)
     }
 
     /**

@@ -25,10 +25,14 @@ import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
 import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
 import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
+import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.database.TagAliases
 import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.database.Users
+import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
+import com.github.devcordde.devcordbot.listeners.DevmarktRequestUpdater
+import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import com.zaxxer.hikari.HikariDataSource
@@ -39,7 +43,6 @@ import dev.kord.core.event.gateway.DisconnectEvent
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.gateway.ResumedEvent
 import dev.kord.core.on
-import io.github.cdimascio.dotenv.Dotenv
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.json.*
@@ -58,8 +61,7 @@ import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalC
  * General class to manage the Discord bot.
  */
 internal class DevCordBotImpl(
-    games: List<GameAnimator.AnimatedGame>,
-    env: Dotenv,
+    override val config: Config,
     override val debugMode: Boolean,
     override val kord: Kord,
     override val guild: Guild
@@ -67,10 +69,6 @@ internal class DevCordBotImpl(
 
     private val logger = KotlinLogging.logger { }
     private lateinit var dataSource: HikariDataSource
-
-    private val modRoleId = env["MOD_ROLE"]!!.toLong()
-    private val adminRoleId = env["ADMIN_ROLE"]!!.toLong()
-    private val botOwners = env["BOT_OWNERS"]!!.split(',').map { it.toLong() }
 
     override val commandClient: CommandClient =
         CommandClientImpl(this, Constants.prefix, RolePermissionHandler(emptyList()))
@@ -85,9 +83,9 @@ internal class DevCordBotImpl(
     override val github: GithubUtil = GithubUtil(httpClient)
     override val coroutineContext: CoroutineContext = Dispatchers.IO + Job()
 
-    override val googler: Googler = Googler(env["CSE_KEY"]!!, env["CSE_ID"]!!)
+    override val googler: Googler = Googler(this)
 
-    override val gameAnimator = GameAnimator(this, games)
+    override val gameAnimator = GameAnimator(this)
 
     /**
      * Whether the bot received the [ReadyEvent] or not.
@@ -98,17 +96,41 @@ internal class DevCordBotImpl(
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
         logger.info { "Establishing connection to the database …" }
-        connectToDatabase(env)
+        connectToDatabase()
 
         logger.info { "Registering commands …" }
-        registerCommands(env)
-        kord.listeners(env)
+        registerCommands()
+        kord.listeners()
     }
 
-    private fun Kord.listeners(env: Dotenv) {
+    private fun Kord.listeners() {
         whenReady()
         whenDisconnected()
         whenResumed()
+
+        val ratProtector = RatProtector(this@DevCordBotImpl)
+        with(ratProtector) {
+            onReactionAdd()
+        }
+
+        val selfMentionListener = SelfMentionListener(this@DevCordBotImpl)
+        with(selfMentionListener) {
+            onMessageReceive()
+        }
+
+        val databaseUpdater = DatabaseUpdater(this@DevCordBotImpl)
+        with(databaseUpdater) {
+            registerListeners()
+        }
+
+        with(commandClient) {
+            onInteraction()
+        }
+
+        val devmarkt = DevmarktRequestUpdater(this@DevCordBotImpl)
+        with(devmarkt) {
+            registerListeners()
+        }
     }
 
     /**
@@ -148,11 +170,12 @@ internal class DevCordBotImpl(
         gameAnimator.start()
     }
 
-    private fun connectToDatabase(env: Dotenv) {
+    private fun connectToDatabase() {
+        val databaseConfig = config.database
         dataSource = HikariDataSource().apply {
-            jdbcUrl = "jdbc:postgresql://${env["DATABASE_HOST"]}/${env["DATABASE"]}"
-            username = env["DATABASE_USERNAME"]
-            password = env["DATABASE_PASSWORD"]
+            jdbcUrl = "jdbc:postgresql://${databaseConfig.host}/${databaseConfig.database}"
+            username = databaseConfig.username
+            password = databaseConfig.password
         }
         Database.connect(dataSource)
         transaction {
@@ -170,7 +193,7 @@ internal class DevCordBotImpl(
         dataSource.close()
     }
 
-    private fun registerCommands(env: Dotenv) {
+    private fun registerCommands() {
         commandClient.registerCommands(
             HelpCommand(),
             TagCommand().apply {
@@ -187,8 +210,8 @@ internal class DevCordBotImpl(
             GoogleCommand()
         )
 
-        val redeployHost = env["REDEPLOY_HOST"]
-        val redeployToken = env["REDEPLOY_TOKEN"]
+        val redeployHost = config.redeployment.host
+        val redeployToken = config.redeployment.token
         if (redeployHost != null && redeployToken != null && redeployHost.isNotBlank() && redeployToken.isNotBlank()) {
             commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
         }

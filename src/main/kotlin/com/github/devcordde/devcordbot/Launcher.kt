@@ -18,24 +18,16 @@ package com.github.devcordde.devcordbot
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
-import com.github.devcordde.devcordbot.core.GameAnimator
-import dev.kord.common.entity.ActivityType
-import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
-import io.github.cdimascio.dotenv.dotenv
-import io.ktor.http.*
 import io.sentry.Sentry
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import mu.KotlinLogging
 import org.slf4j.LoggerFactory
-import kotlin.system.exitProcess
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
 import org.slf4j.event.Level as SLF4JLevel
-
-private val logger = KotlinLogging.logger {}
 
 /**
  * DevCordBot entry point.
@@ -59,38 +51,18 @@ suspend fun main(args: Array<String>) {
     val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
     rootLogger.level = Level.valueOf(logLevelRaw)
 
-    val env = dotenv()
+    val config = Config()
+
     if (debugMode) {
         Sentry.init("") // Initilizing sentry with null does mute sentry
     } else {
-        env["SENTRY_DSN"]?.let {
-            Sentry.init("$it?stacktrace.app.packages=com.github.devcordde.devcordbot")
-        }
+        Sentry.init("${config.sentry.dsn}?stacktrace.app.packages=com.github.devcordde.devcordbot")
     }
 
-    val token = env["DISCORD_TOKEN"]
+    Constants.hastebinUrl = config.hasteHost
 
-    var games = env["GAMES"]?.split(";")?.map {
-        if (it.startsWith("!")) {
-            GameAnimator.AnimatedGame(it, ActivityType.Listening)
-        } else {
-            GameAnimator.AnimatedGame(it, ActivityType.Game)
-        }
-    }
+    val kord = Kord(config.discord.token)
+    val guild = kord.getGuild(config.discord.guildId) ?: error("Could not find dev guild")
 
-    if (token == null) {
-        logger.error { "The Discord bot token must not be null" }
-        exitProcess(1)
-    }
-    if (games == null) {
-        logger.warn { "Games could not be found, returning to fallback status..." }
-        games = listOf(GameAnimator.AnimatedGame("with errors"))
-    }
-
-    Constants.hastebinUrl = env["HASTE_HOST"]?.let { Url(it) } ?: Url("https://haste.devcord.xyz")
-
-    val kord = Kord(token)
-    val guild = kord.getGuild(Snowflake(env["guild"]!!))!!
-
-    DevCordBot(games, env, debugMode, kord, guild)
+    DevCordBot(config, debugMode, kord, guild)
 }

@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot.listeners
 
+import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.core.DevCordBot
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
@@ -35,12 +36,9 @@ import java.time.Instant
  */
 class DevmarktRequestUpdater(
     private val bot: DevCordBot,
-    private val modChannel: Snowflake,
-    private val accessToken: String,
-    private val baseUrl: String,
-    private val emoteCheckId: Snowflake,
-    private val emoteBlockId: Snowflake
 ) {
+
+    private val config: Config.Devmarkt get() = bot.config.devmarkt
 
     /**
      * Registers the necessary listeners.
@@ -71,14 +69,14 @@ class DevmarktRequestUpdater(
      * Sends the event on an incoming reaction.
      */
     private fun Kord.onMessageReceived() = on<MessageCreateEvent> {
-        if (message.channelId != modChannel
+        if (message.channelId != config.requestChannel
             || message.author?.id != kord.selfId
             || !isNewEntryMessage(message)
         ) {
             return@on
         }
 
-        val check = getGuild()?.getEmoji(emoteCheckId) ?: return@on
+        val check = getGuild()?.getEmoji(config.checkEmote) ?: return@on
         message.addReaction(check)
     }
 
@@ -86,9 +84,9 @@ class DevmarktRequestUpdater(
      * Sends the event on an incoming reaction.
      */
     private fun Kord.onReactionInDevmarktRequestChannel() = on<ReactionAddEvent> {
-        if (message.channelId != modChannel
+        if (message.channelId != config.requestChannel
             || userId == kord.selfId
-            || (emoji as? ReactionEmoji.Custom)?.id != emoteCheckId
+            || (emoji as? ReactionEmoji.Custom)?.id != config.checkEmote
         ) {
             return@on
         }
@@ -100,34 +98,21 @@ class DevmarktRequestUpdater(
 
         val requestId = getFieldValue(realMessage, "Request-ID") ?: return@on
 
-        val author = realMessage.author ?: return@on
-
-        bot.httpClient.post(baseUrl) {
-            url {
-                path("process.php")
-            }
-
-            formData {
-                append("moderator_id", author.id.asString)
-                append("action", "accept")
-                append("access_token", accessToken)
-                append("req_id", requestId)
-            }
-        }
+        process(userId, requestId, action = "accept")
     }
 
     /**
      * Reacts if a message is received
      */
     private fun Kord.onReceiveDenyMessage() = on<MessageCreateEvent> {
-        if (message.channelId != modChannel) {
+        if (message.channelId != config.requestChannel) {
             return@on
         }
 
         val guild = getGuild() ?: return@on
 
-        val check = guild.getEmoji(emoteCheckId)
-        val block = guild.getEmoji(emoteBlockId)
+        val check = guild.getEmoji(config.checkEmote)
+        val block = guild.getEmoji(config.blockEmote)
         val message = message
         val referencedMessage = message.referencedMessage ?: return@on
 
@@ -184,7 +169,7 @@ class DevmarktRequestUpdater(
      * Sends the event on an incoming reaction.
      */
     private fun Kord.onReactonOnReasonMessage() = on<ReactionAddEvent> {
-        if (message.channel.id != modChannel
+        if (message.channel.id != config.requestChannel
             || userId == kord.selfId
         ) {
             return@on
@@ -199,10 +184,10 @@ class DevmarktRequestUpdater(
         val reactionEmoteId = (emoji as? ReactionEmoji.Custom)?.id ?: return@on
         val requestId = getFieldValue(realMessage, "Request-ID") ?: return@on
 
-        if (reactionEmoteId == emoteBlockId) {
+        if (reactionEmoteId == config.blockEmote) {
             message.delete()
         }
-        if (reactionEmoteId != emoteCheckId) {
+        if (reactionEmoteId != config.checkEmote) {
             return@on
         }
 
@@ -210,17 +195,28 @@ class DevmarktRequestUpdater(
 
 
         message.delete()
-        bot.httpClient.post(baseUrl) {
+        process(userId, requestId, reason, "decline")
+    }
+
+    private suspend fun process(
+        userId: Snowflake,
+        requestId: String,
+        reason: String? = null,
+        action: String
+    ) {
+        bot.httpClient.post<Unit>(config.baseUrl) {
             url {
                 path("process.php")
             }
 
             formData {
                 append("moderator_id", userId.asString)
-                append("action", "decline")
-                append("access_token", accessToken)
+                append("action", action)
+                append("access_token", config.accessToken)
                 append("req_id", requestId)
-                append("reason", reason)
+                if (reason != null) {
+                    append("reason", reason)
+                }
             }
         }
     }

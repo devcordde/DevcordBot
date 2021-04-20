@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot.util
 
+import com.github.devcordde.devcordbot.core.DevCordBot
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.customsearch.v1.CustomSearchAPI
@@ -24,7 +25,7 @@ import com.google.api.services.customsearch.v1.model.Result
 /**
  * Utility to google things.
  */
-class Googler(private val apiKey: String, private val engineId: String) {
+class Googler(private val bot: DevCordBot) {
 
     private val search =
         CustomSearchAPI.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
@@ -36,8 +37,8 @@ class Googler(private val apiKey: String, private val engineId: String) {
      */
     fun google(query: String): List<Result> {
         return with(search.cse().list().apply { q = query }) {
-            key = apiKey
-            cx = engineId
+            key = bot.config.cse.key ?: error("Missing CSE key")
+            cx = bot.config.cse.id ?: error("Missing CSE id")
             safe = "active"
             execute()
         }.items ?: emptyList()

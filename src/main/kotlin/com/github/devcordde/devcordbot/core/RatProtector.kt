@@ -18,7 +18,6 @@ package com.github.devcordde.devcordbot.core
 
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
-import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.any
 import dev.kord.core.event.message.ReactionAddEvent
@@ -30,12 +29,12 @@ import dev.kord.core.on
  * @param channelId the id of the rat channel
  * @param roleId the id of the rat role with bypass permissions
  */
-class RatProtector(private val channelId: Snowflake, private val roleId: Snowflake, private val bot: DevCordBot) {
+class RatProtector(private val bot: DevCordBot) {
 
     fun Kord.onReactionAdd() = on<ReactionAddEvent> {
         val user = user.asUser()
         val member = getUserAsMember()
-        if (user.isBot || channelId != this@RatProtector.channelId || member?.roles?.any { it.id == roleId } == true || bot.commandClient.permissionHandler.isCovered(
+        if (user.isBot || channelId != bot.config.devrat.channelId || member?.roles?.any { it.id == bot.config.devrat.roleId } == true || bot.commandClient.permissionHandler.isCovered(
                 Permission.MODERATOR, member, null, false
             ) == PermissionState.ACCEPTED) return@on
 

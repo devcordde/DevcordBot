@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot.listeners
 
+import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.database.Users
@@ -36,7 +37,7 @@ import java.time.Instant
 /**
  * Updates the Database based on Discord events.
  */
-class DatabaseUpdater(private val whiteList: List<Snowflake>) {
+class DatabaseUpdater(private val bot: DevCordBot) {
 
     fun Kord.registerListeners() {
         onMemberJoin()
@@ -70,7 +71,7 @@ class DatabaseUpdater(private val whiteList: List<Snowflake>) {
             return@on
         }
 
-        if (message.channel.id !in whiteList) {
+        if (message.channel.id !in bot.config.xpWhielist) {
             return@on
         }
 

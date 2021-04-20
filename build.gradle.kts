@@ -72,6 +72,10 @@ dependencies {
     implementation("io.ktor", "ktor-client-serialization")
     implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.1.0")
 
+    // Config
+    implementation("com.github.uchuhimo.konf", "konf", "master-SNAPSHOT")
+    implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.12.+")
+
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.8.0")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")

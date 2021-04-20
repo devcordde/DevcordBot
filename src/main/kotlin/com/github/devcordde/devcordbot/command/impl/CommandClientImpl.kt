@@ -86,9 +86,10 @@ class CommandClientImpl(
             if (command == null) {
                 null
             } else {
+                val permissions = bot.config.permissions
                 PartialDiscordGuildApplicationCommandPermissions(
                     it.id,
-                    command.generatePermissions(0,0,0)
+                    command.generatePermissions(permissions.botOwners, permissions.modId, permissions.adminId)
                 )
             }
         }.toList()
@@ -103,7 +104,7 @@ class CommandClientImpl(
     /**
      * Consumer for slash command invocations.
      */
-    fun Kord.onInteraction(): Job = on<InteractionCreateEvent> { dipatchSlashCommand(this) }
+    override fun Kord.onInteraction(): Job = on<InteractionCreateEvent> { dipatchSlashCommand(this) }
 
     private suspend fun dipatchSlashCommand(event: InteractionCreateEvent) {
         if (!bot.isInitialized) return

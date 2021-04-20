@@ -17,6 +17,7 @@
 package com.github.devcordde.devcordbot.core
 
 import com.github.devcordde.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import dev.kord.core.Kord
@@ -78,4 +79,6 @@ interface DevCordBot : CoroutineScope {
      * The [Json] instance used for serialization.
      */
     val json: Json
+
+    val config: Config
 }
