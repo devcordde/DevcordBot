@@ -19,28 +19,31 @@ package com.github.devcordde.devcordbot.menu
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.constants.Colors
 import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.dsl.editMessage
+import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.dsl.embed
-import com.github.devcordde.devcordbot.dsl.sendMessage
-import com.github.devcordde.devcordbot.event.EventSubscriber
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent
-import net.dv8tion.jda.api.exceptions.ErrorResponseException
-import net.dv8tion.jda.api.requests.ErrorResponse
-import java.awt.Color
-import java.util.concurrent.CompletableFuture
+import dev.kord.common.Color
+import dev.kord.common.annotation.KordPreview
+import dev.kord.core.behavior.edit
+import dev.kord.core.entity.Message
+import dev.kord.core.entity.ReactionEmoji
+import dev.kord.core.entity.User
+import dev.kord.core.event.message.ReactionAddEvent
+import dev.kord.core.live.LiveMessage
+import dev.kord.core.live.live
+import dev.kord.core.live.onReactionAdd
+import dev.kord.core.live.onShutDown
+import dev.kord.x.emoji.DiscordEmoji
+import dev.kord.x.emoji.Emojis
+import dev.kord.x.emoji.addReaction
+import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.min
 
 /**
- * Reaction and embed based paginator for string lists.
+ * Creates a new [Paginator].
+ *
+ * @param bot the [DevCordBot] instance
  * @param items the list of items to paginate
  * @param user the user that is allowed to paginate
  * @param context the context to send the paginatable list to
@@ -51,81 +54,114 @@ import kotlin.math.min
  * @param loadingDescription the description of the embed displayed while loading
  * @param color the color of the embed
  */
-class Paginator(
-    private val items: List<CharSequence>,
-    private val user: User,
+@Suppress("FunctionName")
+suspend fun Paginator(
+    items: List<CharSequence>,
+    user: User,
     context: Context,
-    private val title: String,
-    private val timeoutMillis: Long = TimeUnit.SECONDS.toMillis(15),
+    title: String,
+    timeoutMillis: Long = TimeUnit.SECONDS.toMillis(15),
     firstPage: Int = 1,
-    private val itemsPerPage: Int = 8,
+    itemsPerPage: Int = 8,
     loadingTitle: String = "Bitte warten!",
     loadingDescription: String = "Bitte warte, während die Liste geladen wird.",
-    private val color: Color = Colors.BLUE
-) {
+    color: Color = Colors.BLUE
+): Paginator {
+    require(itemsPerPage > 0) { "Items per page must be > 0" }
+    require(items.isNotEmpty()) { "Items must not be empty" }
+    val pages = ceil(items.size.toDouble() / itemsPerPage).toInt()
+    require(firstPage <= pages) { "First page must exist" }
 
-    private val pages: Int
-    private var currentPage = firstPage
-    private val message: Message
-    private lateinit var canceller: Job
+    val message = context.respond(Embeds.loading(loadingTitle, loadingDescription))
+    if (pages > 1) {
+        Paginator.addReactions(message)
+    }
+
+    return Paginator(
+        context.bot,
+        items,
+        user,
+        title,
+        timeoutMillis,
+        itemsPerPage,
+        color,
+        firstPage,
+        pages,
+        message.live(),
+    )
+}
+
+/**
+ * Reaction and embed based paginator for string lists.
+ * @see Paginator
+ */
+@OptIn(KordPreview::class)
+class Paginator internal constructor(
+    private val bot: DevCordBot,
+    private val items: List<CharSequence>,
+    private val user: User,
+    private val title: String,
+    private val timeoutMillis: Long = TimeUnit.SECONDS.toMillis(15),
+    private val itemsPerPage: Int = 8,
+    private val color: Color = Colors.BLUE,
+    private var currentPage: Int,
+    private val pages: Int,
+    private val message: LiveMessage,
+) : CoroutineScope by bot {
 
     init {
-        require(itemsPerPage > 0) { "Items per page must be > 0" }
-        require(items.isNotEmpty()) { "Items must not be empty" }
-        pages = ceil(items.size.toDouble() / itemsPerPage).toInt()
-        require(firstPage <= pages) { "First page must exist" }
-        if (pages > 1) {
-            message = context.ack.sendMessage(Embeds.loading(loadingTitle, loadingDescription))
-                .complete()
-            context.jda.addEventListener(this)
-            CompletableFuture.allOf(*listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).map {
-                message.addReaction(it).submit()
-            }.toTypedArray())
-                .thenAccept {
-                    paginate(currentPage)
-                }
-                .exceptionally {
-                    context.commandClient.errorHandler.handleException(it, context, Thread.currentThread())
-                    close()
-                    null // You cannot return Void
-                }
-            rescheduleTimeout()
+        launch {
+            paginate(currentPage)
+        }
+        if (pages == 1) {
+            launch {
+                close()
+            }
         } else {
-            message = context.ack.sendMessage(renderEmbed(items)).complete()
+            rescheduleTimeout()
+
+            message.onShutDown {
+                canceller.cancel()
+            }
+
+            message.onReactionAdd {
+                onReaction(it)
+            }
         }
     }
 
-    private fun paginate(destinationPage: Int) {
+    private lateinit var canceller: Job
+
+    private suspend fun paginate(destinationPage: Int) {
         currentPage = destinationPage
         val start: Int = (destinationPage - 1) * itemsPerPage
         val end = min(items.size, destinationPage * itemsPerPage)
         val rows = items.subList(start, end)
-        return message.editMessage(renderEmbed(rows)).queue()
+        message.message.edit { embed = renderEmbed(rows) }
     }
 
     private fun renderEmbed(rows: List<CharSequence>) = embed {
         color = this@Paginator.color
-        title(title)
+        title = this@Paginator.title
         val rowBuilder = StringBuilder()
         rows.indices.forEach {
             rowBuilder.append('`').append(it + (itemsPerPage * (currentPage - 1)) + 1).append("`. ")
                 .appendLine(rows[it])
         }
-        description = rowBuilder
-        footer("Seite $currentPage/$pages (${rows.size} Einträge)")
+        description = rowBuilder.toString()
+        footer {
+            text = "Seite $currentPage/$pages (${rows.size} Einträge)"
+        }
     }
 
-    /**
-     * Listens for new reactions.
-     */
-    @EventSubscriber
-    fun onReaction(event: GuildMessageReactionAddEvent) {
-        if (event.reactionEmote.isEmote || event.user != user || event.messageIdLong != message.idLong) return
-        if (event.user != event.jda.selfUser) {
-            event.reaction.removeReaction(event.user).queue()
+    private suspend fun onReaction(event: ReactionAddEvent) {
+        val emoji = event.emoji as? ReactionEmoji.Unicode ?: return
+        if (event.user != user) return
+        if (event.user.id != event.kord.selfId) {
+            event.message.deleteReaction(event.userId, event.emoji)
         } else return // Don't react to the bots reactions
 
-        val nextPage = when (event.reactionEmote.emoji) {
+        val nextPage = when (Emojis[emoji.name]) {
             BULK_LEFT -> 1
             LEFT -> currentPage - 1
             RIGHT -> currentPage + 1
@@ -145,16 +181,8 @@ class Paginator(
         paginate(nextPage)
     }
 
-    /**
-     * Cancells timeout keeper when message get's deleted
-     */
-    @EventSubscriber
-    fun onMessageDeletion(event: GuildMessageDeleteEvent) {
-        canceller.cancel()
-    }
-
     private fun rescheduleTimeout() {
-        if (::canceller.isInitialized) {
+        if (canceller.isActive) {
             canceller.cancel()
         }
         canceller = GlobalScope.launch {
@@ -163,17 +191,22 @@ class Paginator(
         }
     }
 
-    private fun close(cancelJob: Boolean = true) {
+    private suspend fun close(cancelJob: Boolean = true) {
         if (cancelJob) canceller.cancel()
-        message.clearReactions().queue(null, ErrorResponseException.ignore(ErrorResponse.UNKNOWN_MESSAGE))
-        message.jda.removeEventListener(this)
+        message.shutDown()
+        message.message.deleteAllReactions()
     }
 
     companion object {
-        private const val BULK_LEFT: String = """⏪"""
-        private const val LEFT: String = """◀"""
-        private const val STOP: String = """⏹"""
-        private const val RIGHT: String = """▶"""
-        private const val BULK_RIGHT: String = """⏩"""
+        private val BULK_LEFT: DiscordEmoji = Emojis.rewind
+        private val LEFT: DiscordEmoji = Emojis.arrowLeft
+        private val STOP: DiscordEmoji = Emojis.stopButton
+        private val RIGHT: DiscordEmoji = Emojis.arrowRight
+        private val BULK_RIGHT: DiscordEmoji = Emojis.fastForward
+
+        internal suspend fun addReactions(message: Message) =
+            listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).forEach {
+                message.addReaction(it)
+            }
     }
 }

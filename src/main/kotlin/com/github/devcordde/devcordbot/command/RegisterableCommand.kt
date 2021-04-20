@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
+ * Copyright 2021 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,11 +14,16 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.util
+package com.github.devcordde.devcordbot.command
 
-import net.dv8tion.jda.api.entities.Message
+import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
 
 /**
- * Convenience alias for [Message.MentionType].
+ * A command which can be registered (root commands).
  */
-typealias MentionType = Message.MentionType
+interface RegisterableCommand {
+    /**
+     * Registers the command to this [ApplicationCommandsCreateBuilder].
+     */
+    fun ApplicationCommandsCreateBuilder.applyCommand()
+}

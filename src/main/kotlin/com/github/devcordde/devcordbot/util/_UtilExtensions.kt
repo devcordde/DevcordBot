@@ -16,13 +16,19 @@
 
 package com.github.devcordde.devcordbot.util
 
-import kotlinx.coroutines.future.await
-import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.Member
-import net.dv8tion.jda.api.requests.RestAction
-import net.dv8tion.jda.api.utils.data.DataObject
+import dev.kord.core.behavior.MemberBehavior
+import dev.kord.core.behavior.MessageBehavior
+import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.channel.createMessage
+import dev.kord.core.behavior.edit
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
+import dev.kord.core.behavior.interaction.edit
+import dev.kord.core.behavior.interaction.followUp
+import dev.kord.core.entity.Member
+import dev.kord.core.entity.User
+import dev.kord.rest.Image
+import dev.kord.rest.builder.message.EmbedBuilder
 
-private val httpLogger = KotlinLogging.logger("HttpClient")
 
 /**
  * Checks whether a string is numeric or not.
@@ -37,9 +43,9 @@ fun String.isNumeric(): Boolean = all(Char::isDigit)
 fun String.isNotNumeric(): Boolean = !isNumeric()
 
 /**
- * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
+ * Modification of [MemberBehavior.mention] which can validate any format.
  */
-fun Member.asMention(): Regex = "<@!?$id>\\s?".toRegex()
+fun MemberBehavior.asMention(): Regex = "<@!?$id>\\s?".toRegex()
 
 /**
  * Limits the length of a string by [amount] and adds [contraction] at the end.
@@ -47,13 +53,18 @@ fun Member.asMention(): Regex = "<@!?$id>\\s?".toRegex()
 fun String.limit(amount: Int, contraction: String = "..."): String =
     if (length < amount) this else "${substring(0, amount - contraction.length)}$contraction"
 
-/**
- * Public map constructor of [DataObject].
- */
-class MapJsonObject(map: Map<String, Any>) : DataObject(map)
+suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder) = createMessage { embed = embedBuilder }
 
-/**
- * **Only use in coroutines**
- * Awaits the [RestAction] to finish
- */
-suspend fun <T> RestAction<T>.await(): T = submit().await()
+suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder) =
+    edit { embeds = mutableListOf(embedBuilder) }
+
+suspend fun PublicInteractionResponseBehavior.followUp(embedBuilder: EmbedBuilder) =
+    followUp { embeds = mutableListOf(embedBuilder.toRequest()) }
+
+suspend fun MessageBehavior.edit(embedBuilder: EmbedBuilder) = edit { embed = embedBuilder }
+
+val User.effectiveAvatarUrl: String
+    get() = with(avatar) { if (isCustom) getUrl(Image.Size.Size64) else defaultUrl }
+
+val Member.effictiveName: String
+    get() = nickname ?: username

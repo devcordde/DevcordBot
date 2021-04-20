@@ -23,13 +23,11 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
-import com.github.devcordde.devcordbot.dsl.editMessage
-import com.github.devcordde.devcordbot.dsl.editOriginal
+import com.github.devcordde.devcordbot.constants.TEXT_MAX_LENGTH
 import com.github.devcordde.devcordbot.util.HastebinUtil
-import com.github.devcordde.devcordbot.util.await
+import com.github.devcordde.devcordbot.util.edit
 import com.github.devcordde.devcordbot.util.limit
-import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
@@ -42,7 +40,8 @@ class EvalCommand : AbstractSingleCommand() {
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
-    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+
+    override fun ApplicationCommandCreateBuilder.applyOptions() {
         string("code", "Der auszuführende Code")
     }
 
@@ -52,7 +51,7 @@ class EvalCommand : AbstractSingleCommand() {
                 "Code wird kompiliert und ausgeführt",
                 "Bitte warte einen Augenblick während dein Script kompiliert und ausgeführt wird"
             )
-        ).await()
+        )
 
         val scriptEngine = ScriptEngineManager().getEngineByName("kotlin")
         val script = context.args.string("code")
@@ -73,16 +72,16 @@ class EvalCommand : AbstractSingleCommand() {
         scriptEngine.put("context", context)
         val result = try {
             val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
-            if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
+            if (evaluation.length > TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
                 val result = Embeds.info(
                     "Erfolgreich ausgeführt!",
                     "Ergebnis: ${Emotes.LOADING}"
                 )
                 val hasteUrl = HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient)
-                message.editMessage(result.apply {
+                message.edit(result.apply {
                     @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
                     description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                }).queue()
+                })
                 result
             } else {
                 Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$evaluation```")
@@ -93,12 +92,12 @@ class EvalCommand : AbstractSingleCommand() {
                 "Es ist folgender Fehler aufgetreten: ```${e.message?.limit(1024)}``` Detailierter Fehler: ${Emotes.LOADING}"
             )
             val hasteUrl = HastebinUtil.postErrorToHastebin(e.stackTraceToString(), context.bot.httpClient)
-            message.editMessage(result.apply {
+            message.edit(result.apply {
                 @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
                 description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-            }).queue()
+            })
             result
         }
-        context.ack.editOriginal(result)
+        context.ack.edit(result)
     }
 }

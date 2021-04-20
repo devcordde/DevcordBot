@@ -14,11 +14,8 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.dsl
+package com.github.devcordde.devcordbot.constants
 
-import dev.kord.rest.builder.message.EmbedBuilder
+const val TEXT_MAX_LENGTH = 2048
 
-
-typealias EmbedCreator = EmbedBuilder.() -> Unit
-
-fun embed(creator: EmbedCreator) = EmbedBuilder().apply(creator)
+const val MAX_CONTENT_LENGTH = 1048

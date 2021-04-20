@@ -20,6 +20,9 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.core.GameAnimator
+import dev.kord.common.entity.ActivityType
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.Kord
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.*
 import io.sentry.Sentry
@@ -27,7 +30,6 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.Activity
 import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
@@ -38,7 +40,7 @@ private val logger = KotlinLogging.logger {}
 /**
  * DevCordBot entry point.
  */
-fun main(args: Array<String>) {
+suspend fun main(args: Array<String>) {
     val cliParser = ArgParser("devcordbot")
     val debugMode by cliParser.option(
         ArgType.Boolean,
@@ -70,9 +72,9 @@ fun main(args: Array<String>) {
 
     var games = env["GAMES"]?.split(";")?.map {
         if (it.startsWith("!")) {
-            GameAnimator.AnimatedGame(it, Activity.ActivityType.LISTENING)
+            GameAnimator.AnimatedGame(it, ActivityType.Listening)
         } else {
-            GameAnimator.AnimatedGame(it, Activity.ActivityType.DEFAULT)
+            GameAnimator.AnimatedGame(it, ActivityType.Game)
         }
     }
 
@@ -87,5 +89,8 @@ fun main(args: Array<String>) {
 
     Constants.hastebinUrl = env["HASTE_HOST"]?.let { Url(it) } ?: Url("https://haste.devcord.xyz")
 
-    DevCordBot(token, games, env, debugMode)
+    val kord = Kord(token)
+    val guild = kord.getGuild(Snowflake(env["guild"]!!))!!
+
+    DevCordBot(games, env, debugMode, kord, guild)
 }

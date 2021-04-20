@@ -50,31 +50,4 @@ object Constants {
         .withLocale(Locale.GERMAN)
         .withZone(ZoneId.of("Europe/Berlin")) // To lazy to set server timezone :P
 
-    /**
-     * Regex that matches jdoodle code blocks.
-     */
-    val JDOODLE_REGEX: Regex = "```([A-z]+)\n([^`]*)```".toRegex(RegexOption.MULTILINE)
-
-
-    /**
-     * Regex that matches discord code blocks.
-     * https://regex101.com/r/SBv5RG/3
-     */
-    val CODE_BLOCK_REGEX: Regex =
-        "```(actionscript3|apache|applescript|asp|brainfuck|c|cfm|clojure|cmake|coffee-script|coffeescript|coffee|cpp|cs|csharp|css|csv|bash|diff|elixir|erb|go|haml|http|java|javascript|json|jsx|less|lolcode|make|markdown|matlab|nginx|objectivec|pascal|PHP|Perl|python|profile|rust|salt|saltstate|shell|sh|zsh|bash|sql|scss|sql|svg|swift|rb|jruby|ruby|smalltalk|vim|viml|volt|vhdl|vue|xml|yaml)?([^`]*)```".toRegex(
-            RegexOption.MULTILINE
-        )
-
-    /**
-     * A regex matching a lot of common (non-user) packages.
-     *
-     * Results in (?:<packages>).*
-     */
-    val KNOWN_PACKAGES: Regex = listOf(
-        "java", "javax", "javafx", // Java
-        "com.google", "org.apache", "com.jetbrains", "org.jetbrains", "okhttp3", // publishers of big libs
-        "net.minecraft", "org.bukkit", "org.spigotmc", "net.md_5", "co.aikar", "com.destroystokyo", // mc servers
-        "net.milkbowl", "me.clip", "org.sk89q", "com.onarandombox" // known libraries
-    ).joinToString(prefix = "(?:", separator = "|", postfix = ").*").toRegex()
-
 }

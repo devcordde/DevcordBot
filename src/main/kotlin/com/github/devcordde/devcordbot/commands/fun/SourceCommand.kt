@@ -20,7 +20,7 @@ import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 
 /**
  * Source command.
@@ -32,17 +32,20 @@ class SourceCommand : AbstractSingleCommand() {
     override val category: CommandCategory = CommandCategory.FUN
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+
+    override fun ApplicationCommandCreateBuilder.applyOptions() {
         string("command", "Der Name des Commands für den der SourceCode angezeigt werden soll")
     }
 
     override suspend fun execute(context: Context) {
         val commandName = context.args.optionalString("command")
-        val command = commandName?.let { findCommand(it, context) } ?: return context.respond(
-            Embeds.info(
-                "Quellcode:", "Den code vom Bot findest du [hier]($GITHUB_BASE)"
+        val command = commandName?.let { findCommand(it, context) } ?: return run {
+            context.respond(
+                Embeds.info(
+                    "Quellcode:", "Den code vom Bot findest du [hier]($GITHUB_BASE)"
+                )
             )
-        ).queue()
+        }
         val parentCommand = getParent(command)
 
         val definitionLine = command.callback.stackTrace[1].lineNumber
@@ -58,7 +61,7 @@ class SourceCommand : AbstractSingleCommand() {
                 "${command.name} - Source",
                 "Den Quellcode des Commands findest du hier: [$classUrl]($classUrl)"
             )
-        ).queue()
+        )
     }
 
     private fun findCommand(argument: String, context: Context): AbstractCommand? {

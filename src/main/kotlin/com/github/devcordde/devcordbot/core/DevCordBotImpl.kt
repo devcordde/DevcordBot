@@ -29,15 +29,16 @@ import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.database.TagAliases
 import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.database.Users
-import com.github.devcordde.devcordbot.event.AnnotatedEventManager
-import com.github.devcordde.devcordbot.event.EventSubscriber
-import com.github.devcordde.devcordbot.event.MessageListener
-import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
-import com.github.devcordde.devcordbot.listeners.DevmarktRequestUpdater
-import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import com.zaxxer.hikari.HikariDataSource
+import dev.kord.common.entity.PresenceStatus
+import dev.kord.core.Kord
+import dev.kord.core.entity.Guild
+import dev.kord.core.event.gateway.DisconnectEvent
+import dev.kord.core.event.gateway.ReadyEvent
+import dev.kord.core.event.gateway.ResumedEvent
+import dev.kord.core.on
 import io.github.cdimascio.dotenv.Dotenv
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -47,23 +48,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.OnlineStatus
-import net.dv8tion.jda.api.entities.Activity
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.events.DisconnectEvent
-import net.dv8tion.jda.api.events.ReadyEvent
-import net.dv8tion.jda.api.events.ReconnectedEvent
-import net.dv8tion.jda.api.events.ResumedEvent
-import net.dv8tion.jda.api.requests.GatewayIntent
-import net.dv8tion.jda.api.requests.RestAction
-import net.dv8tion.jda.api.utils.MemberCachePolicy
-import net.dv8tion.jda.api.utils.cache.CacheFlag
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 import kotlin.coroutines.CoroutineContext
 import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 
@@ -71,14 +58,14 @@ import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalC
  * General class to manage the Discord bot.
  */
 internal class DevCordBotImpl(
-    token: String,
     games: List<GameAnimator.AnimatedGame>,
     env: Dotenv,
-    override val debugMode: Boolean
+    override val debugMode: Boolean,
+    override val kord: Kord,
+    override val guild: Guild
 ) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
-    private val restActionLogger = KotlinLogging.logger("RestAction")
     private lateinit var dataSource: HikariDataSource
 
     private val modRoleId = env["MOD_ROLE"]!!.toLong()
@@ -86,7 +73,7 @@ internal class DevCordBotImpl(
     private val botOwners = env["BOT_OWNERS"]!!.split(',').map { it.toLong() }
 
     override val commandClient: CommandClient =
-        CommandClientImpl(this, Constants.prefix, modRoleId, adminRoleId, botOwners, RolePermissionHandler(botOwners))
+        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(emptyList()))
     override val json: Json = Json {
         ignoreUnknownKeys = true
     }
@@ -100,41 +87,7 @@ internal class DevCordBotImpl(
 
     override val googler: Googler = Googler(env["CSE_KEY"]!!, env["CSE_ID"]!!)
 
-    override val jda: JDA = JDABuilder.create(
-        token,
-        GatewayIntent.getIntents(
-            GatewayIntent.ALL_INTENTS and GatewayIntent.getRaw(
-                GatewayIntent.GUILD_MESSAGE_TYPING,
-                GatewayIntent.DIRECT_MESSAGE_TYPING
-            ).inv()
-        )
-    )
-        .setEventManager(AnnotatedEventManager())
-        .disableCache(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
-        .setMemberCachePolicy(MemberCachePolicy.ALL)
-        .setActivity(Activity.playing("Starting ..."))
-        .setStatus(OnlineStatus.DO_NOT_DISTURB)
-        .addEventListeners(
-            RatProtector(env["RAT_CHANNEL_ID"]!!.toLong(), env["RAT_ROLE_ID"]!!.toLong(), this),
-            MessageListener(),
-            this@DevCordBotImpl,
-            SelfMentionListener(this),
-            DatabaseUpdater(env["XP_WHITELIST"]!!.split(",")),
-            commandClient,
-            DevmarktRequestUpdater(
-                env["DEVMARKT_REQUEST_CHANNEL"]!!,
-                env["BOT_ACCESS_TOKEN"]!!,
-                env["DEVMARKT_BASE_URL"]!!,
-                env["EMOTE_CHECK_ID"]!!,
-                env["EMOTE_BLOCK_ID"]!!,
-            ),
-        )
-        .build()
-    override val gameAnimator = GameAnimator(jda, games)
-
-    private val guildId = env["GUILD_ID"]!!
-    override val guild: Guild
-        get() = jda.getGuildById(guildId)!!
+    override val gameAnimator = GameAnimator(this, games)
 
     /**
      * Whether the bot received the [ReadyEvent] or not.
@@ -144,34 +97,39 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
-        RestAction.setDefaultFailure {
-            restActionLogger.error(it) { "An error occurred while executing restaction" }
-        }
-
         logger.info { "Establishing connection to the database …" }
         connectToDatabase(env)
 
         logger.info { "Registering commands …" }
         registerCommands(env)
+        kord.listeners(env)
+    }
+
+    private fun Kord.listeners(env: Dotenv) {
+        whenReady()
+        whenDisconnected()
+        whenResumed()
     }
 
     /**
      * Fired when the Discord bot has started successfully.
      */
-    @EventSubscriber
-    fun whenReady(event: ReadyEvent) {
+    private fun Kord.whenReady() = on<ReadyEvent> {
         logger.info { "Received Ready event initializing bot internals …" }
         isInitialized = true
-        event.jda.presence.setStatus(OnlineStatus.ONLINE)
+        kord.editPresence {
+            status = PresenceStatus.Online
+        }
         gameAnimator.start()
+
+        (commandClient as CommandClientImpl).updateCommands()
     }
 
     /**
      * Fired when the Discord connection gets interrupted
      */
-    @EventSubscriber
-    fun whenDisconnected(event: DisconnectEvent) {
-        logger.warn { "Bot got disconnected (code: ${event.closeCode}) disabling Discord specific internals" }
+    private fun Kord.whenDisconnected() = on<DisconnectEvent> {
+        logger.warn { "Bot got disconnected (code: $this) disabling Discord specific internals" }
         isInitialized = false
         gameAnimator.stop()
     }
@@ -179,14 +137,7 @@ internal class DevCordBotImpl(
     /**
      * Fired when the bot can resume its previous connections when reconnecting.
      */
-    @EventSubscriber
-    fun whenResumed(@Suppress("UNUSED_PARAMETER") event: ResumedEvent) = reinitialize()
-
-    /**
-     * Fired when the bot reconnects.
-     */
-    @EventSubscriber
-    fun whenReconnect(@Suppress("UNUSED_PARAMETER") event: ReconnectedEvent) = reinitialize()
+    private fun Kord.whenResumed() = on<ResumedEvent> { reinitialize() }
 
     private fun reinitialize() {
         logger.info {
@@ -241,7 +192,5 @@ internal class DevCordBotImpl(
         if (redeployHost != null && redeployToken != null && redeployHost.isNotBlank() && redeployToken.isNotBlank()) {
             commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
         }
-
-        (commandClient as CommandClientImpl).updateCommands().queue()
     }
 }

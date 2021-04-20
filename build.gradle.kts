@@ -27,6 +27,7 @@ repositories {
     mavenCentral()
     maven("https://kotlin.bintray.com/kotlinx")
     maven("https://m2.dv8tion.net/releases")
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
     maven("https://jitpack.io")
 }
 
@@ -56,9 +57,8 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "4.0.3")
 
     // Discord
-    implementation("com.github.dv8fromtheworld", "jda", "e3d2bd7398")
-    implementation("club.minnced:opus-java:1.1.0")
-    implementation("com.fasterxml.jackson.core", "jackson-databind", "2.9.9.2")
+    implementation("dev.kord", "kord-core", "0.7.0-RC2")
+    implementation("dev.kord.x", "emoji", "0.5.0-SNAPSHOT")
 
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
@@ -89,7 +89,8 @@ tasks {
         kotlinOptions {
             jvmTarget = "14"
             useIR = true
-            freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
+            freeCompilerArgs =
+                freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn" + "-Xopt-in=dev.kord.common.annotation.KordPreview" + "-Xopt-in=dev.kord.common.annotation.KordExperimental"
         }
     }
 

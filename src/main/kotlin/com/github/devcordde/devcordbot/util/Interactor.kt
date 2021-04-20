@@ -18,16 +18,17 @@ package com.github.devcordde.devcordbot.util
 
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.dsl.editMessage
-import com.github.devcordde.devcordbot.event.EventSubscriber
+import dev.kord.core.behavior.MessageBehavior
+import dev.kord.core.behavior.edit
+import dev.kord.core.entity.Message
+import dev.kord.core.event.message.MessageCreateEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.withTimeout
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import net.dv8tion.jda.api.requests.restaction.MessageAction
-import kotlin.coroutines.resume
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
@@ -35,9 +36,9 @@ import kotlin.time.minutes
 /**
  * Updates a message to a timed out message.
  */
-fun Message.timeout(): MessageAction = editMessage(
+suspend fun MessageBehavior.timeout() = edit {
     Embeds.error("Timed out", "Du hast zu lange gebraucht.")
-)
+}
 
 /**
  * Returns the next [Message] by the author in the invocation channel or `null` if [timeout] gets exceeded.
@@ -58,17 +59,12 @@ suspend fun Context.readSafe(timeout: Duration = 1.minutes): Message? {
 @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
 suspend fun Context.read(timeout: Duration = 1.minutes): Message {
     return withTimeout(timeout) {
-        suspendCancellableCoroutine { cont ->
-            jda.addEventListener(object {
-                @EventSubscriber
-                fun onMessage(event: MessageReceivedEvent) {
-                    if (
-                        event.author == author &&
-                        event.channel == channel
-                    )
-                        cont.resume(event.message)
-                }
-            })
-        }
+        bot.kord.events
+            .filterIsInstance<MessageCreateEvent>()
+            .filter { it.message.author == author }
+            .filter { it.message.channel == channel }
+            .take(1)
+            .single()
+            .message
     }
 }

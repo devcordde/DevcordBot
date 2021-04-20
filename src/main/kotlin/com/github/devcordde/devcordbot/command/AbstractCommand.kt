@@ -17,9 +17,8 @@
 package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.command.slashcommands.OptionsBuilder
-import com.github.devcordde.devcordbot.command.slashcommands.permissions.DiscordApplicationCommandPermission
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
+import dev.kord.common.entity.DiscordGuildApplicationCommandPermission
+import dev.kord.common.entity.Snowflake
 
 /**
  * Base class for all commands.
@@ -45,7 +44,7 @@ abstract class AbstractCommand {
 
 
     /**
-     * Generates a list of [DiscordApplicationCommandPermissions][DiscordApplicationCommandPermission]
+     * Generates a list of [DiscordApplicationCommandPermissions][DiscordGuildApplicationCommandPermission]
      * required to register slash command permissions
      *
      * @param botOwners a list of ids which can bypass [Permission.BOT_OWNER]
@@ -53,47 +52,37 @@ abstract class AbstractCommand {
      * @param adminId the id of the role for [Permission.ADMIN]
      */
     @OptIn(ExperimentalStdlibApi::class)
-    fun generatePermissions(botOwners: List<Long>, modId: Long, adminId: Long): List<DiscordApplicationCommandPermission> =
-        when (permission) {
-            Permission.ANY -> emptyList()
-            Permission.BOT_OWNER -> botOwners.map {
-                DiscordApplicationCommandPermission(
-                    it,
-                    DiscordApplicationCommandPermission.Type.USER,
-                    true
-                )
-            }
-            Permission.MODERATOR -> listOf(
-                DiscordApplicationCommandPermission(
-                    modId,
-                    DiscordApplicationCommandPermission.Type.ROLE,
-                    true
-                )
-            )
-            Permission.ADMIN -> listOf(
-                DiscordApplicationCommandPermission(
-                    modId,
-                    DiscordApplicationCommandPermission.Type.ROLE,
-                    true
-                ),
-                DiscordApplicationCommandPermission(
-                    adminId,
-                    DiscordApplicationCommandPermission.Type.ROLE,
-                    true
-                )
+    fun generatePermissions(
+        botOwners: List<Snowflake>,
+        modId: Snowflake,
+        adminId: Snowflake
+    ): List<DiscordGuildApplicationCommandPermission> = when (permission) {
+        Permission.ANY -> emptyList()
+        Permission.BOT_OWNER -> botOwners.map {
+            DiscordGuildApplicationCommandPermission(
+                it,
+                DiscordGuildApplicationCommandPermission.Type.User,
+                true
             )
         }
-
-
-    /**
-     * Utility function to create slash command options.
-     *
-     * @see OptionsBuilder
-     */
-    @OptIn(ExperimentalStdlibApi::class)
-    protected fun buildOptions(builder: OptionsBuilder.() -> Unit): List<CommandUpdateAction.OptionData> {
-        return buildList {
-            OptionsBuilder(this).apply(builder)
-        }
+        Permission.MODERATOR -> listOf(
+            DiscordGuildApplicationCommandPermission(
+                modId,
+                DiscordGuildApplicationCommandPermission.Type.Role,
+                true
+            )
+        )
+        Permission.ADMIN -> listOf(
+            DiscordGuildApplicationCommandPermission(
+                modId,
+                DiscordGuildApplicationCommandPermission.Type.Role,
+                true
+            ),
+            DiscordGuildApplicationCommandPermission(
+                adminId,
+                DiscordGuildApplicationCommandPermission.Type.Role,
+                true
+            )
+        )
     }
 }

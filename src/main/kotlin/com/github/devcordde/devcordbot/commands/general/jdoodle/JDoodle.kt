@@ -16,13 +16,10 @@
 
 package com.github.devcordde.devcordbot.commands.general.jdoodle
 
-import com.github.devcordde.devcordbot.util.MapJsonObject
 import io.github.cdimascio.dotenv.dotenv
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.time.Duration
+import io.ktor.client.*
+import io.ktor.client.request.*
+import kotlinx.serialization.Serializable
 
 
 /**
@@ -31,12 +28,6 @@ import java.time.Duration
 object JDoodle {
     private val clientId: String
     private val clientSecret: String
-    private val httpClient = OkHttpClient.Builder()
-        .callTimeout(Duration.ofMinutes(2))
-        .connectTimeout(Duration.ofMinutes(2))
-        .readTimeout(Duration.ofMinutes(2))
-        .writeTimeout(Duration.ofMinutes(2))
-        .build()
 
     /**
      * Init the values for execution.
@@ -53,29 +44,27 @@ object JDoodle {
      * @param language the script's language
      * @param script the script
      */
-    fun execute(language: Language, script: String): String? {
-        val dataObject = MapJsonObject(
-            mapOf(
-                "clientId" to clientId,
-                "clientSecret" to clientSecret,
-                "script" to script,
-                "language" to language.lang,
-                "versionIndex" to language.code
+    suspend fun execute(httpClient: HttpClient, language: Language, script: String): JDoodleResponse {
+        return httpClient.post("https://api.jdoodle.com/v1/execute") {
+            body = JDoodleRequest(
+                clientId,
+                clientSecret,
+                script,
+                language.lang,
+                language.code
             )
-        )
-
-        val bodyString = dataObject.toString()
-
-        val request = Request.Builder()
-            .url("https://api.jdoodle.com/v1/execute")
-            .post(bodyString.toRequestBody("application/json".toMediaTypeOrNull())).build()
-
-        val response = httpClient.newCall(request).execute()
-
-        if (response.code != 200) {
-            return null
         }
-
-        return response.body?.string()
     }
 }
+
+@Serializable
+private data class JDoodleRequest(
+    val clientId: String,
+    val clientSecret: String,
+    val script: String,
+    val language: String,
+    val versionIndex: Int
+)
+
+@Serializable
+data class JDoodleResponse(val output: String)

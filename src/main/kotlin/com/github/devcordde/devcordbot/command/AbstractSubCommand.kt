@@ -18,9 +18,8 @@ package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveSubCommandData
-import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveSubCommandGroupData
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.SubCommandBuilder
 
 /**
  * Skeleton of a sub command.
@@ -41,7 +40,7 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
     /**
      * Registers this command to a [CommandUpdateAction.CommandData].
      */
-    abstract fun CommandUpdateAction.CommandData.register()
+    abstract fun ApplicationCommandCreateBuilder.applyCommand()
 
     /**
      * Abstract implementation of a slash sub-command.
@@ -49,9 +48,10 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
     abstract class Command(parent: AbstractCommand) : AbstractSubCommand(parent) {
 
         /**
-         * A List of [CommandUpdateAction.OptionData] required for slash command registration.
+         * Function that is called when building command to add options.
+         * @see SubCommandBuilder
          */
-        open val options: List<CommandUpdateAction.OptionData> = emptyList()
+        open fun SubCommandBuilder.applyOptions(): Unit = Unit
 
         /**
          * Invokes the command.
@@ -59,24 +59,9 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
          */
         abstract suspend fun execute(context: Context)
 
-        override fun CommandUpdateAction.CommandData.register() {
-            addSubcommand(toCommandData())
-        }
-
-        internal fun toCommandData(): CommandUpdateAction.SubcommandData {
-            try {
-                val command = PermissiveSubCommandData(
-                    name, description
-                )
-                command.defaultPermission = permission == Permission.ANY
-                options.forEach(command::addOption)
-
-                return command
-            } catch (e: Exception) {
-                throw IllegalStateException(
-                    "Could not process command with name $name",
-                    e
-                )
+        override fun ApplicationCommandCreateBuilder.applyCommand() {
+            subCommand(name, description) {
+                applyOptions()
             }
         }
     }
@@ -86,14 +71,15 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
      */
     abstract class Group(parent: AbstractCommand) : AbstractSubCommand(parent),
         CommandRegistry<Command> {
-        override fun CommandUpdateAction.CommandData.register() {
-            val data = PermissiveSubCommandGroupData(name, description)
-            data.defaultPermission = permission == Permission.ANY
-            commandAssociations.values
-                .map(Command::toCommandData)
-                .forEach(data::addSubcommand)
-
-            addSubcommandGroup(data)
+        override fun ApplicationCommandCreateBuilder.applyCommand() {
+            group(name, description) {
+                commandAssociations.values
+                    .forEach {
+                        with(it as AbstractSubCommand) {
+                            this@applyCommand.applyCommand()
+                        }
+                    }
+            }
         }
     }
 }

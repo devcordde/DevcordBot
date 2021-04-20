@@ -24,17 +24,12 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
-import com.github.devcordde.devcordbot.dsl.editMessage
-import com.github.devcordde.devcordbot.dsl.sendMessage
+import com.github.devcordde.devcordbot.constants.TEXT_MAX_LENGTH
 import com.github.devcordde.devcordbot.util.HastebinUtil
-import com.github.devcordde.devcordbot.util.await
+import com.github.devcordde.devcordbot.util.edit
 import com.github.devcordde.devcordbot.util.readSafe
 import com.github.devcordde.devcordbot.util.timeout
-import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.exceptions.ParsingException
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
-import net.dv8tion.jda.api.utils.MarkdownSanitizer
-import net.dv8tion.jda.api.utils.data.DataObject
+import dev.kord.rest.builder.interaction.SubCommandBuilder
 
 /**
  * Eval command.
@@ -51,24 +46,15 @@ class EvalCommand : AbstractRootCommand() {
         registerCommands(ListCommand())
     }
 
-    private fun example(title: String) = Embeds.error(
-        title,
-        "`Beispiel`\n${MarkdownSanitizer.escape("```kotlin\nfun main() = print(\"Hello World\")\n```")}"
-    )
-
-    private fun internalError() = Embeds.error(
-        "Ein interner Fehler ist aufgetreten",
-        "Bei der Kommunikation mit JDoodle ist ein Fehler aufgetreten."
-    )
-
     private inner class ExecuteCommand : AbstractSubCommand.Command(this) {
         override val name: String = "execute"
         override val description: String = "Führt den angegebenen Code aus."
-        override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+
+        override fun SubCommandBuilder.applyOptions() {
             int("language", "Die Sprache in der das Codesnippet ist") {
-                isRequired = true
+                required = true
                 Language.values().forEach {
-                    addChoice(it.humanReadable, it.ordinal)
+                    choice(it.humanReadable, it.ordinal)
                 }
             }
         }
@@ -79,48 +65,42 @@ class EvalCommand : AbstractRootCommand() {
                     "Bitte gebe Code an",
                     "Bitte sende den Code der ausgeführt werden soll in einer neuen Nachricht"
                 )
-            ).await()
+            )
 
             val language = Language.values()[context.args.int("language")]
-            val script = context.readSafe()?.contentRaw ?: return origin.timeout().queue()
+            val script = context.readSafe()?.content ?: return run { origin.timeout() }
 
-            origin.editMessage(
+            origin.edit(
                 Embeds.info(
                     "Code erhalten!",
                     "Dein Code wird nun ausgeführt."
                 )
-            ).queue()
+            )
 
-            val loading = context.ack.sendMessage(
+            val loading = context.ack.edit(
                 Embeds.loading(
                     "Code wird ausgeführt.",
                     "Bitte warten"
                 )
-            ).await()
+            )
 
-            val response = JDoodle.execute(language, script)
-                ?: return loading.editMessage(internalError()).queue()
+            val (output) = JDoodle.execute(context.bot.httpClient, language, script)
 
-            val output = try {
-                DataObject.fromJson(response)["output"].toString()
-            } catch (p: ParsingException) {
-                return loading.editMessage(internalError()).queue()
-            }
 
-            if (output.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
+            if (output.length > TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
                 val result = Embeds.info(
                     "Erfolgreich ausgeführt!",
                     "Ergebnis: ${Emotes.LOADING}"
-                ).toEmbedBuilder()
+                )
 
-                loading.editMessage(result.build())
+                loading.edit(result)
 
                 val hasteUrl = HastebinUtil.postErrorToHastebin(output, context.bot.httpClient)
                 description.replace(Emotes.LOADING.toRegex(), hasteUrl)
             } else {
-                loading.editMessage(
+                loading.edit(
                     Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```")
-                ).queue()
+                )
             }
         }
     }
@@ -136,12 +116,12 @@ class EvalCommand : AbstractRootCommand() {
         override val description: String = "Listet die verfügbaren Sprachen auf."
 
         override suspend fun execute(context: Context) {
-            return context.respond(
+            context.respond(
                 Embeds.info(
                     "Verfügbare Sprachen",
                     languageList()
                 )
-            ).queue()
+            )
         }
     }
 }

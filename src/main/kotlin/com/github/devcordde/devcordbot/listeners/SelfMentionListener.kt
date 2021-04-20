@@ -20,14 +20,16 @@ import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.core.DevCordBot
-import com.github.devcordde.devcordbot.dsl.EmbedConvention
-import com.github.devcordde.devcordbot.dsl.editMessage
-import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.util.asMention
+import dev.kord.core.Kord
+import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.channel.createMessage
+import dev.kord.core.behavior.edit
+import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.on
+import dev.kord.rest.builder.message.EmbedBuilder
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.hooks.SubscribeEvent
 
 /**
  * Listens for the bot being mentioned.
@@ -37,12 +39,12 @@ class SelfMentionListener(private val bot: DevCordBot) {
     /**
      * Listens for new Guild messages.
      */
-    @SubscribeEvent
-    fun onMessageReceive(event: GuildMessageReceivedEvent) {
-        if (event.author.isBot) return
-        if (event.guild.selfMember.asMention().matchEntire(event.message.contentRaw) != null) {
+    fun Kord.onMessageReceive() = on<MessageCreateEvent> {
+        if (message.author?.isBot == true) return@on
+        val guild = getGuild() ?: return@on
+        if (message.content.matches(guild.getMember(kord.selfId).asMention())) {
             bot.launch {
-                sendInfo(event.channel, bot)
+                sendInfo(message.channel, bot)
             }
         }
     }
@@ -64,27 +66,48 @@ class SelfMentionListener(private val bot: DevCordBot) {
          *
          * @param devs the developers field
          */
-        fun makeEmbed(bot: DevCordBot, devs: String = Emotes.LOADING): EmbedConvention = Embeds.info("DevCordBot") {
-            addField("Programmiersprache", "[Kotlin](https://kotlinlang.org)", inline = true)
-            addField("Entwickler", devs, inline = true)
-            addField(
-                "Source",
-                "[github.com/devcordde/Devcordbot](https://github.com/devcordde/Devcordbot)",
+        fun makeEmbed(bot: DevCordBot, devs: String = Emotes.LOADING): EmbedBuilder = Embeds.info("DevCordBot") {
+            field {
+                name = "Programmiersprache"
+                value = "[Kotlin](https://kotlinlang.org)"
                 inline = true
-            )
-            addField("User", bot.guild.memberCount.toString(), inline = true)
-            addField("Prefix", "`${Constants.firstPrefix}`", inline = true)
+            }
+            field {
+                name = "Entwickler"
+                value = devs
+                inline = true
+            }
+            field {
+                name = "Source"
+                value = "[github.com/devcordde/Devcordbot](https://github.com/devcordde/Devcordbot)"
+                inline = true
+            }
+            field {
+                name = "User"
+                value = bot.guild.memberCount.toString()
+                inline = true
+            }
+            field {
+                name = "Prefix"
+                value = "`${Constants.firstPrefix}`"
+                inline = true
+            }
         }
 
         /**
          * Send Bot-Information to given channel
          */
-        suspend fun sendInfo(textChannel: MessageChannel, devCordBot: DevCordBot) {
-            val contributors = fetchContributors(devCordBot)
+        suspend fun sendInfo(textChannel: MessageChannelBehavior, devCordBot: DevCordBot) {
+            val contributors = devCordBot.async { fetchContributors(devCordBot) }
 
-            textChannel.sendMessage(makeEmbed(devCordBot)).flatMap {
-                it.editMessage(makeEmbed(devCordBot, contributors))
-            }.queue()
+            val message = textChannel.createMessage {
+                embed = makeEmbed(devCordBot)
+            }
+            val contributorList = contributors.await()
+
+            message.edit {
+                embed = makeEmbed(devCordBot, contributorList)
+            }
         }
     }
 }

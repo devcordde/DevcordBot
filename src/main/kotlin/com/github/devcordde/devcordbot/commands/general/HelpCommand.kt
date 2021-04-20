@@ -23,7 +23,7 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 
 /**
  * Help command.
@@ -34,7 +34,8 @@ class HelpCommand : AbstractSingleCommand() {
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
-    override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+
+    override fun ApplicationCommandCreateBuilder.applyOptions() {
         string("command", "Der Name eines Commands für den Hilfe angezeigt werden soll")
     }
 
@@ -47,7 +48,7 @@ class HelpCommand : AbstractSingleCommand() {
         }
     }
 
-    private fun sendCommandHelpMessage(context: Context, commandName: String) {
+    private suspend fun sendCommandHelpMessage(context: Context, commandName: String) {
         val command = context.commandClient.commandAssociations[commandName.toLowerCase()]
 
         if (command == null || context.commandClient.permissionHandler.isCovered(
@@ -57,27 +58,29 @@ class HelpCommand : AbstractSingleCommand() {
                 acknowledgeBlacklist = false
             ) != PermissionState.ACCEPTED
         ) {
-            return context.respond(
+            context.respond(
                 Embeds.error(
                     "Befehl nicht gefunden!",
                     "Es scheint für dich keinen Befehl mit diesem Namen zu geben."
                 )
-            ).queue()
+            )
+            return
         }
 
         if (!command.commandPlace.matches(context.event)) {
-            return context.respond(
+            context.respond(
                 Embeds.error(
                     "Falscher Context!",
                     "Der Command ist in diesem Channel nicht ausführbar."
                 )
-            ).queue()
+            )
+            return
         }
 
-        context.respond(Embeds.command(command)).queue()
+        context.respond(Embeds.command(command))
     }
 
-    private fun sendCommandList(context: Context) {
+    private suspend fun sendCommandList(context: Context) {
         context.respond(
             Embeds.info(
                 "Befehls-Hilfe", """Dies ist eine Liste aller Befehle, die du benutzen kannst,
@@ -95,13 +98,14 @@ class HelpCommand : AbstractSingleCommand() {
                 CommandCategory.values().forEach { category ->
                     val categoryCommands = commands.filter { it.category == category }.map { it.name }
                     if (categoryCommands.isNotEmpty()) {
-                        addField(
-                            category.displayName,
-                            categoryCommands.joinToString(prefix = "`", separator = "`, `", postfix = "`")
-                        )
+                        field {
+                            name = category.displayName
+                            value =
+                                categoryCommands.joinToString(prefix = "`", separator = "`, `", postfix = "`")
+                        }
                     }
                 }
             }
-        ).queue()
+        )
     }
 }

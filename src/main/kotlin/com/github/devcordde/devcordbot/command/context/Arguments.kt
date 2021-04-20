@@ -16,8 +16,12 @@
 
 package com.github.devcordde.devcordbot.command.context
 
-import net.dv8tion.jda.api.entities.*
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import dev.kord.core.entity.Member
+import dev.kord.core.entity.Role
+import dev.kord.core.entity.User
+import dev.kord.core.entity.channel.MessageChannel
+import dev.kord.core.entity.interaction.OptionValue
+
 
 /**
  * A converter that converts a command argument.
@@ -33,54 +37,61 @@ typealias ArgumentConverter<T> = (String) -> T
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Arguments(
-    private val options: Map<String, SlashCommandEvent.OptionData>
+    private val options: Map<String, OptionValue<*>>
 ) {
 
     /**
      * Returns the argument with [name].
      */
-    fun argument(name: String): SlashCommandEvent.OptionData =
+    fun argument(name: String): OptionValue<*> =
         optionalArgument(name) ?: error("Argument $name not found")
 
-    fun string(name: String): String = argument(name).asString
+    @Suppress("unchecked_cast")
+    private fun <T> typedArgument(name: String): OptionValue<T> = requiredArgument(name) as OptionValue<T>
 
-    fun optionalString(name: String): String? = optionalArgument(name)?.asString
+    fun string(name: String): String = typedArgument<String>(name).value
+
+    fun optionalString(name: String): String? = optionalTypedArgument<String>(name)?.value
 
     /**
      * Return the argument at the specified [index] or `null` if there is no argument at that position.
      */
-    fun optionalArgument(name: String): SlashCommandEvent.OptionData? = options[name]
+    fun optionalArgument(name: String): OptionValue<*>? = options[name]
+
+
+    @Suppress("unchecked_cast")
+    private fun <T> optionalTypedArgument(name: String): OptionValue<T>? = optionalArgument(name) as OptionValue<T>?
 
     /**
      * Return the argument at the specified [index] as an [Int] or `null` if there is no argument at that position, or it is not an [Int].
      */
-    fun optionalInt(name: String): Int? = optionalArgument(name)?.asLong?.toInt()
+    fun optionalInt(name: String): Int? = optionalLong(name)?.toInt()
 
     /**
      * Return the argument at the specified [index] as a [Long] or `null` if there is no argument at that position, or it is not a [Long].
      */
-    fun optionalLong(name: String): Long? = optionalArgument(name)?.asLong
+    fun optionalLong(name: String): Long? = optionalTypedArgument<Long>(name)?.value
 
     /**
      * Return the argument at the specified [index] as a [User] or `null` if there is no argument at that position, or it is not a [User].
      * @param ignoreCase whether the case of the name should be ignored or not
      */
     fun optionalUser(name: String): User? =
-        optionalArgument(name)?.asUser
+        optionalTypedArgument<User>(name)?.value
 
     /**
      * Return the argument at the specified [index] as a [Member] or `null` if there is no argument at that position, or it is not a [Member].
      * @param ignoreCase whether the case of the name should be ignored or not
      */
     fun optionalMember(name: String): Member? =
-        optionalArgument(name)?.asMember
+        optionalTypedArgument<Member>(name)?.value
 
     /**
      * Return the argument at the specified [index] as a [Role] or `null` if there is no argument at that position, or it is not a [Role].
      * @param ignoreCase whether the case of the name should be ignored or not
      */
     fun optionalRole(name: String): Role? =
-        optionalArgument(name)?.asRole
+        optionalTypedArgument<Role>(name)?.value
 
     /**
      * Return the argument at the specified [index] as a [TextChannel] or `null` if there is no argument at that position, or it is not a [TextChannel].
@@ -89,7 +100,7 @@ data class Arguments(
     fun optionalChannel(
         name: String
     ): MessageChannel? =
-        optionalArgument(name)?.asMessageChannel
+        optionalTypedArgument<MessageChannel>(name)?.value
 
 
     /**
@@ -97,7 +108,7 @@ data class Arguments(
      * And sends a command help if there is no argument at that position.
      * @param context the context that executed the command
      */
-    fun requiredArgument(name: String): SlashCommandEvent.OptionData =
+    fun requiredArgument(name: String): OptionValue<*> =
         optionalArgument(name) ?: error("Could not find argument $name")
 
     /**
@@ -105,14 +116,14 @@ data class Arguments(
      * If there is no [Int] at that position it sends a help message.
      * @param context the context that executed the command
      */
-    fun int(name: String): Int = requiredArgument(name).asLong.toInt()
+    fun int(name: String): Int = long(name).toInt()
 
     /**
      * Return the argument at the specified [index] as a [Long] or `null` if there is no argument at that position.
      * If there is no [Long] at that position it sends a help message.
      * @param context the context that executed the command
      */
-    fun long(name: String): Long = requiredArgument(name).asLong
+    fun long(name: String): Long = typedArgument<Long>(name).value
 
     /**
      * Return the argument at the specified [index] as a [User] or `null` if there is no argument at that position.
@@ -120,7 +131,7 @@ data class Arguments(
      * @param ignoreCase whether the case of the name should be ignored or not
      * @param context the context that executed the command
      */
-    fun user(name: String): User = requiredArgument(name).asUser!!
+    fun user(name: String): User = typedArgument<User>(name).value
 
     /**
      * Return the argument at the specified [index] as a [Member] or `null` if there is no argument at that position.
@@ -128,7 +139,7 @@ data class Arguments(
      * @param ignoreCase whether the case of the name should be ignored or not
      * @param context the context that executed the command
      */
-    fun member(name: String): Member = requiredArgument(name).asMember!!
+    fun member(name: String): Member = typedArgument<Member>(name).value
 
     /**
      * Return the argument at the specified [index] as a [Role] or `null` if there is no argument at that position.
@@ -136,7 +147,7 @@ data class Arguments(
      * @param ignoreCase whether the case of the name should be ignored or not
      * @param context the context that executed the command
      */
-    fun role(name: String): Role = requiredArgument(name).asRole!!
+    fun role(name: String): Role = typedArgument<Role>(name).value
 
     /**
      * Return the argument at the specified [index] as a [TextChannel] or `null` if there is no argument at that position.
@@ -144,6 +155,6 @@ data class Arguments(
      * @param ignoreCase whether the case of the name should be ignored or not
      * @param context the context that executed the command
      */
-    fun channel(name: String): MessageChannel = requiredArgument(name).asMessageChannel!!
+    fun channel(name: String): MessageChannel = typedArgument<MessageChannel>(name).value
 
 }

@@ -18,6 +18,7 @@
 
 package com.github.devcordde.devcordbot.database
 
+import dev.kord.common.entity.Snowflake
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.LongEntity
@@ -56,6 +57,11 @@ open class DatabaseDevCordUser(id: EntityID<Long>) : LongEntity(id), DevCordUser
          * Returns the [DevCordUser] corresponding to [id] and created one if needed.
          */
         fun findOrCreateById(id: Long): DevCordUser = findById(id) ?: new(id) { }
+
+        /**
+         * Returns the [DevCordUser] corresponding to [id] and created one if needed.
+         */
+        fun findOrCreateById(id: Snowflake): DevCordUser = findOrCreateById(id.value)
     }
 
     override val userID: Long

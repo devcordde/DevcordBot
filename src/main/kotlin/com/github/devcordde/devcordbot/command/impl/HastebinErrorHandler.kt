@@ -20,13 +20,12 @@ import com.github.devcordde.devcordbot.command.ErrorHandler
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
-import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.util.HastebinUtil
-import com.github.devcordde.devcordbot.util.await
+import com.github.devcordde.devcordbot.util.edit
+import dev.kord.core.behavior.channel.GuildChannelBehavior
+import dev.kord.core.entity.channel.GuildChannel
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.ChannelType
-import net.dv8tion.jda.api.entities.TextChannel
 import java.time.LocalDateTime
 import kotlin.coroutines.CoroutineContext
 
@@ -52,22 +51,22 @@ class HastebinErrorHandler : ErrorHandler {
                     "Ein Fehler ist aufgetreten!",
                     "${Emotes.LOADING} Bitte warte einen Augenblick, während ich versuche mehr Informationen über den Fehler herauszufinden."
                 )
-            ).await()
+            )
 
             val error = collectErrorInformation(exception, context, thread, coroutineContext)
             val url = HastebinUtil.postErrorToHastebin(error, context.bot.httpClient)
 
-            message.editMessage(
+            message.edit(
                 Embeds.error(
                     "Es ist ein Fehler aufgetreten!",
                     "Bitte zeige einem Entwickler [diesen]($url) Link um Hilfe zu erhalten."
                 )
-            ).queue()
+            )
         }
     }
 }
 
-private fun collectErrorInformation(
+private suspend fun collectErrorInformation(
     e: Throwable,
     context: Context,
     thread: Thread,
@@ -75,20 +74,20 @@ private fun collectErrorInformation(
 ): String {
     val information = StringBuilder()
     val channel = context.channel
-    information.append("TextChannel: ").append('#').append(channel.name)
+    information.append("TextChannel: ").append('#').append(channel.asChannelOrNull()?.data?.name)
         .append('(').append(channel.id).appendLine(")")
     val guild = context.guild
-    information.append("Guild: ").append(guild.name).append('(').append(guild.id)
+    information.append("Guild: ").append(guild.asGuild().name).append('(').append(guild.id)
         .appendLine(')')
-    val executor = context.author
-    information.append("Executor: ").append('@').append(executor.name).append('#')
-        .append(executor.discriminator).append('(').append(executor.id).appendLine(')')
-    val selfMember = guild.selfMember
-    information.append("Permissions: ").appendLine(selfMember.permissions)
+    val executor = context.author.asUser()
+    information.append("Executor: ").append('@').append(executor.tag).append('(').append(executor.id).appendLine(')')
+    val selfMember = guild.getMember(guild.kord.selfId)
+    information.append("Permissions: ").appendLine(selfMember.getPermissions())
 
-    if (context.channel.type == ChannelType.TEXT) {
+    if (context.channel is GuildChannelBehavior) {
+        val guildChannel = context.channel.asChannel() as GuildChannel
         information.append("Channel permissions: ")
-            .appendLine(selfMember.getPermissions(context.channel as TextChannel))
+            .appendLine(guildChannel.getEffectivePermissions(selfMember.id))
     }
 
     information.append("Timestamp: ").appendLine(LocalDateTime.now())

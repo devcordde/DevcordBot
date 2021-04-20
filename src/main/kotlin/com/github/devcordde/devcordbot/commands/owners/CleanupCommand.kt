@@ -24,10 +24,10 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Tag
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.entity.Guild
 import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.User
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 /**
  * Cleanup Command
@@ -44,9 +44,9 @@ class CleanupCommand : AbstractSingleCommand() {
     override suspend fun execute(context: Context) {
         val guild = context.bot.guild
         val cleanedUsers = cleanupRanks(guild)
-        val cleanedTags = cleanupTags(guild, context.bot.jda.selfUser)
+        val cleanedTags = cleanupTags(guild, context.bot.kord.selfId)
 
-        return context.respond(
+        context.respond(
             Embeds.info(
                 "Erfolgreich ausgeführt!",
                 """
@@ -54,12 +54,12 @@ class CleanupCommand : AbstractSingleCommand() {
                 Veränderte Tags: $cleanedTags
                 """
             )
-        ).queue()
+        )
     }
 
-    private fun cleanupRanks(guild: Guild): Int {
+    private suspend fun cleanupRanks(guild: Guild): Int {
         var clearedEntries = 0
-        transaction {
+        newSuspendedTransaction {
             DatabaseDevCordUser.all().forEach {
                 if (!isMemberOfGuild(guild, it.userID)) {
                     logger.info { "User gelöscht: ID ${it.userID}, Level: ${it.level}, XP: ${it.experience}" }
@@ -71,13 +71,13 @@ class CleanupCommand : AbstractSingleCommand() {
         return clearedEntries
     }
 
-    private fun cleanupTags(guild: Guild, selfUser: User): Int {
+    private suspend fun cleanupTags(guild: Guild, selfId: Snowflake): Int {
         var movedEntries = 0
-        transaction {
+        newSuspendedTransaction {
             Tag.all().forEach {
                 if (!isMemberOfGuild(guild, it.author)) {
                     logger.info { "Autor geändert: Alter Author: ${it.author}, Name: ${it.name}" }
-                    it.author = selfUser.idLong
+                    it.author = selfId.value
                     movedEntries++
                 }
             }
@@ -85,7 +85,6 @@ class CleanupCommand : AbstractSingleCommand() {
         return movedEntries
     }
 
-    private fun isMemberOfGuild(guild: Guild, userID: Long): Boolean {
-        return guild.getMemberById(userID) != null
-    }
+    private suspend fun isMemberOfGuild(guild: Guild, userID: Long): Boolean =
+        guild.getMemberOrNull(Snowflake(userID)) != null
 }

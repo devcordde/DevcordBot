@@ -17,40 +17,30 @@
 package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveCommandData
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
+import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
 
 /**
  * Abstract implementation of a slash command with subcommands.
  */
-abstract class AbstractRootCommand : AbstractCommand(), CommandRegistry<AbstractSubCommand> {
+abstract class AbstractRootCommand : AbstractCommand(), CommandRegistry<AbstractSubCommand>, RegisterableCommand {
 
     override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
 
     /**
      * Generates the nessasary [CommandUpdateAction.CommandData] for slash commands registration.
      */
-    fun toSlashCommand(): CommandUpdateAction.CommandData {
-        try {
-            val command = PermissiveCommandData(
-                name, description
-            )
-            command.defaultPermission = permission == Permission.ANY
+    final override fun ApplicationCommandsCreateBuilder.applyCommand() {
+        command(name, description) {
+            defaultPermission = permission == Permission.ANY
+
             commandAssociations.values
                 .asSequence()
                 .distinct()
                 .forEach {
                     with(it) {
-                        command.register()
+                        applyCommand() // SubCommand.applyCommand()
                     }
                 }
-
-            return command
-        } catch (e: Exception) {
-            throw IllegalStateException(
-                "Could not process command with name $name",
-                e
-            )
         }
     }
 }

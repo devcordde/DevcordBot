@@ -25,7 +25,10 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
+import com.github.devcordde.devcordbot.util.effictiveName
+import dev.kord.common.entity.Snowflake
+import dev.kord.rest.builder.interaction.SubCommandBuilder
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
@@ -47,9 +50,9 @@ class BlacklistCommand : AbstractRootCommand() {
         override val name: String = "toggle"
         override val description: String = "Fügt hinzu/Entfernt einen Nutzer von der blacklist"
 
-        override val options: List<CommandUpdateAction.OptionData> = buildOptions {
+        override fun SubCommandBuilder.applyOptions() {
             user("target", "Der Nutzer der zur/von der Schwarzen Liste hinzugefügt/entfernt werden soll") {
-                isRequired = true
+                required = true
             }
         }
 
@@ -57,14 +60,13 @@ class BlacklistCommand : AbstractRootCommand() {
             val user = context.args.user("target")
 
             val blacklisted = transaction {
-                val devcordUser = DatabaseDevCordUser.findOrCreateById(user.idLong)
+                val devcordUser = DatabaseDevCordUser.findOrCreateById(user.id)
 
                 devcordUser.blacklisted = !devcordUser.blacklisted
                 devcordUser.blacklisted
             }
 
             context.respond(Embeds.success(if (blacklisted) "User zur Blacklist hinzugefügt." else "User aus der Blacklist entfernt."))
-                .queue()
         }
     }
 
@@ -73,18 +75,19 @@ class BlacklistCommand : AbstractRootCommand() {
         override val description: String = "Listet geblacklistete User auf."
 
         override suspend fun execute(context: Context) {
-            val userNames = transaction {
+            val userNames = newSuspendedTransaction {
                 DatabaseDevCordUser.find {
                     Users.blacklisted eq true
                 }.map {
-                    "`${context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"}`"
+                    "`${context.guild.getMemberOrNull(Snowflake(it.userID))?.effictiveName ?: "Nicht auf dem Guild"}`"
                 }
             }
 
             if (userNames.isEmpty()) {
-                return context.respond(Embeds.warn("Niemand da!", "Es ist niemand auf der blacklist")).queue()
+                context.respond(Embeds.warn("Niemand da!", "Es ist niemand auf der blacklist"))
+                return
             }
-            context.respond(Embeds.success("Blacklisted Users", userNames.joinToString(", "))).queue()
+            context.respond(Embeds.success("Blacklisted Users", userNames.joinToString(", ")))
         }
     }
 }

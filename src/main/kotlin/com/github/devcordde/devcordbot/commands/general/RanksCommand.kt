@@ -38,13 +38,13 @@ class RanksCommand : AbstractSingleCommand() {
         context.respond(
             Embeds.info("Rollen") {
                 Level.values().forEach {
-                    val roleName = context.guild.getRoleById(it.roleId)?.name ?: "Rolle nicht gefunden"
-                    addField(
-                        "Level ${it.level}",
-                        roleName
-                    )
+                    val roleName = context.guild.getRoleOrNull(it.roleId)?.name ?: "Rolle nicht gefunden"
+                    field {
+                        name = "Level ${it.level}"
+                        value = roleName
+                    }
                 }
             }
-        ).queue()
+        )
     }
 }

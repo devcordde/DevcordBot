@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.command.impl
 
 import com.github.devcordde.devcordbot.command.ErrorHandler
 import com.github.devcordde.devcordbot.command.context.Context
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import kotlin.coroutines.CoroutineContext
 
@@ -35,7 +36,8 @@ class DebugErrorHandler : ErrorHandler {
         coroutineContext: CoroutineContext?
     ) {
         logger.error(exception) { "An error occurred while executing a command in $context." }
-        context.respond("Es ist ein Fehler aufgetreten! Der ErrorHandler wurde wegen des Debug modus deaktiviert")
-            .queue()
+        context.bot.launch {
+            context.respond("Es ist ein Fehler aufgetreten! Der ErrorHandler wurde wegen des Debug modus deaktiviert")
+        }
     }
 }

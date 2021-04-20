@@ -21,8 +21,9 @@ import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.dsl.editOriginal
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.util.edit
+import kotlinx.coroutines.async
 
 /**
  * InfoCommand.
@@ -36,10 +37,10 @@ class InfoCommand : AbstractSingleCommand() {
 
     override suspend fun execute(context: Context) {
         val devCordBot = context.bot
-        val contributors = SelfMentionListener.fetchContributors(devCordBot)
+        val contributors = devCordBot.async { SelfMentionListener.fetchContributors(devCordBot) }
 
-        context.respond(SelfMentionListener.makeEmbed(devCordBot)).flatMap {
-            context.ack.editOriginal(SelfMentionListener.makeEmbed(devCordBot, contributors))
-        }.queue()
+        val origin = context.respond(SelfMentionListener.makeEmbed(devCordBot))
+
+        origin.edit(SelfMentionListener.makeEmbed(devCordBot, contributors.await()))
     }
 }

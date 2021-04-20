@@ -18,6 +18,7 @@
 
 package com.github.devcordde.devcordbot.database
 
+import com.github.devcordde.devcordbot.constants.MAX_CONTENT_LENGTH
 import com.github.devcordde.devcordbot.database.TagAliases.name
 import com.github.devcordde.devcordbot.database.TagAliases.tag
 import com.github.devcordde.devcordbot.database.Tags.author
@@ -30,7 +31,6 @@ import com.github.devcordde.devcordbot.database.Users.experience
 import com.github.devcordde.devcordbot.database.Users.id
 import com.github.devcordde.devcordbot.database.Users.lastUpgrade
 import com.github.devcordde.devcordbot.database.Users.level
-import net.dv8tion.jda.api.entities.Message
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
@@ -72,7 +72,7 @@ object Tags : IdTable<String>() {
     val name: Column<EntityID<String>> = text("name").entityId()
     val usages: Column<Int> = integer("usages").default(0)
     val author: Column<Long> = long("author")
-    val content: Column<String> = varchar("content", Message.MAX_CONTENT_LENGTH)
+    val content: Column<String> = varchar("content", MAX_CONTENT_LENGTH)
     val createdAt: Column<Instant> = timestamp("created_at").clientDefault { Instant.now() }
 
     override val primaryKey: PrimaryKey = PrimaryKey(id)

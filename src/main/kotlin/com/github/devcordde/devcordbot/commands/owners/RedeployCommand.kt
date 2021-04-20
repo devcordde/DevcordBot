@@ -41,11 +41,12 @@ class RedeployCommand(private val host: String, private val token: String) : Abs
 
         // response.status != HttpStatusCode.OK if status code is not 2xx expectStatus setting will cause it to fail
         if (response == "Hook rules were not satisfied.") {
-            return context.respond(
+            context.respond(
                 Embeds.error("Fehler", "Der Bot konnte nicht neu gestartet werden.")
-            ).queue()
+            )
+            return
         }
 
-        return context.respond(Embeds.info("Erfolgreich", "Der Bot startet sich jetzt neu.")).queue()
+        context.respond(Embeds.info("Erfolgreich", "Der Bot startet sich jetzt neu."))
     }
 }

@@ -19,11 +19,11 @@ package com.github.devcordde.devcordbot.core
 import com.github.devcordde.devcordbot.command.CommandClient
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
+import dev.kord.core.Kord
+import dev.kord.core.entity.Guild
 import io.ktor.client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.Guild
 
 /**
  * Main class of the bot
@@ -35,9 +35,9 @@ interface DevCordBot : CoroutineScope {
     val commandClient: CommandClient
 
     /**
-     * The [JDA] instance.
+     * The [Kord] instance.
      */
-    val jda: JDA
+    val kord: Kord
 
     /**
      * The [GameAnimator] instance.

@@ -16,7 +16,10 @@
 
 package com.github.devcordde.devcordbot.command
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import dev.kord.core.entity.interaction.DmInteraction
+import dev.kord.core.entity.interaction.GuildInteraction
+import dev.kord.core.event.interaction.InteractionCreateEvent
+
 
 /**
  * CommandPlace defines the places where the command may be executed.
@@ -41,11 +44,11 @@ enum class CommandPlace {
     /**
      * Check if the message matches the CommandPlace.
      */
-    fun matches(interaction: SlashCommandEvent): Boolean {
+    fun matches(event: InteractionCreateEvent): Boolean {
         return when (this) {
             ALL -> true
-            PRIVATE_MESSAGE -> !interaction.isFromGuild
-            GUILD_MESSAGE -> interaction.isFromGuild
+            PRIVATE_MESSAGE -> event.interaction is DmInteraction
+            GUILD_MESSAGE -> event.interaction is GuildInteraction
         }
     }
 }

@@ -17,19 +17,13 @@
 package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.context.Context
-import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.command.slashcommands.permissions.PermissiveCommandData
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
 
 /**
  * Abstract single command (without sub commands).
  */
-abstract class AbstractSingleCommand : AbstractCommand() {
-
-    /**
-     * A List of [CommandUpdateAction.OptionData] required for slash command registration.
-     */
-    open val options: List<CommandUpdateAction.OptionData> = emptyList()
+abstract class AbstractSingleCommand : AbstractCommand(), RegisterableCommand {
 
     /**
      * Invokes the command.
@@ -37,20 +31,14 @@ abstract class AbstractSingleCommand : AbstractCommand() {
      */
     abstract suspend fun execute(context: Context)
 
-    fun toSlashCommand(): CommandUpdateAction.CommandData {
-        try {
-            val command = PermissiveCommandData(
-                name, description
-            )
-            command.defaultPermission = permission == Permission.ANY
-            options.forEach(command::addOption)
+    /**
+     * Function called in [applyCommand] to add options.
+     */
+    open fun ApplicationCommandCreateBuilder.applyOptions(): Unit = Unit
 
-            return command
-        } catch (e: Exception) {
-            throw IllegalStateException(
-                "Could not process command with name $name",
-                e
-            )
+    final override fun ApplicationCommandsCreateBuilder.applyCommand() {
+        command(name, description) {
+            applyOptions()
         }
     }
 }
