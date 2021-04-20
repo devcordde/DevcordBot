@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.util
 import com.github.devcordde.devcordbot.constants.Constants
 import io.ktor.client.*
 import io.ktor.client.request.*
+import kotlinx.serialization.Serializable
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -42,6 +43,7 @@ object HastebinUtil {
     }
 }
 
+@Serializable
 private data class HatebinResponse(
     val key: String
 )

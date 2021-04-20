@@ -41,8 +41,11 @@ import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.Dotenv
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.serialization.json.Json
 import mu.KotlinLogging
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
@@ -84,7 +87,14 @@ internal class DevCordBotImpl(
 
     override val commandClient: CommandClient =
         CommandClientImpl(this, Constants.prefix, modRoleId, adminRoleId, botOwners, RolePermissionHandler(botOwners))
-    override val httpClient: HttpClient = HttpClient(OkHttp)
+    override val json: Json = Json {
+        ignoreUnknownKeys = true
+    }
+    override val httpClient: HttpClient = HttpClient(OkHttp) {
+        install(JsonFeature) {
+            serializer = KotlinxSerializer(json)
+        }
+    }
     override val github: GithubUtil = GithubUtil(httpClient)
     override val coroutineContext: CoroutineContext = Dispatchers.IO + Job()
 

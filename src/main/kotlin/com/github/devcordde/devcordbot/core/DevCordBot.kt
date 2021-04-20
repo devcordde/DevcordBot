@@ -21,6 +21,7 @@ import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import io.ktor.client.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.json.Json
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
 
@@ -72,4 +73,9 @@ interface DevCordBot : CoroutineScope {
      * See [Googler].
      */
     val googler: Googler
+
+    /**
+     * The [Json] instance used for serialization.
+     */
+    val json: Json
 }

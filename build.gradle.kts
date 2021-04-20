@@ -17,6 +17,7 @@
 plugins {
     application
     kotlin("jvm") version "1.4.32"
+    kotlin("plugin.serialization") version "1.4.32"
 }
 
 group = "com.github.devcord.devcordbot"
@@ -68,6 +69,8 @@ dependencies {
     implementation(platform("io.ktor:ktor-bom:1.5.3"))
     implementation("io.ktor", "ktor-client")
     implementation("io.ktor", "ktor-client-okhttp")
+    implementation("io.ktor", "ktor-client-serialization")
+    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.1.0")
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.8.0")

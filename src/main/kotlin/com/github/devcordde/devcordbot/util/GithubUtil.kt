@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.util
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.serialization.Serializable
 
 /**
  * Utility to interact with github gist api
@@ -47,4 +48,5 @@ class GithubUtil(private val client: HttpClient) {
  * @property name the GitHub username of the contributer
  * @property url the url to the contributors GitHub profile
  */
+@Serializable
 data class GitHubContributor(val name: String, val url: String)
