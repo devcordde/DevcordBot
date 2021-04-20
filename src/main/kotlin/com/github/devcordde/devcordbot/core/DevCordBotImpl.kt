@@ -55,7 +55,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.coroutines.CoroutineContext
-import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
+import com.github.devcordde.devcordbot.commands.owners.EvalCommand as BotOwnerEvalCommand
 
 /**
  * General class to manage the Discord bot.
@@ -99,12 +99,13 @@ internal class DevCordBotImpl(
         connectToDatabase()
 
         logger.info { "Registering commands …" }
-        registerCommands()
         kord.listeners()
     }
 
 
     suspend fun start() {
+        registerCommands()
+
         kord.login {
             status = PresenceStatus.DoNotDisturb
             playing("Starting ...")
@@ -151,8 +152,6 @@ internal class DevCordBotImpl(
             status = PresenceStatus.Online
         }
         gameAnimator.start()
-
-        (commandClient as CommandClientImpl).updateCommands()
     }
 
     /**
@@ -201,14 +200,14 @@ internal class DevCordBotImpl(
         dataSource.close()
     }
 
-    private fun registerCommands() {
+    private suspend fun registerCommands() {
         commandClient.registerCommands(
             HelpCommand(),
             TagCommand().apply {
                 registerReadCommand(commandClient)
             },
             EvalCommand(),
-            OwnerEvalCommand(),
+            BotOwnerEvalCommand(),
             SourceCommand(),
             RankCommand(),
             RanksCommand(),
@@ -223,5 +222,7 @@ internal class DevCordBotImpl(
         if (redeployHost != null && redeployToken != null && redeployHost.isNotBlank() && redeployToken.isNotBlank()) {
             commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
         }
+
+        (commandClient as CommandClientImpl).updateCommands()
     }
 }

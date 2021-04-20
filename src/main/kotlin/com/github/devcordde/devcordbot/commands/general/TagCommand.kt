@@ -131,7 +131,7 @@ class TagCommand : AbstractRootCommand() {
         override val name: String = "alias"
         override val description: String = "Erstellt einen neuen Tag Alias"
 
-        override fun ApplicationCommandCreateBuilder.applyCommand() {
+        override fun SubCommandBuilder.applyOptions() {
             string("alias", "Der Name der Alias für den Tag") {
                 required = true
             }
@@ -362,7 +362,7 @@ class TagCommand : AbstractRootCommand() {
         override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
-        override fun ApplicationCommandCreateBuilder.applyCommand() {
+        override fun SubCommandBuilder.applyOptions() {
             string("query", "Die Query nach der gesucht werden soll") {
                 required = true
             }
