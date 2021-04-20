@@ -84,8 +84,7 @@ class EvalCommand : AbstractRootCommand() {
                 )
             )
 
-            val (output) = JDoodle.execute(context.bot.httpClient, language, script)
-
+            val (output) = JDoodle.execute(context.bot, language, script)
 
             if (output.length > TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
                 val result = Embeds.info(
