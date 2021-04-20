@@ -28,5 +28,7 @@ object UrlCodec : JsonDeserializer<Url>() {
     /**
      * @see JsonDeserializer.deserialize
      */
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Url = Url(p.valueAsString)
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Url {
+        return Url(p.valueAsString)
+    }
 }

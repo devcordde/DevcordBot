@@ -16,30 +16,29 @@
 
 package com.github.devcordde.devcordbot.config.codecs
 
-import com.github.devcordde.devcordbot.config.helpers.AnimatedGameList
-import com.github.devcordde.devcordbot.config.helpers.SnowflakeList
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
 import com.github.devcordde.devcordbot.core.GameAnimator
 import dev.kord.common.entity.ActivityType
-import dev.kord.common.entity.Snowflake
 
 /**
- * Codec for [AnimatedGameList].
+ * Implementation of [JsonDeserializer] to deserializer [GameAnimator.AnimatedGame]s.
+ *
+ * If a game startrs with `!` [ActivityType.Listening] is used, otherwise it's [ActivityType.Game]
  */
-object AnimatedGameListCodec : ListCodec<AnimatedGameList, GameAnimator.AnimatedGame>(contentMapper = {
-    val type = if (it.startsWith("!")) {
-        ActivityType.Listening
-    } else {
-        ActivityType.Game
+object AnimatedGameCodec : JsonDeserializer<GameAnimator.AnimatedGame>() {
+    /**
+     * @see JsonDeserializer.deserialize
+     */
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): GameAnimator.AnimatedGame {
+        val content = p.valueAsString
+        val type = if (content.startsWith("!")) {
+            ActivityType.Listening
+        } else {
+            ActivityType.Game
+        }
+
+        return GameAnimator.AnimatedGame(content, type)
     }
-
-    GameAnimator.AnimatedGame(it, type)
-}) {
-    override fun List<GameAnimator.AnimatedGame>.map(): AnimatedGameList = AnimatedGameList(this)
-}
-
-/**
- * Codec for [SnowflakeList].
- */
-object SnowflakeListCodec : ListCodec<SnowflakeList, Snowflake>(contentMapper = { Snowflake(it) }) {
-    override fun List<Snowflake>.map(): SnowflakeList = SnowflakeList(this)
 }

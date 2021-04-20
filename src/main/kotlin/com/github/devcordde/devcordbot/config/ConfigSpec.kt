@@ -22,59 +22,59 @@ import dev.kord.common.entity.Snowflake
 import io.ktor.http.*
 import com.uchuhimo.konf.ConfigSpec as KonfigSpec
 
-internal object ConfigSpec : KonfigSpec() {
-    val xpWhielist by optional(SnowflakeList(emptyList()), "XP_WHITELIST")
+internal object ConfigSpec : KonfigSpec("") {
+    val xpWhielist by optional(SnowflakeList(), "XP_WHITELIST")
     val hasteHost by optional(Url("https://haste.devcord.xyz"), "HASTE_HOST")
 
     object Discord : KonfigSpec() {
-        val token by required<String>("DISCORD_TOKEN")
+        val token by required<String>("TOKEN")
 
         val guildId by required<Snowflake>("GUILD_ID")
         val games by required<List<GameAnimator.AnimatedGame>>("GAMES")
     }
 
     object Database : KonfigSpec() {
-        val host by required<String>("DATABASE_HOST")
-        val database by required<String>("DATABASE")
-        val username by required<String>("DATABASE_USERNAME")
-        val password by required<String>("DATABASE_PASSWORD")
+        val host by required<String>("HOST")
+        val database by required<String>("NAME")
+        val username by required<String>("USERNAME")
+        val password by required<String>("PASSWORD")
     }
 
     object Jdoodle : KonfigSpec() {
-        val clientId by required<String>("JDOODLE_CLIENTID")
-        val clientSecret by required<String>("JDOODLE_CLIENTSECRET")
+        val clientId by required<String>("CLIENTID")
+        val clientSecret by required<String>("CLIENTSECRET")
     }
 
     object Sentry : KonfigSpec() {
-        val dsn by optional("", "SENTRY_DSN")
+        val dsn by optional("", "DSN")
     }
 
     object Cse : KonfigSpec() {
-        val key by optional<String?>(null, "CSE_KEY")
-        val id by optional<String?>(null, "CSE_ID")
+        val key by optional<String?>(null, "KEY")
+        val id by optional<String?>(null, "ID")
     }
 
-    object Redeployment {
-        val host by optional<String?>(null, "REDEPLOY_HOST")
-        val token by optional<String?>(null, "REDEPLOY_TOKEN")
+    object Redeployment : KonfigSpec("REDEPLOY") {
+        val host by optional<String?>(null, "HOST")
+        val token by optional<String?>(null, "TOKEN")
     }
 
-    object Devrat {
-        val channelId by required<Snowflake>("RAT_CHANNEL_ID")
-        val roleId by required<Snowflake>("RAT_ROLE_ID")
+    object Devrat : KonfigSpec("RAT") {
+        val channelId by required<Snowflake>("CHANNEL_ID")
+        val roleId by required<Snowflake>("ROLE_ID")
     }
 
-    object Devmarkt {
-        val requestChannel by required<Snowflake>("DEVMARKT_REQUEST_CHANNEL")
-        val moderatorId by required<Snowflake>("DEVMARKT_MODERATOR_ID")
-        val baseUrl by required<Url>("DEVMARKT_BASE_URL")
+    object Devmarkt : KonfigSpec("DEVMARKT") {
+        val requestChannel by required<Snowflake>("REQUEST_CHANNEL")
+        val moderatorId by required<Snowflake>("MODERATOR_ID")
+        val baseUrl by required<Url>("BASE_URL")
         val accessToken by required<String>("BOT_ACCESS_TOKEN")
         val checkEmote by required<Snowflake>("EMOTE_CHECK_ID")
         val blockEmote by required<Snowflake>("EMOTE_BLOCK_ID")
     }
 
-    object Permissions {
-        val botOwners by optional(SnowflakeList(emptyList()), "BOT_OWNERS")
+    object Permissions : KonfigSpec() {
+        val botOwners by optional(SnowflakeList(), "BOT_OWNERS")
         val modId by required<Snowflake>("MOD_ROLE_ID")
         val adminId by required<Snowflake>("ADMIN_ROLE_ID")
     }

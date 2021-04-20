@@ -21,5 +21,4 @@ import com.github.devcordde.devcordbot.core.GameAnimator
 /**
  * Wrapper class for Lists of [GameAnimator.AnimatedGame] to avoid type erasure.
  */
-class AnimatedGameList(private val delegate: List<GameAnimator.AnimatedGame>) :
-    List<GameAnimator.AnimatedGame> by delegate
+class AnimatedGameList : ArrayList<GameAnimator.AnimatedGame>()

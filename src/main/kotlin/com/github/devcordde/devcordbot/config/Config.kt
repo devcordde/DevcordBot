@@ -33,7 +33,7 @@ class Config internal constructor(private val config: Konfig) {
      * Default: Empty
      * Key: `XP_WHITELIST`
      */
-    val xpWhielist: List<Snowflake> = config[ConfigSpec.xpWhielist]
+    val xpWhielist: List<Snowflake> by config.property(ConfigSpec.xpWhielist)
 
     /**
      * The URL to the hastebin server the bot should use
@@ -41,7 +41,7 @@ class Config internal constructor(private val config: Konfig) {
      * Default: haste.devcord.xyz
      * Key: `HASTE_HOST`
      */
-    val hasteHost: Url = config[ConfigSpec.hasteHost]
+    val hasteHost: Url by config.property(ConfigSpec.hasteHost)
 
     /**
      * Discord related configuration.
@@ -118,7 +118,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **Required**
          * Key: `DISCORD_TOKEN`
          */
-        val token: String = config[ConfigSpec.Discord.token]
+        val token: String by config.property(ConfigSpec.Discord.token)
 
         /**
          * The guild id of the bots main guild (devcord).
@@ -126,7 +126,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `GUILD_ID`
          */
-        val guildId: Snowflake = config[ConfigSpec.Discord.guildId]
+        val guildId: Snowflake by config.property(ConfigSpec.Discord.guildId)
 
         /**
          * A list of strings shown in the game animator
@@ -135,7 +135,7 @@ class Config internal constructor(private val config: Konfig) {
          * Key: `GAMES`
          * @see GameAnimator
          */
-        val games: List<GameAnimator.AnimatedGame> = config[ConfigSpec.Discord.games]
+        val games: List<GameAnimator.AnimatedGame> by config.property(ConfigSpec.Discord.games)
     }
 
     /**
@@ -150,7 +150,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `DATABASE_HOST`
          */
-        val host: String = config[ConfigSpec.Database.host]
+        val host: String by config.property(ConfigSpec.Database.host)
 
         /**
          * Name of the PostgreSQL database.
@@ -158,7 +158,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `DATABASE`
          */
-        val database: String = config[ConfigSpec.Database.database]
+        val database: String by config.property(ConfigSpec.Database.database)
 
         /**
          * Name of the PostgreSQL user.
@@ -166,7 +166,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `DATABASE_USERNAME`
          */
-        val username: String = config[ConfigSpec.Database.username]
+        val username: String by config.property(ConfigSpec.Database.username)
 
         /**
          * Password of the PostgreSQL user.
@@ -174,7 +174,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `DATABASE_USERNAME`
          */
-        val password: String = config[ConfigSpec.Database.password]
+        val password: String by config.property(ConfigSpec.Database.password)
     }
 
     /**
@@ -189,7 +189,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `JDOODLE_CLIENTID`
          */
-        val clientId: String = config[ConfigSpec.Jdoodle.clientId]
+        val clientId: String by config.property(ConfigSpec.Jdoodle.clientId)
 
         /**
          * JDoodle client secret.
@@ -197,7 +197,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `JDOODLE_CLIENTSECRET`
          */
-        val clientSecret: String = config[ConfigSpec.Jdoodle.clientSecret]
+        val clientSecret: String by config.property(ConfigSpec.Jdoodle.clientSecret)
     }
 
     /**
@@ -212,7 +212,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: Empty
          * Key: `SENTRY_DSN`
          */
-        val dsn: String = config[ConfigSpec.Sentry.dsn]
+        val dsn: String by config.property(ConfigSpec.Sentry.dsn)
     }
 
     /**
@@ -227,7 +227,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: Empty
          * Key: `CSE_KEY`
          */
-        val key: String? = config[ConfigSpec.Cse.key]
+        val key: String? by config.property(ConfigSpec.Cse.key)
 
         /**
          * Id of CSE.
@@ -235,7 +235,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: Empty
          * Key: `CSE_ID`
          */
-        val id: String? = config[ConfigSpec.Cse.id]
+        val id: String? by config.property(ConfigSpec.Cse.id)
     }
 
     /**
@@ -250,7 +250,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: Empty
          * Key: `REDEPLOY_HOST`
          */
-        val host: String? = config[ConfigSpec.Redeployment.host]
+        val host: String? by config.property(ConfigSpec.Redeployment.host)
 
         /**
          * Token to authenticate with the redeploy hook.
@@ -258,7 +258,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: Empty
          * Key: `REDEPLOY_TOKEN`
          */
-        val token: String? = config[ConfigSpec.Redeployment.token]
+        val token: String? by config.property(ConfigSpec.Redeployment.token)
     }
 
     /**
@@ -273,7 +273,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `RAT_CHANNEL_ID`
          */
-        val channelId: Snowflake = config[ConfigSpec.Devrat.channelId]
+        val channelId: Snowflake by config.property(ConfigSpec.Devrat.channelId)
 
         /**
          *The id of the dev rat role.
@@ -281,7 +281,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `RAT_ROLE_ID`
          */
-        val roleId: Snowflake = config[ConfigSpec.Devrat.roleId]
+        val roleId: Snowflake by config.property(ConfigSpec.Devrat.roleId)
     }
 
     /**
@@ -296,7 +296,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `DEVMARKT_REQUEST_CHANNEL`
          */
-        val requestChannel: Snowflake = config[ConfigSpec.Devmarkt.requestChannel]
+        val requestChannel: Snowflake by config.property(ConfigSpec.Devmarkt.requestChannel)
 
         /**
          * The id of the mod role.
@@ -304,7 +304,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `DEVMARKT_MODERATOR_ID`
          */
-        val moderatorId: Snowflake = config[ConfigSpec.Devmarkt.moderatorId]
+        val moderatorId: Snowflake by config.property(ConfigSpec.Devmarkt.moderatorId)
 
         /**
          * The base url of the devmarkt api.
@@ -312,7 +312,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `DEVMARKT_BASE_URL`
          */
-        val baseUrl: Url = config[ConfigSpec.Devmarkt.baseUrl]
+        val baseUrl: Url by config.property(ConfigSpec.Devmarkt.baseUrl)
 
         /**
          * The authentication token for the api.
@@ -320,7 +320,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `BOT_ACCESS_TOKEN`
          */
-        val accessToken: String = config[ConfigSpec.Devmarkt.accessToken]
+        val accessToken: String by config.property(ConfigSpec.Devmarkt.accessToken)
 
         /**
          * THe id of the check emote.
@@ -328,7 +328,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `EMOTE_CHECK_ID`
          */
-        val checkEmote: Snowflake = config[ConfigSpec.Devmarkt.checkEmote]
+        val checkEmote: Snowflake by config.property(ConfigSpec.Devmarkt.checkEmote)
 
         /**
          * The block emote id.
@@ -336,7 +336,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `EMOTE_BLOCK_ID`
          */
-        val blockEmote: Snowflake = config[ConfigSpec.Devmarkt.blockEmote]
+        val blockEmote: Snowflake by config.property(ConfigSpec.Devmarkt.blockEmote)
     }
 
     /**
@@ -352,7 +352,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `BOT_OWNERS`
          */
-        val botOwners: List<Snowflake> = config[ConfigSpec.Permissions.botOwners]
+        val botOwners: List<Snowflake> by config.property(ConfigSpec.Permissions.botOwners)
 
         /**
          * API key for CSE API.
@@ -360,7 +360,7 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `MOD_ROLE_ID`
          */
-        val modId: Snowflake = config[ConfigSpec.Permissions.modId]
+        val modId: Snowflake by config.property(ConfigSpec.Permissions.modId)
 
         /**
          * API key for CSE API.
@@ -368,6 +368,6 @@ class Config internal constructor(private val config: Konfig) {
          * Default: **required**
          * Key: `ADMIN_ROLE_ID`
          */
-        val adminId: Snowflake = config[ConfigSpec.Permissions.adminId]
+        val adminId: Snowflake by config.property(ConfigSpec.Permissions.adminId)
     }
 }

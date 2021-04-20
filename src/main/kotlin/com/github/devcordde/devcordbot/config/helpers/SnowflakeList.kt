@@ -21,4 +21,4 @@ import dev.kord.common.entity.Snowflake
 /**
  * Wrapper class for Lists of [Snowflake] to avoid type erasure.
  */
-class SnowflakeList(private val delegate: List<Snowflake>) : List<Snowflake> by delegate
+class SnowflakeList : ArrayList<Snowflake>()

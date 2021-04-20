@@ -103,6 +103,14 @@ internal class DevCordBotImpl(
         kord.listeners()
     }
 
+
+    suspend fun start() {
+        kord.login {
+            status = PresenceStatus.DoNotDisturb
+            playing("Starting ...")
+        }
+    }
+
     private fun Kord.listeners() {
         whenReady()
         whenDisconnected()

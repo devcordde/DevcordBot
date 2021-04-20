@@ -64,5 +64,5 @@ suspend fun main(args: Array<String>) {
     val kord = Kord(config.discord.token)
     val guild = kord.getGuild(config.discord.guildId) ?: error("Could not find dev guild")
 
-    DevCordBot(config, debugMode, kord, guild)
+    DevCordBot(config, debugMode, kord, guild).start()
 }

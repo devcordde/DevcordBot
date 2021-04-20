@@ -19,11 +19,13 @@ package com.github.devcordde.devcordbot.config
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.devcordde.devcordbot.config.codecs.AnimatedGameListCodec
+import com.github.devcordde.devcordbot.config.codecs.AnimatedGameCodec
 import com.github.devcordde.devcordbot.config.codecs.SnowflakeCodec
-import com.github.devcordde.devcordbot.config.codecs.SnowflakeListCodec
 import com.github.devcordde.devcordbot.config.codecs.UrlCodec
 import com.uchuhimo.konf.BaseConfig
+import com.uchuhimo.konf.Feature
+import com.uchuhimo.konf.source.Source
+import com.uchuhimo.konf.source.base.FlatSource
 import io.github.cdimascio.dotenv.dotenv
 
 /**
@@ -34,25 +36,40 @@ fun Config(): Config {
         val module = SimpleModule().apply {
             addDeserializer(SnowflakeCodec)
             addDeserializer(UrlCodec)
-            addDeserializer(AnimatedGameListCodec)
-            addDeserializer(SnowflakeListCodec)
+            addDeserializer(AnimatedGameCodec)
         }
 
         registerModule(module)
     }
 
     val dotenv = dotenv()
+    val envMap = dotenv
+        .entries()
+        .associateBy { it.key }
+        .mapValues { (_, it) -> it.value }
+        .toMap()
     val konfig = BaseConfig(mapper = objectMapper).apply {
         addSpec(ConfigSpec)
-        val envMap = dotenv
-            .entries()
-            .associateBy { it.key }
-            .mapValues { (_, it) -> it.value }
-            .toMap()
-
-        from.envMap(envMap)
-    }
+    }.withSource(envMap(envMap))
     return Config(konfig)
+}
+
+private val validEnv = Regex("(\\w+)(.\\w+)*")
+
+fun envMap(map: Map<String, String>, nested: Boolean = true): Source {
+    return FlatSource(
+        map.mapKeys { (key, _) ->
+            if (nested) key.replaceFirst('_', '.') else key
+        }.filter { (key, _) ->
+            key.matches(validEnv)
+        }.toSortedMap(),
+        type = "system-environment",
+        allowConflict = true
+    ).enabled(
+        Feature.LOAD_KEYS_CASE_INSENSITIVELY
+    ).disabled(
+        Feature.SUBSTITUTE_SOURCE_BEFORE_LOADED
+    )
 }
 
 private inline fun <reified T> SimpleModule.addDeserializer(deserializer: JsonDeserializer<T>) =
