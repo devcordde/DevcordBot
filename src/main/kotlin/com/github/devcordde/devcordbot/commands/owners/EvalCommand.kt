@@ -23,8 +23,10 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.dsl.editMessage
 import com.github.devcordde.devcordbot.dsl.editOriginal
 import com.github.devcordde.devcordbot.util.HastebinUtil
+import com.github.devcordde.devcordbot.util.await
 import com.github.devcordde.devcordbot.util.limit
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction
@@ -45,17 +47,18 @@ class EvalCommand : AbstractSingleCommand() {
     }
 
     override suspend fun execute(context: Context) {
-        context.respond(
+        val message = context.respond(
             Embeds.loading(
                 "Code wird kompiliert und ausgeführt",
                 "Bitte warte einen Augenblick während dein Script kompiliert und ausgeführt wird"
             )
-        ).flatMap {
-            val scriptEngine = ScriptEngineManager().getEngineByName("kotlin")
-            val script = context.args.string("code")
-            //language=kotlin
-            scriptEngine.eval(
-                """
+        ).await()
+
+        val scriptEngine = ScriptEngineManager().getEngineByName("kotlin")
+        val script = context.args.string("code")
+        //language=kotlin
+        scriptEngine.eval(
+            """
                 import com.github.devcordde.devcordbot.*
                 import com.github.devcordde.devcordbot.database.*
                 import com.github.devcordde.devcordbot.command.*
@@ -66,40 +69,36 @@ class EvalCommand : AbstractSingleCommand() {
                 import net.dv8tion.jda.api.*
                 import net.dv8tion.jda.api.entities.*
             """.trimIndent()
-            )
-            scriptEngine.put("context", context)
-            val result = try {
-                val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
-                if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
-                    val result = Embeds.info(
-                        "Erfolgreich ausgeführt!",
-                        "Ergebnis: ${Emotes.LOADING}"
-                    )
-                    HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient).thenAccept { hasteUrl ->
-                        context.ack.editOriginal(result.apply {
-                            @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
-                            description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                        }).queue()
-                    }
-                    result
-                } else {
-                    Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$evaluation```")
-                }
-            } catch (e: ScriptException) {
-                val result = Embeds.error(
-                    "Fehler!",
-                    "Es ist folgender Fehler aufgetreten: ```${e.message?.limit(1024)}``` Detailierter Fehler: ${Emotes.LOADING}"
+        )
+        scriptEngine.put("context", context)
+        val result = try {
+            val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
+            if (evaluation.length > MessageEmbed.TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
+                val result = Embeds.info(
+                    "Erfolgreich ausgeführt!",
+                    "Ergebnis: ${Emotes.LOADING}"
                 )
-                HastebinUtil.postErrorToHastebin(e.stackTraceToString(), context.bot.httpClient)
-                    .thenAccept { hasteUrl ->
-                        context.ack.editOriginal(result.apply {
-                            @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
-                            description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                        }).queue()
-                    }
+                val hasteUrl = HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient)
+                message.editMessage(result.apply {
+                    @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
+                    description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
+                }).queue()
                 result
+            } else {
+                Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$evaluation```")
             }
-            context.ack.editOriginal(result)
-        }.queue()
+        } catch (e: ScriptException) {
+            val result = Embeds.error(
+                "Fehler!",
+                "Es ist folgender Fehler aufgetreten: ```${e.message?.limit(1024)}``` Detailierter Fehler: ${Emotes.LOADING}"
+            )
+            val hasteUrl = HastebinUtil.postErrorToHastebin(e.stackTraceToString(), context.bot.httpClient)
+            message.editMessage(result.apply {
+                @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
+                description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
+            }).queue()
+            result
+        }
+        context.ack.editOriginal(result)
     }
 }

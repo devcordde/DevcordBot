@@ -382,11 +382,9 @@ class TagCommand : AbstractRootCommand() {
             val content =
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
             if (content.length > Message.MAX_CONTENT_LENGTH) {
-                context.respond(Emotes.LOADING).submit()
-                    .thenCombine(HastebinUtil.postErrorToHastebin(content, context.bot.httpClient)) { _, code ->
-                        context.ack.editOriginal(code).queue()
-                    }
-                return
+                val message = context.respond(Emotes.LOADING).await()
+                val code = HastebinUtil.postErrorToHastebin(content, context.bot.httpClient)
+                return message.editMessage(code).queue()
             }
             context.respond(content).queue()
         }

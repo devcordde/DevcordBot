@@ -22,7 +22,7 @@ import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
-import okhttp3.Request
+import io.ktor.client.request.*
 
 /**
  * RedeployCommand.
@@ -35,10 +35,12 @@ class RedeployCommand(private val host: String, private val token: String) : Abs
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
-        val request = Request.Builder().url(host).addHeader("Redeploy-Token", token).build()
-        val response = context.bot.httpClient.newCall(request).execute()
+        val response = context.bot.httpClient.get<String>(host) {
+            header("Redeploy-Token", token)
+        }
 
-        if (response.code != 200 || response.body?.string().equals("Hook rules were not satisfied.")) {
+        // response.status != HttpStatusCode.OK if status code is not 2xx expectStatus setting will cause it to fail
+        if (response == "Hook rules were not satisfied.") {
             return context.respond(
                 Embeds.error("Fehler", "Der Bot konnte nicht neu gestartet werden.")
             ).queue()

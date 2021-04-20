@@ -16,66 +16,28 @@
 
 package com.github.devcordde.devcordbot.util
 
-import net.dv8tion.jda.api.utils.data.DataArray
-import net.dv8tion.jda.api.utils.data.DataObject
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import java.util.concurrent.CompletableFuture
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 
 /**
  * Utility to interact with github gist api
  */
-class GithubUtil(private val client: OkHttpClient) {
-
-    /**
-     * Returns a [CompletableFuture] containing list of url that contain raw content of files by [gistId].
-     */
-    fun retrieveGistFiles(gistId: String): CompletableFuture<List<String>> {
-        val request = Request.Builder()
-            .url(GET_GIST_ENDPOINT.newBuilder().addPathSegment(gistId).build())
-            .get()
-            .build()
-        val call = client.newCall(request)
-        return call.executeAsync().thenApply {
-            val json =
-                it.body?.string()?.let { it1 -> DataObject.fromJson(it1) } ?: return@thenApply emptyList<String>()
-            val files = json.getObject("files")
-            files.keys().map { key ->
-                files.getObject(key).getString("raw_url")
-            }
-        }
-    }
+class GithubUtil(private val client: HttpClient) {
 
     /**
      * Retrieves a list of [GitHubContributor]s, that have contributed to the bot project on GitHub.
      */
-    fun retrieveContributors(): CompletableFuture<List<GitHubContributor>> {
-        val request = Request.Builder()
-            .url(GET_CONTRIBUTORS_ENDPOINT)
-            .get()
-            .build()
-        val call = client.newCall(request)
-        return call.executeAsync().thenApply { response ->
-            val json =
-                response.body?.string()?.let { it1 -> DataArray.fromJson(it1) }
-                    ?: return@thenApply emptyList<GitHubContributor>()
-            (0 until json.length()).map {
-                val contributor = json.getObject(it)
-                GitHubContributor(
-                    contributor.getString("login"),
-                    contributor.getString("html_url")
-                )
+    suspend fun retrieveContributors(): List<GitHubContributor> {
+        return client.get(API_BASE) {
+            url {
+                path("repos", "devcordde", "devcordbot", "contributors")
             }
         }
     }
 
     companion object {
-        private val API_BASE = "https://api.github.com".toHttpUrl()
-        private val GET_GIST_ENDPOINT = API_BASE.newBuilder().addPathSegment("gists").build()
-        private val GET_CONTRIBUTORS_ENDPOINT = API_BASE.newBuilder()
-            .addPathSegments("repos/devcordde/devcordbot/contributors")
-            .build()
+        private val API_BASE = Url("https://api.github.com")
     }
 }
 

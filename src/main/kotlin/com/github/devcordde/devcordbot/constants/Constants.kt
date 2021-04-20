@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.constants
 
-import okhttp3.HttpUrl
+import io.ktor.http.*
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -40,7 +40,7 @@ object Constants {
     /**
      * URL that is used for pasting text.
      */
-    lateinit var hastebinUrl: HttpUrl
+    lateinit var hastebinUrl: Url
 
     /**
      * Dateformat used in the bot.

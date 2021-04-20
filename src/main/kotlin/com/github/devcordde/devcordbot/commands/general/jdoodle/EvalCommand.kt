@@ -115,12 +115,8 @@ class EvalCommand : AbstractRootCommand() {
 
                 loading.editMessage(result.build())
 
-                HastebinUtil.postErrorToHastebin(output, context.bot.httpClient).thenAccept { hasteUrl ->
-                    context.ack.editOriginal(result.apply {
-                        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
-                        setDescription(description.replace(Emotes.LOADING.toRegex(), hasteUrl))
-                    }.build()).queue()
-                }
+                val hasteUrl = HastebinUtil.postErrorToHastebin(output, context.bot.httpClient)
+                description.replace(Emotes.LOADING.toRegex(), hasteUrl)
             } else {
                 loading.editMessage(
                     Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```")

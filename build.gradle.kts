@@ -61,9 +61,13 @@ dependencies {
 
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
-    implementation("com.squareup.okhttp3", "okhttp", "4.9.1")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200917-1.31.0")
+
+    // Http
+    implementation(platform("io.ktor:ktor-bom:1.5.3"))
+    implementation("io.ktor", "ktor-client")
+    implementation("io.ktor", "ktor-client-okhttp")
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.8.0")

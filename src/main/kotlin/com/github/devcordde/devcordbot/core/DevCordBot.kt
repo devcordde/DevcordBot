@@ -19,14 +19,15 @@ package com.github.devcordde.devcordbot.core
 import com.github.devcordde.devcordbot.command.CommandClient
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
+import io.ktor.client.*
+import kotlinx.coroutines.CoroutineScope
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
-import okhttp3.OkHttpClient
 
 /**
  * Main class of the bot
  */
-interface DevCordBot {
+interface DevCordBot : CoroutineScope {
     /**
      * The [CommandClient] used for command parsing.
      */
@@ -50,7 +51,7 @@ interface DevCordBot {
     /**
      * Http client used for JDA and the bot.
      */
-    val httpClient: OkHttpClient
+    val httpClient: HttpClient
 
     /**
      * Whether the bot is in debug mode or not.

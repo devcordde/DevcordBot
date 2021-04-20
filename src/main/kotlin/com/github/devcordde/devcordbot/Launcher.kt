@@ -21,13 +21,13 @@ import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.core.GameAnimator
 import io.github.cdimascio.dotenv.dotenv
+import io.ktor.http.*
 import io.sentry.Sentry
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Activity
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
@@ -85,7 +85,7 @@ fun main(args: Array<String>) {
         games = listOf(GameAnimator.AnimatedGame("with errors"))
     }
 
-    Constants.hastebinUrl = env["HASTE_HOST"]?.toHttpUrl() ?: "https://haste.devcord.xyz".toHttpUrl()
+    Constants.hastebinUrl = env["HASTE_HOST"]?.let { Url(it) } ?: Url("https://haste.devcord.xyz")
 
     DevCordBot(token, games, env, debugMode)
 }

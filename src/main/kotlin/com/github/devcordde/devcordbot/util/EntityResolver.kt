@@ -22,4 +22,3 @@ import net.dv8tion.jda.api.entities.Message
  * Convenience alias for [Message.MentionType].
  */
 typealias MentionType = Message.MentionType
-

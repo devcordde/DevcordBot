@@ -16,17 +16,11 @@
 
 package com.github.devcordde.devcordbot.util
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
 import kotlinx.coroutines.future.await
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.utils.data.DataObject
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.Response
-import java.io.IOException
-import java.util.concurrent.CompletableFuture
 
 private val httpLogger = KotlinLogging.logger("HttpClient")
 
@@ -46,30 +40,6 @@ fun String.isNotNumeric(): Boolean = !isNumeric()
  * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
  */
 fun Member.asMention(): Regex = "<@!?$id>\\s?".toRegex()
-
-/**
- * Executes a [Call] asynchronously.
- * @see Call.enqueue
- * @return a [CompletableFuture] containing the [Response]
- */
-fun Call.executeAsync(): CompletableFuture<Response> {
-    val future = CompletableFuture<Response>().exceptionally {
-        httpLogger.error(it) { "An error ocurred while executing an HTTP request" }
-        null
-    }
-    enqueue(object : Callback {
-        override fun onFailure(call: Call, e: IOException) {
-            future.completeExceptionally(e)
-        }
-
-        override fun onResponse(call: Call, response: Response) {
-            future.complete(response)
-        }
-
-    })
-    return future
-}
-
 
 /**
  * Limits the length of a string by [amount] and adds [contraction] at the end.

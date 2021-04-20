@@ -39,6 +39,10 @@ import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.Dotenv
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import mu.KotlinLogging
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
@@ -53,11 +57,11 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
-import okhttp3.OkHttpClient
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
 
 /**
@@ -80,8 +84,9 @@ internal class DevCordBotImpl(
 
     override val commandClient: CommandClient =
         CommandClientImpl(this, Constants.prefix, modRoleId, adminRoleId, botOwners, RolePermissionHandler(botOwners))
-    override val httpClient: OkHttpClient = OkHttpClient()
+    override val httpClient: HttpClient = HttpClient(OkHttp)
     override val github: GithubUtil = GithubUtil(httpClient)
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + Job()
 
     override val googler: Googler = Googler(env["CSE_KEY"]!!, env["CSE_ID"]!!)
 
@@ -99,7 +104,6 @@ internal class DevCordBotImpl(
         .setMemberCachePolicy(MemberCachePolicy.ALL)
         .setActivity(Activity.playing("Starting ..."))
         .setStatus(OnlineStatus.DO_NOT_DISTURB)
-        .setHttpClient(httpClient)
         .addEventListeners(
             RatProtector(env["RAT_CHANNEL_ID"]!!.toLong(), env["RAT_ROLE_ID"]!!.toLong(), this),
             MessageListener(),

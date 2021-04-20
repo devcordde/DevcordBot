@@ -39,7 +39,7 @@ class InfoCommand : AbstractSingleCommand() {
         val contributors = SelfMentionListener.fetchContributors(devCordBot)
 
         context.respond(SelfMentionListener.makeEmbed(devCordBot)).flatMap {
-            context.ack.editOriginal(SelfMentionListener.makeEmbed(devCordBot, contributors.join()))
+            context.ack.editOriginal(SelfMentionListener.makeEmbed(devCordBot, contributors))
         }.queue()
     }
 }
