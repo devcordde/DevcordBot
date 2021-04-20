@@ -26,7 +26,6 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.effictiveName
-import dev.kord.common.entity.Snowflake
 import dev.kord.rest.builder.interaction.SubCommandBuilder
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -79,7 +78,7 @@ class BlacklistCommand : AbstractRootCommand() {
                 DatabaseDevCordUser.find {
                     Users.blacklisted eq true
                 }.map {
-                    "`${context.guild.getMemberOrNull(Snowflake(it.userID))?.effictiveName ?: "Nicht auf dem Guild"}`"
+                    "`${context.guild.getMemberOrNull(it.userID)?.effictiveName ?: "Nicht auf dem Guild"}`"
                 }
             }
 

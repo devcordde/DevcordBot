@@ -27,7 +27,6 @@ import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.XPUtil
 import com.github.devcordde.devcordbot.util.effictiveName
-import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.User
 import dev.kord.rest.builder.interaction.SubCommandBuilder
 import org.jetbrains.exposed.sql.SortOrder
@@ -127,7 +126,7 @@ class RankCommand : AbstractRootCommand() {
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
                     .mapIndexed { index, it ->
                         val name =
-                            context.guild.getMemberOrNull(Snowflake(it.userID))?.effictiveName ?: "Nicht auf dem Guild"
+                            context.guild.getMemberOrNull(it.userID)?.effictiveName ?: "Nicht auf dem Guild"
                         "`${index + offset + 1}.` `${name}`: Level `${it.level}`"
                     }
             }

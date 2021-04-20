@@ -31,6 +31,7 @@ import com.github.devcordde.devcordbot.database.Users.experience
 import com.github.devcordde.devcordbot.database.Users.id
 import com.github.devcordde.devcordbot.database.Users.lastUpgrade
 import com.github.devcordde.devcordbot.database.Users.level
+import dev.kord.common.entity.Snowflake
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
@@ -45,8 +46,8 @@ import java.time.Instant
  * @property lastUpgrade the last time the user gained XP
  * @property blacklisted user is blacklisted for commands
  */
-object Users : IdTable<Long>() {
-    override val id: Column<EntityID<Long>> = long("id").entityId()
+object Users : IdTable<Snowflake>() {
+    override val id: Column<EntityID<Snowflake>> = snowflake("id").entityId()
     val level: Column<Int> = integer("level").default(0)
     val experience: Column<Long> = long("experience").default(0L)
     val lastUpgrade: Column<Instant> = timestamp("last_experience_gained").default(Instant.now())
@@ -71,7 +72,7 @@ object Tags : IdTable<String>() {
         get() = name
     val name: Column<EntityID<String>> = text("name").entityId()
     val usages: Column<Int> = integer("usages").default(0)
-    val author: Column<Long> = long("author")
+    val author: Column<Snowflake> = snowflake("author")
     val content: Column<String> = varchar("content", MAX_CONTENT_LENGTH)
     val createdAt: Column<Instant> = timestamp("created_at").clientDefault { Instant.now() }
 

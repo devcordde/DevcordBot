@@ -49,11 +49,11 @@ class DatabaseUpdater(private val whiteList: List<Snowflake>) {
     }
 
     private fun Kord.onMemberLeave() = on<MemberLeaveEvent> {
-        val id = user.id.value
+        val id = user.id
 
         transaction {
             Tags.update({ Tags.author eq id }) {
-                it[author] = kord.selfId.value
+                it[author] = kord.selfId
             }
         }
 
@@ -90,7 +90,7 @@ class DatabaseUpdater(private val whiteList: List<Snowflake>) {
             // For some bizarre reasons using the DAO update performs a useless SELECT query before the update query
             Users.update(
                 {
-                    Users.id eq message.author!!.id.value
+                    Users.id eq message.author!!.id
                 }
             ) {
                 @Suppress("UNCHECKED_CAST") // Users.update will give you UpdateStatement<User> :smart:

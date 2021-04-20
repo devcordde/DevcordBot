@@ -77,7 +77,7 @@ class CleanupCommand : AbstractSingleCommand() {
             Tag.all().forEach {
                 if (!isMemberOfGuild(guild, it.author)) {
                     logger.info { "Autor geändert: Alter Author: ${it.author}, Name: ${it.name}" }
-                    it.author = selfId.value
+                    it.author = selfId
                     movedEntries++
                 }
             }
@@ -85,6 +85,6 @@ class CleanupCommand : AbstractSingleCommand() {
         return movedEntries
     }
 
-    private suspend fun isMemberOfGuild(guild: Guild, userID: Long): Boolean =
-        guild.getMemberOrNull(Snowflake(userID)) != null
+    private suspend fun isMemberOfGuild(guild: Guild, userID: Snowflake): Boolean =
+        guild.getMemberOrNull(userID) != null
 }

@@ -24,7 +24,6 @@ import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.menu.Paginator
 import com.github.devcordde.devcordbot.util.*
-import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.edit
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 import dev.kord.rest.builder.interaction.SubCommandBuilder
@@ -116,7 +115,7 @@ class TagCommand : AbstractRootCommand() {
             val tag = transaction {
                 Tag.new(name) {
                     this.content = content
-                    author = context.author.id.value
+                    author = context.author.id
                 }
             }
             context.ack.followUp(
@@ -210,7 +209,7 @@ class TagCommand : AbstractRootCommand() {
             val rank = transaction {
                 Tags.select { (Tags.usages greaterEq tag.usages) }.count()
             }
-            val author = context.jda.getUser(Snowflake(tag.author))
+            val author = context.jda.getUser(tag.author)
             context.respond(
                 embed {
                     color = Colors.BLUE
@@ -310,7 +309,7 @@ class TagCommand : AbstractRootCommand() {
             if (checkPermission(tag, context)) return
 
             transaction {
-                tag.author = user.id.value
+                tag.author = user.id
             }
 
             context.respond(
@@ -348,7 +347,7 @@ class TagCommand : AbstractRootCommand() {
 
         override suspend fun execute(context: Context) {
             val user = context.args.optionalUser("author") ?: context.author
-            val tags = transaction { Tag.find { Tags.author eq user.id.value }.map(Tag::name) }
+            val tags = transaction { Tag.find { Tags.author eq user.id }.map(Tag::name) }
             if (tags.isEmpty()) {
                 context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
                 return
@@ -414,7 +413,7 @@ class TagCommand : AbstractRootCommand() {
         tag: Tag,
         context: Context
     ): Boolean {
-        if (tag.author != context.author.id.value && !context.hasModerator()) {
+        if (tag.author != context.author.id && !context.hasModerator()) {
             context.respond(
                 Embeds.error(
                     "Keine Berechtigung!",

@@ -21,8 +21,6 @@ package com.github.devcordde.devcordbot.database
 import dev.kord.common.entity.Snowflake
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import java.time.Instant
 
@@ -35,7 +33,7 @@ import java.time.Instant
  * @property blacklisted user is blacklisted for commands
  */
 interface DevCordUser {
-    val userID: Long
+    val userID: Snowflake
     var level: Int
     var experience: Long
     var lastUpgrade: Instant
@@ -51,20 +49,20 @@ interface DevCordUser {
  * @property lastUpgrade the last time the user gained XP
  * @property blacklisted user is blacklisted for commands
  */
-open class DatabaseDevCordUser(id: EntityID<Long>) : LongEntity(id), DevCordUser {
-    companion object : LongEntityClass<DatabaseDevCordUser>(Users) {
+open class DatabaseDevCordUser(id: EntityID<Snowflake>) : SnowflakeEntity(id), DevCordUser {
+    companion object : SnowflakeEntityClass<DatabaseDevCordUser>(Users) {
         /**
          * Returns the [DevCordUser] corresponding to [id] and created one if needed.
          */
-        fun findOrCreateById(id: Long): DevCordUser = findById(id) ?: new(id) { }
+        fun findOrCreateById(id: Long): DevCordUser = findOrCreateById(Snowflake(id))
 
         /**
          * Returns the [DevCordUser] corresponding to [id] and created one if needed.
          */
-        fun findOrCreateById(id: Snowflake): DevCordUser = findOrCreateById(id.value)
+        fun findOrCreateById(id: Snowflake): DevCordUser = findById(id) ?: new(id) { }
     }
 
-    override val userID: Long
+    override val userID: Snowflake
         get() = id.value
     override var level: Int by Users.level
     override var experience: Long by Users.experience
@@ -97,7 +95,7 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
     val name: String
         get() = id.value
     var usages: Int by Tags.usages
-    var author: Long by Tags.author
+    var author: Snowflake by Tags.author
     var content: String by Tags.content
     val createdAt: Instant by Tags.createdAt
 
