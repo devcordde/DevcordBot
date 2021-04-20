@@ -20,8 +20,6 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.core.GameAnimator
-import com.github.devcordde.devcordbot.core.JavaDocManager
-import com.github.devcordde.devcordbot.core.autohelp.ImageReader
 import io.github.cdimascio.dotenv.dotenv
 import io.sentry.Sentry
 import kotlinx.cli.ArgParser
@@ -89,8 +87,5 @@ fun main(args: Array<String>) {
 
     Constants.hastebinUrl = env["HASTE_HOST"]?.toHttpUrl() ?: "https://haste.devcord.xyz".toHttpUrl()
 
-    logger.info { "Launching DevCordBot..." }
-    logger.info { "OCR Available: ${ImageReader.available}" }
-    JavaDocManager.javadocPool // for some reason the object instance is made lazly which is to late here
     DevCordBot(token, games, env, debugMode)
 }

@@ -24,7 +24,6 @@ version = "2.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    jcenter()
     maven("https://kotlin.bintray.com/kotlinx")
     maven("https://m2.dv8tion.net/releases")
     maven("https://jitpack.io")
@@ -48,27 +47,22 @@ dependencies {
     implementation("io.sentry", "sentry-logback", "4.2.0")
 
     // Database
-    implementation("org.jetbrains.exposed", "exposed-core", "0.29.1")
-    implementation("org.jetbrains.exposed", "exposed-dao", "0.29.1")
-    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.29.1")
-    implementation("org.jetbrains.exposed", "exposed-java-time", "0.29.1")
+    implementation("org.jetbrains.exposed", "exposed-core", "0.30.2")
+    implementation("org.jetbrains.exposed", "exposed-dao", "0.30.2")
+    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.30.2")
+    implementation("org.jetbrains.exposed", "exposed-java-time", "0.30.2")
     implementation("org.postgresql", "postgresql", "42.2.19")
     implementation("com.zaxxer", "HikariCP", "4.0.3")
 
     // Discord
     implementation("com.github.dv8fromtheworld", "jda", "e3d2bd7398")
+    implementation("club.minnced:opus-java:1.1.0")
     implementation("com.fasterxml.jackson.core", "jackson-databind", "2.9.9.2")
 
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
     implementation("com.squareup.okhttp3", "okhttp", "4.9.1")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
-    implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
-    implementation("com.github.johnnyjayjay", "javadox", "adb3613484")
-    implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.62.2")
-    implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
-    implementation("com.google.cloud", "google-cloud-vision", "1.101.1")
-
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.8.0")
