@@ -26,8 +26,9 @@ import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
 import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
 import com.github.devcordde.devcordbot.constants.Constants
-import com.github.devcordde.devcordbot.core.autohelp.AutoHelp
-import com.github.devcordde.devcordbot.database.*
+import com.github.devcordde.devcordbot.database.TagAliases
+import com.github.devcordde.devcordbot.database.Tags
+import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.event.AnnotatedEventManager
 import com.github.devcordde.devcordbot.event.EventSubscriber
 import com.github.devcordde.devcordbot.event.MessageListener
@@ -106,14 +107,6 @@ internal class DevCordBotImpl(
             SelfMentionListener(this),
             DatabaseUpdater(env["XP_WHITELIST"]!!.split(",")),
             commandClient,
-            AutoHelp(
-                this,
-                env["AUTO_HELP_WHITELIST"]!!.split(','),
-                env["AUTO_HELP_BLACKLIST"]!!.split(','),
-                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(','),
-                env["AUTO_HELP_BYPASS"]!!,
-                Integer.parseInt(env["AUTO_HELP_MAX_LINES"])
-            ),
             DevmarktRequestUpdater(
                 env["DEVMARKT_REQUEST_CHANNEL"]!!,
                 env["BOT_ACCESS_TOKEN"]!!,

@@ -40,11 +40,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.4.3")
 
     // Logging
-    implementation("io.github.microutils", "kotlin-logging", "2.0.4")
+    implementation("io.github.microutils", "kotlin-logging", "1.12.5")
     implementation("org.slf4j", "slf4j-api", "2.0.0alpha1")
     implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
-    implementation("io.sentry", "sentry", "4.2.0")
-    implementation("io.sentry", "sentry-logback", "4.2.0")
+    implementation("io.sentry", "sentry", "4.3.0")
+    implementation("io.sentry", "sentry-logback", "4.3.0")
 
     // Database
     implementation("org.jetbrains.exposed", "exposed-core", "0.30.2")
@@ -63,6 +63,7 @@ dependencies {
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
     implementation("com.squareup.okhttp3", "okhttp", "4.9.1")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
+    implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200917-1.31.0")
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.8.0")

@@ -18,8 +18,8 @@ package com.github.devcordde.devcordbot.util
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.services.customsearch.Customsearch
-import com.google.api.services.customsearch.model.Result
+import com.google.api.services.customsearch.v1.CustomSearchAPI
+import com.google.api.services.customsearch.v1.model.Result
 
 /**
  * Utility to google things.
@@ -27,7 +27,7 @@ import com.google.api.services.customsearch.model.Result
 class Googler(private val apiKey: String, private val engineId: String) {
 
     private val search =
-        Customsearch.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
+        CustomSearchAPI.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
             .setApplicationName("DevcordBot")
             .build()
 
@@ -35,7 +35,7 @@ class Googler(private val apiKey: String, private val engineId: String) {
      * Googles the [query].
      */
     fun google(query: String): List<Result> {
-        return with(search.cse().list(query)) {
+        return with(search.cse().list().apply { q = query }) {
             key = apiKey
             cx = engineId
             safe = "active"

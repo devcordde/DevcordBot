@@ -52,7 +52,7 @@ class HastebinErrorHandler : ErrorHandler {
         ).submit().thenCompose { message ->
             val error = collectErrorInformation(exception, context, thread, coroutineContext)
             HastebinUtil.postErrorToHastebin(error, context.jda.httpClient).thenApply { it to message }
-        }.thenAccept { (url, message) ->
+        }.thenAccept { (url, _) ->
             context.ack.editOriginal(
                 Embeds.error(
                     "Es ist ein Fehler aufgetreten!",
