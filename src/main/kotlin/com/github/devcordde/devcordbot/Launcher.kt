@@ -21,6 +21,9 @@ import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
 import dev.kord.core.Kord
+import dev.kord.gateway.Intent
+import dev.kord.gateway.Intents
+import dev.kord.gateway.PrivilegedIntent
 import io.sentry.Sentry
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -32,6 +35,7 @@ import org.slf4j.event.Level as SLF4JLevel
 /**
  * DevCordBot entry point.
  */
+@OptIn(PrivilegedIntent::class)
 suspend fun main(args: Array<String>) {
     val cliParser = ArgParser("devcordbot")
     val debugMode by cliParser.option(
@@ -61,7 +65,9 @@ suspend fun main(args: Array<String>) {
 
     Constants.hastebinUrl = config.hasteHost
 
-    val kord = Kord(config.discord.token)
+    val kord = Kord(config.discord.token) {
+        intents = Intents.nonPrivileged + Intent.GuildMembers
+    }
     val guild = kord.getGuild(config.discord.guildId) ?: error("Could not find dev guild")
 
     DevCordBot(config, debugMode, kord, guild).start()
