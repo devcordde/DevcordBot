@@ -7,7 +7,7 @@ services:
 
   bot:
     container_name: devcordbot
-    image: jkoenig134/devcordbot
+    image: devcord/devcordbot
     volumes:
       - .env:/usr/app/.env
       - "/etc/timezone:/etc/timezone:ro"
