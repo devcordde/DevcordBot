@@ -350,7 +350,7 @@ class TagCommand : AbstractCommand() {
         }
     }
 
-    private fun Tag.Companion.findByName(name: String) = Tag.findByNameId(name) ?: TagAlias.findById(name)?.tag
+    private fun Tag.Companion.findByName(name: String) = findByNameId(name) ?: TagAlias.findById(name)?.tag
 
     private fun checkPermission(
         tag: Tag,
@@ -427,6 +427,7 @@ class TagCommand : AbstractCommand() {
     }
 
     private fun checkNotTagExists(name: String, context: Context): Tag? {
+        if (checkNameLength(name, context)) return null
         val foundTag = Tag.findByName(name)
         return if (foundTag != null) foundTag else {
             val similarTag =
