@@ -91,12 +91,13 @@ class ContentFetcher(
     }
 
     private suspend fun fetchAttachment(attachment: Message.Attachment): String {
-        val stream = attachment.retrieveInputStream().await()
-        return if (attachment.isImage) {
-            ImageReader.readImage(stream) ?: ""
-        } else {
-            BufferedReader(InputStreamReader(stream)).use { reader ->
-                reader.readText()
+        attachment.retrieveInputStream().await().use {
+            return if (attachment.isImage) {
+                ImageReader.readImage(it) ?: ""
+            } else {
+                BufferedReader(InputStreamReader(it)).use { reader ->
+                    reader.readText()
+                }
             }
         }
     }
