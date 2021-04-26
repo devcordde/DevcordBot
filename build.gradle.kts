@@ -15,9 +15,8 @@
  */
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "5.2.0"
     application
-    kotlin("jvm") version "1.4.0"
+    kotlin("jvm") version "1.4.32"
 }
 
 group = "com.github.devcord.devcordbot"
@@ -84,24 +83,19 @@ application {
 }
 
 tasks {
-    shadowJar {
-        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
-    }
-
-    compileKotlin {
-        kotlinOptions.jvmTarget = "12"
-    }
-
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "12"
-    }
-
-    jar {
-        archiveClassifier.value = "original"
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "15"
+            useIR = true
+        }
     }
 
     test {
         useJUnitPlatform()
+    }
+
+    installDist {
+        destinationDir = buildDir.resolve("libs/install")
     }
 }
 
