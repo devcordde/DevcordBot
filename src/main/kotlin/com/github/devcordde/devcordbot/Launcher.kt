@@ -35,7 +35,6 @@ import kotlin.system.exitProcess
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
 import org.slf4j.event.Level as SLF4JLevel
 
-
 private val logger = KotlinLogging.logger {}
 
 /**

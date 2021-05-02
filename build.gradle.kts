@@ -15,9 +15,8 @@
  */
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "6.1.0"
     application
-    kotlin("jvm") version "1.4.31"
+    kotlin("jvm") version "1.4.32"
 }
 
 group = "com.github.devcord.devcordbot"
@@ -70,7 +69,6 @@ dependencies {
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
     implementation("com.google.cloud", "google-cloud-vision", "1.101.1")
 
-
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.8.0")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
@@ -87,24 +85,19 @@ application {
 }
 
 tasks {
-    shadowJar {
-        transform(com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer::class.java)
-    }
-
-    compileKotlin {
-        kotlinOptions.jvmTarget = "14"
-    }
-
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "14"
-    }
-
-    jar {
-        archiveClassifier.value = "original"
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "15"
+            useIR = true
+        }
     }
 
     test {
         useJUnitPlatform()
+    }
+
+    installDist {
+        destinationDir = buildDir.resolve("libs/install")
     }
 }
 
