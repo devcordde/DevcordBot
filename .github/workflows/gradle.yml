@@ -34,7 +34,7 @@ jobs:
       if: success()
       uses: manusa/actions-publish-docker@v1.0.1
       with:
-        name: devcordde/devcordbot
+        name: devcord/devcordbot
         tag: ${{ env.TAG }}
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_SECRET }}
