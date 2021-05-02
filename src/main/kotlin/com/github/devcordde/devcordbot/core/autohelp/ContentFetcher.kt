@@ -160,7 +160,7 @@ class ContentFetcher(
 
         // https://regex101.com/r/CyjiKt/2
         private val GHOSTBIN_PATTERN =
-            "(?:https?:\\/\\/(?:www\\.)?)?(?:ghostbin\\.co)\\/(?:paste\\/)?(.+?(?=\\.|\$|\\/))(?:\\/raw)?".toRegex()
+            "(?:https?:\\/\\/(?:www\\.)?)?ghostbin\\.co\\/(?:paste\\/)?(.+?(?=\\.|\$|\\/))(?:\\/raw)?".toRegex()
 
         // https://regex101.com/r/AlVYjn/2
         private val GITHUB_GIST_PATTERN =
