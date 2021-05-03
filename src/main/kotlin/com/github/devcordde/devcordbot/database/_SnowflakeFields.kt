@@ -48,6 +48,10 @@ object SnowflakeColumnType : ColumnType() {
 
         return value.value
     }
+
+    override fun valueToString(value: Any?): String = value.toString()
+
+    override fun notNullValueToDB(value: Any): Any = valueToDB(value)
 }
 
 /**

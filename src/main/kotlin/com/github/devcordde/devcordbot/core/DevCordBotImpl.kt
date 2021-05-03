@@ -27,6 +27,8 @@ import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
 import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
+import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.core.autohelp.DevCordTagSupplier
 import com.github.devcordde.devcordbot.database.TagAliases
 import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.database.Users
@@ -43,18 +45,26 @@ import dev.kord.core.event.gateway.DisconnectEvent
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.gateway.ResumedEvent
 import dev.kord.core.on
+import dev.schlaubi.forp.analyze.client.RemoteStackTraceAnalyzer
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import me.schlaubi.autohelp.AutoHelp
+import me.schlaubi.autohelp.autoHelp
+import me.schlaubi.autohelp.kord.kordContext
+import me.schlaubi.autohelp.kord.kordEventSource
+import me.schlaubi.autohelp.kord.useKordMessageRenderer
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.ExperimentalTime
 import com.github.devcordde.devcordbot.commands.owners.EvalCommand as BotOwnerEvalCommand
 
 /**
@@ -86,6 +96,26 @@ internal class DevCordBotImpl(
     override val googler: Googler = Googler(this)
 
     override val gameAnimator = GameAnimator(this)
+
+    override val autoHelp: AutoHelp = autoHelp {
+        tagSupplier = DevCordTagSupplier
+        loadingEmote = Emotes.LOADING
+
+        useKordMessageRenderer(kord)
+        htmlRenderer { de.nycode.bankobot.docdex.htmlRenderer.convert(this) }
+
+        analyzer = RemoteStackTraceAnalyzer {
+            serverUrl = config.autoHelp.host
+            authKey = config.autoHelp.key
+        }
+
+        kordContext {
+            kordEventSource(kord)
+            filter {
+                it.kordMessage.author?.isBot != true && it.channelId in config.autoHelp.channels
+            }
+        }
+    }
 
     /**
      * Whether the bot received the [ReadyEvent] or not.
@@ -145,13 +175,16 @@ internal class DevCordBotImpl(
     /**
      * Fired when the Discord bot has started successfully.
      */
+    @OptIn(ExperimentalTime::class)
     private fun Kord.whenReady() = on<ReadyEvent> {
         logger.info { "Received Ready event initializing bot internals …" }
         isInitialized = true
-        kord.editPresence {
-            status = PresenceStatus.Online
-        }
-        gameAnimator.start()
+
+//        delay(5.seconds) // if we don't wait here discord will kick us out of the gateway
+//        kord.editPresence {
+//            status = PresenceStatus.Online
+//        }
+//        gameAnimator.start()
     }
 
     /**
@@ -198,6 +231,9 @@ internal class DevCordBotImpl(
     private fun shutdown() {
         gameAnimator.close()
         dataSource.close()
+        runBlocking {
+            autoHelp.close()
+        }
     }
 
     private suspend fun registerCommands() {

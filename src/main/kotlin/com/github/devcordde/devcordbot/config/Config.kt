@@ -107,6 +107,13 @@ class Config internal constructor(private val config: Konfig) {
     val permissions: Permissions = Permissions()
 
     /**
+     * Autohelp related config.
+     *
+     * @see AutoHelp
+     */
+    val autoHelp: AutoHelp = AutoHelp()
+
+    /**
      * Discord related configuration.
      *
      * @see Config.discord
@@ -369,5 +376,29 @@ class Config internal constructor(private val config: Konfig) {
          * Key: `ADMIN_ROLE_ID`
          */
         val adminId: Snowflake by config.property(ConfigSpec.Permissions.adminId)
+    }
+
+    /**
+     * AutoHelp related configuration.
+     *
+     * @see Config.autoHelp
+     */
+    inner class AutoHelp internal constructor() {
+        /**
+         * The host of the autohelp server.
+         *
+         * @see Url
+         */
+        val host: Url by config.property(ConfigSpec.AutoHelp.host)
+
+        /**
+         * The authentication key for the autohelp server.
+         */
+        val key: String by config.property(ConfigSpec.AutoHelp.key)
+
+        /**
+         * A list of channels that are whitelisted for autohelp.
+         */
+        val channels: List<Long> by config.property(ConfigSpec.AutoHelp.channels)
     }
 }

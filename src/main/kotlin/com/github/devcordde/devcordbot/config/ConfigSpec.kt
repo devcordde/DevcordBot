@@ -78,4 +78,10 @@ internal object ConfigSpec : KonfigSpec("") {
         val modId by required<Snowflake>("MOD_ROLE_ID")
         val adminId by required<Snowflake>("ADMIN_ROLE_ID")
     }
+
+    object AutoHelp : KonfigSpec() {
+        val host by required<Url>()
+        val key by required<String>()
+        val channels by optional<List<Long>>(emptyList())
+    }
 }

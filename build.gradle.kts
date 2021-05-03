@@ -25,10 +25,9 @@ version = "2.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    maven("https://kotlin.bintray.com/kotlinx")
-    maven("https://m2.dv8tion.net/releases")
     maven("https://oss.sonatype.org/content/repositories/snapshots")
     maven("https://jitpack.io")
+    maven("https://schlaubi.jfrog.io/artifactory/forp")
 }
 
 dependencies {
@@ -75,6 +74,11 @@ dependencies {
     // Config
     implementation("com.github.uchuhimo.konf", "konf", "master-SNAPSHOT")
     implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.12.+")
+
+    // Autohelp
+    implementation("me.schlaubi.autohelp", "kord", "1.1.1")
+    implementation("dev.schlaubi.forp", "forp-analyze-client", "1.0-SNAPSHOT")
+    implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.60.2")
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.8.0")

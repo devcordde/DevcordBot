@@ -21,11 +21,12 @@ import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import dev.kord.core.Kord
-import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.entity.Guild
+import dev.kord.core.event.gateway.ReadyEvent
 import io.ktor.client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
+import me.schlaubi.autohelp.AutoHelp
 
 /**
  * Main class of the bot
@@ -86,4 +87,9 @@ interface DevCordBot : CoroutineScope {
      * @see Config
      */
     val config: Config
+
+    /**
+     * The autohelp instance of the bot.
+     */
+    val autoHelp: AutoHelp
 }
