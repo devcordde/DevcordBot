@@ -38,7 +38,6 @@ import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import com.zaxxer.hikari.HikariDataSource
-import dev.kord.common.entity.PresenceStatus
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
 import dev.kord.core.event.gateway.DisconnectEvent
@@ -136,10 +135,7 @@ internal class DevCordBotImpl(
     suspend fun start() {
         registerCommands()
 
-        kord.login {
-            status = PresenceStatus.DoNotDisturb
-            playing("Starting ...")
-        }
+        kord.login()
     }
 
     private fun Kord.listeners() {
@@ -179,12 +175,6 @@ internal class DevCordBotImpl(
     private fun Kord.whenReady() = on<ReadyEvent> {
         logger.info { "Received Ready event initializing bot internals …" }
         isInitialized = true
-
-//        delay(5.seconds) // if we don't wait here discord will kick us out of the gateway
-//        kord.editPresence {
-//            status = PresenceStatus.Online
-//        }
-//        gameAnimator.start()
     }
 
     /**
