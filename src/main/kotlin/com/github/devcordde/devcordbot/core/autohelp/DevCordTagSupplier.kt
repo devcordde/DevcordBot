@@ -20,13 +20,14 @@ import com.github.devcordde.devcordbot.database.Tag
 import dev.schlaubi.forp.parser.stacktrace.StackTrace
 import me.schlaubi.autohelp.tags.TagSupplier
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 /**
  * Implementation of [TagSupplier] acting like the original autohelp.
  */
 object DevCordTagSupplier : TagSupplier {
     override fun findTagForException(exception: StackTrace): String? {
-        val exceptionName = (exception.exception.innerClassName ?: exception.exception.className).toLowerCase()
+        val exceptionName = (exception.exception.innerClassName ?: exception.exception.className).lowercase(Locale.getDefault())
         val message = exception.message
         val tag = when {
             exceptionName == "nullpointerexception" -> "nullpointerexception"
@@ -34,7 +35,7 @@ object DevCordTagSupplier : TagSupplier {
             exceptionName == "ClassCastException" -> "casting"
             message == "Plugin already initialized!" -> "plugin-already-initialized"
             exceptionName == "invaliddescriptionexception" -> "plugin.yml"
-            exceptionName == "invalidpluginexception" && message?.toLowerCase()
+            exceptionName == "invalidpluginexception" && message?.lowercase(Locale.getDefault())
                 ?.contains("cannot find main class") == true -> "main-class-not-found"
             exceptionName == "arrayindexoutofboundsexception" -> "ArrayIndexOutOfBoundsException"
             else -> null

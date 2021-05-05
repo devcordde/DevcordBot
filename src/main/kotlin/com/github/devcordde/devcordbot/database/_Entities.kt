@@ -23,6 +23,7 @@ import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import java.time.Instant
+import java.util.*
 
 /**
  * Representation of a devcord user.
@@ -84,7 +85,7 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
         /**
          * Finds the first [Tag] by its [name].
          */
-        fun findByNameId(name: String): Tag? = find { upper(Tags.name) eq name.toUpperCase() }.firstOrNull()
+        fun findByNameId(name: String): Tag? = find { upper(Tags.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()
 
         /**
          * Maximum length of a tag name.
@@ -110,7 +111,7 @@ class TagAlias(alias: EntityID<String>) : Entity<String>(alias) {
         /**
          * Finds the first [TagAlias] by its [name].
          */
-        fun findByNameId(name: String): TagAlias? = find { upper(TagAliases.name) eq name.toUpperCase() }.firstOrNull()
+        fun findByNameId(name: String): TagAlias? = find { upper(TagAliases.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()
     }
 
     val name: String

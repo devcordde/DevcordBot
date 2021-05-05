@@ -23,8 +23,8 @@ import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.Closeable
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.seconds
 
 /**
  * Animates the bot's activity status.
@@ -35,7 +35,7 @@ class GameAnimator(private val bot: DevCordBot) : Closeable {
     private lateinit var job: Job
 
     @OptIn(ExperimentalTime::class)
-    private val ticker = ticker(30.seconds.toLongMilliseconds())
+    private val ticker = ticker(Duration.seconds(30).inWholeMilliseconds)
 
     /**
      * Starts the game animation.

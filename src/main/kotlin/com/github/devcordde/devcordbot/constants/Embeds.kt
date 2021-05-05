@@ -89,7 +89,7 @@ object Embeds {
     /**
      * Creates a help embed for [command].
      */
-    inline fun command(command: AbstractCommand): EmbedBuilder {
+    fun command(command: AbstractCommand): EmbedBuilder {
         return info("${command.name} - Hilfe", command.description) {
             field {
                 name = "Name"

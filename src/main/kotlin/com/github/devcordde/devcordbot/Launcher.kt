@@ -58,7 +58,7 @@ suspend fun main(args: Array<String>) {
     val config = Config()
 
     if (debugMode) {
-        Sentry.init("") // Initilizing sentry with null does mute sentry
+        Sentry.init("") // Initilizing sentry with empty dsn does mute sentry
     } else {
         Sentry.init("${config.sentry.dsn}?stacktrace.app.packages=com.github.devcordde.devcordbot")
     }

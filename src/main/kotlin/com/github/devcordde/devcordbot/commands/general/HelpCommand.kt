@@ -24,6 +24,7 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import java.util.*
 
 /**
  * Help command.
@@ -49,7 +50,7 @@ class HelpCommand : AbstractSingleCommand() {
     }
 
     private suspend fun sendCommandHelpMessage(context: Context, commandName: String) {
-        val command = context.commandClient.commandAssociations[commandName.toLowerCase()]
+        val command = context.commandClient.commandAssociations[commandName.lowercase(Locale.getDefault())]
 
         if (command == null || context.commandClient.permissionHandler.isCovered(
                 command.permission,

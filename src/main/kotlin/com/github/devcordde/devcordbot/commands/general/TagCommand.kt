@@ -33,8 +33,8 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.minutes
 
 /**
  * Tag command.
@@ -109,7 +109,7 @@ class TagCommand : AbstractRootCommand() {
                 )
             )
 
-            val content = context.readSafe(3.minutes)?.content ?: return run { status.timeout() }
+            val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
 
             val tag = transaction {
                 Tag.new(name) {

@@ -30,6 +30,7 @@ import com.github.devcordde.devcordbot.util.edit
 import com.github.devcordde.devcordbot.util.readSafe
 import com.github.devcordde.devcordbot.util.timeout
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import java.util.*
 
 /**
  * Eval command.
@@ -108,7 +109,7 @@ class EvalCommand : AbstractRootCommand() {
         prefix = "`",
         separator = "`, `",
         postfix = "`"
-    ) { it.name.toLowerCase() }
+    ) { it.name.lowercase(Locale.getDefault()) }
 
     private inner class ListCommand : AbstractSubCommand.Command(this) {
         override val name: String = "list"

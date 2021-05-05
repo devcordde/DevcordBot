@@ -33,7 +33,7 @@ object HastebinUtil {
      * @return a [CompletableFuture] containing the haste-url
      */
     suspend fun postErrorToHastebin(text: String, client: HttpClient): String {
-        return client.post<HatebinResponse>(Constants.hastebinUrl) {
+        return client.post<HastebinResponse>(Constants.hastebinUrl) {
             url {
                 path("documents")
             }
@@ -44,6 +44,6 @@ object HastebinUtil {
 }
 
 @Serializable
-private data class HatebinResponse(
+private data class HastebinResponse(
     val key: String
 )

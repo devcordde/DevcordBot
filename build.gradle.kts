@@ -16,8 +16,8 @@
 
 plugins {
     application
-    kotlin("jvm") version "1.4.32"
-    kotlin("plugin.serialization") version "1.4.32"
+    kotlin("jvm") version "1.5.0"
+    kotlin("plugin.serialization") version "1.5.0"
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
 }
 
@@ -95,8 +95,7 @@ application {
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions {
-            jvmTarget = "14"
-            useIR = true
+            jvmTarget = "16"
             freeCompilerArgs =
                 freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn" + "-Xopt-in=dev.kord.common.annotation.KordPreview" + "-Xopt-in=dev.kord.common.annotation.KordExperimental"
         }
