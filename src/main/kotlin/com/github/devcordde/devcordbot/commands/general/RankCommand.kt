@@ -75,7 +75,7 @@ class RankCommand : AbstractCommand() {
         ).queue()
     }
 
-    private fun buildProgressBar(current: Long, next: Long): String? {
+    private fun buildProgressBar(current: Long, next: Long): String {
         val stringBuilder = StringBuilder()
         val barProgress = (current.toDouble() / next * 20).toInt()
         stringBuilder.append("█".repeat(barProgress))
