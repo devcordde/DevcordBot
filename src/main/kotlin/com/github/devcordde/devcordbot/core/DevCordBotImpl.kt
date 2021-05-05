@@ -218,13 +218,16 @@ internal class DevCordBotImpl(
             RankCommand(),
             RanksCommand(),
             BlacklistCommand(),
-            InfoCommand(),    
+            InfoCommand(),
+            OracleJavaDocCommand(),
+            SpigotJavaDocCommand(),
+            SpigotLegacyJavaDocCommand(),
             CleanupCommand(),
             GoogleCommand()
         )
 
         val javadocEnabled = env["JAVADOC_ENABLED"]
-        if(javadocEnabled != null) {
+        if (javadocEnabled != null) {
             commandClient.registerCommands(
                 OracleJavaDocCommand(),
                 SpigotJavaDocCommand(),
