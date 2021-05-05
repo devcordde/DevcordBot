@@ -58,6 +58,12 @@ class EvalCommand : AbstractSingleCommand() {
         //language=kotlin
         scriptEngine.eval(
             """
+                    import com.github.devcordde.devcordbot.*
+                    import com.github.devcordde.devcordbot.database.*
+                    import com.github.devcordde.devcordbot.command.*
+                    import com.github.devcordde.devcordbot.command.permission.Permission as BotPermission
+                    import com.github.devcordde.devcordbot.command.context.*
+                    import org.jetbrains.exposed.sql.transactions.*
                     import dev.kord.common.entity.*
             """.trimIndent()
         )
