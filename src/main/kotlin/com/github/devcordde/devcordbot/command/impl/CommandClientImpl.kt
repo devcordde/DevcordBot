@@ -129,14 +129,14 @@ class CommandClientImpl(
         )
 
         val arguments = Arguments(interaction.command.options)
-        val ack = interaction.ackowledgePublic()
+        val acknowledgement = interaction.ackowledgePublic()
 
         when (permissionState) {
             PermissionState.IGNORED -> return
-            PermissionState.DECLINED -> return handleNoPermission(command.permission, ack)
+            PermissionState.DECLINED -> return handleNoPermission(command.permission, acknowledgement)
             PermissionState.ACCEPTED -> {
                 if (!command.commandPlace.matches(event)) return handleWrongContext(interaction.channel.asChannel())
-                val context = Context(bot, command, arguments, event, this, user, ack, member)
+                val context = Context(bot, command, arguments, event, this, user, acknowledgement, member)
                 processCommand(command, context)
             }
         }
@@ -181,8 +181,8 @@ class CommandClientImpl(
         )
     }
 
-    private suspend fun handleNoPermission(permission: Permission, ack: PublicInteractionResponseBehavior) {
-        ack.edit(
+    private suspend fun handleNoPermission(permission: Permission, acknowledgement: PublicInteractionResponseBehavior) {
+        acknowledgement.edit(
             Embeds.error(
                 "Keine Berechtigung!",
                 "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"

@@ -58,15 +58,7 @@ class EvalCommand : AbstractSingleCommand() {
         //language=kotlin
         scriptEngine.eval(
             """
-                import com.github.devcordde.devcordbot.*
-                import com.github.devcordde.devcordbot.database.*
-                import com.github.devcordde.devcordbot.command.*
-                import com.github.devcordde.devcordbot.command.permission.Permission as BotPermission
-                import com.github.devcordde.devcordbot.command.context.*
-                import org.jetbrains.exposed.sql.transactions.*
-                import okhttp3.*
-                import net.dv8tion.jda.api.*
-                import net.dv8tion.jda.api.entities.*
+                    import dev.kord.common.entity.*
             """.trimIndent()
         )
         scriptEngine.put("context", context)
@@ -102,6 +94,6 @@ class EvalCommand : AbstractSingleCommand() {
             )
             result
         }
-        context.ack.edit(result)
+        context.acknowledgement.edit(result)
     }
 }

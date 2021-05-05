@@ -61,7 +61,7 @@ suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder): Me
     createMessage { embed = embedBuilder }
 
 /**
- * Edits this [public slash command ack][PublicInteractionResponseBehavior] to contain [embedBuilder].
+ * Edits this [public slash command acknowledgement][PublicInteractionResponseBehavior] to contain [embedBuilder].
  */
 suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder): Message =
     edit { embeds = mutableListOf(embedBuilder) }

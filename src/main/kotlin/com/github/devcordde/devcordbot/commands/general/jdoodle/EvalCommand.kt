@@ -78,7 +78,7 @@ class EvalCommand : AbstractRootCommand() {
                 )
             )
 
-            val loading = context.ack.edit(
+            val loading = context.acknowledgement.edit(
                 Embeds.loading(
                     "Code wird ausgeführt.",
                     "Bitte warten"

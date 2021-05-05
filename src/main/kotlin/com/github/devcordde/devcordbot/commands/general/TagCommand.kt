@@ -117,7 +117,7 @@ class TagCommand : AbstractRootCommand() {
                     author = context.author.id
                 }
             }
-            context.ack.followUp(
+            context.acknowledgement.followUp(
                 Embeds.success(
                     "Erfolgreich erstellt!",
                     "Der Tag mit dem Namen `${tag.name}` wurde erfolgreich erstellt."
@@ -208,7 +208,7 @@ class TagCommand : AbstractRootCommand() {
             val rank = transaction {
                 Tags.select { (Tags.usages greaterEq tag.usages) }.count()
             }
-            val author = context.jda.getUser(tag.author)
+            val author = context.kord.getUser(tag.author)
             context.respond(
                 embed {
                     color = Colors.BLUE

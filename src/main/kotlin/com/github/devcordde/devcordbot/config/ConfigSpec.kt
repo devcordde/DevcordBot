@@ -23,7 +23,7 @@ import io.ktor.http.*
 import com.uchuhimo.konf.ConfigSpec as KonfigSpec
 
 internal object ConfigSpec : KonfigSpec("") {
-    val xpWhielist by optional(SnowflakeList(), "XP_WHITELIST")
+    val xpWhitelist by optional(SnowflakeList(), "XP_WHITELIST")
     val hasteHost by optional(Url("https://haste.devcord.xyz"), "HASTE_HOST")
 
     object Discord : KonfigSpec() {

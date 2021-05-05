@@ -46,7 +46,7 @@ import dev.kord.rest.builder.message.EmbedBuilder
  * @property commandClient the [CommandClient] which executed this command
  * @property bot instance of the [DevCordBot]
  * @property event the [InteractionCreateEvent] which triggered this invocation
- * @property ack the [PublicInteractionResponseBehavior] which acknowledged the exeuction of the command
+ * @property acknowledgement the [PublicInteractionResponseBehavior] which acknowledged the exeuction of the command
  * it acts like a communication point between the bot and the interaction thread, all message sending should be
  * handles using this [respond] and [sendHelp] methods will also refer to this
  * @property devCordUser User storing database settings. See [DevCordUser]
@@ -60,14 +60,14 @@ data class Context(
     val event: InteractionCreateEvent,
     val commandClient: CommandClient,
     val devCordUser: DevCordUser,
-    var ack: PublicInteractionResponseBehavior,
+    var acknowledgement: PublicInteractionResponseBehavior,
     val member: Member
 ) {
 
     /**
      * The [Kord] instance.
      */
-    val jda: Kord
+    val kord: Kord
         get() = event.kord
 
     /**
@@ -113,7 +113,7 @@ data class Context(
      * @return the [Message] which was sent
      */
     suspend fun respond(content: String): Message {
-        return ack.edit {
+        return acknowledgement.edit {
             allowedMentions {
                 +AllowedMentionType.UserMentions
                 +AllowedMentionType.RoleMentions
@@ -126,7 +126,7 @@ data class Context(
      * Sends [embedBuilder] into [channel].
      * @return the [Message] which was sent
      */
-    suspend fun respond(embedBuilder: EmbedBuilder): Message = ack.edit {
+    suspend fun respond(embedBuilder: EmbedBuilder): Message = acknowledgement.edit {
         embeds = mutableListOf(embedBuilder)
     }
 
