@@ -63,7 +63,7 @@ suspend fun Paginator(
     firstPage: Int = 1,
     itemsPerPage: Int = 8,
     loadingTitle: String = "Bitte warten!",
-    loadingDescription: String = "Bitte warte, während die Liste geladen wird.",
+    loadingDescription: String = "Bitte warte, während die Liste geladen wird...",
     color: Color = Colors.BLUE
 ): Paginator {
     require(itemsPerPage > 0) { "Items per page must be > 0" }

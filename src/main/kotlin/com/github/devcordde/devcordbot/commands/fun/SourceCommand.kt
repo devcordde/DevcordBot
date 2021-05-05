@@ -27,13 +27,13 @@ import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
  */
 class SourceCommand : AbstractSingleCommand() {
     override val name: String = "source"
-    override val description: String = "Displays the source code of the bot"
+    override val description: String = "Zeigt den Quellcode des Bots an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.FUN
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override fun ApplicationCommandCreateBuilder.applyOptions() {
-        string("command", "Der Name des Commands für den der SourceCode angezeigt werden soll")
+        string("command", "Der Name des Befehls, für den der Quellcode angezeigt werden soll")
     }
 
     override suspend fun execute(context: Context) {
@@ -41,7 +41,7 @@ class SourceCommand : AbstractSingleCommand() {
         val command = commandName?.let { findCommand(it, context) } ?: return run {
             context.respond(
                 Embeds.info(
-                    "Quellcode:", "Den code vom Bot findest du [hier]($GITHUB_BASE)"
+                    "Quellcode:", "Den Code vom Bot findest du [hier]($GITHUB_BASE)"
                 )
             )
         }
@@ -52,13 +52,13 @@ class SourceCommand : AbstractSingleCommand() {
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // All command classes are not anonymous or local
         val classUrl =
             "$GITHUB_BASE$GITHUB_FILE_APPENDIX${
-            parentCommand::class.qualifiedName!!.replace(".", "/")
-                .replace(".", "/")
+                parentCommand::class.qualifiedName!!.replace(".", "/")
+                    .replace(".", "/")
             }.kt#L$definitionLine"
         context.respond(
             Embeds.info(
                 "${command.name} - Source",
-                "Den Quellcode des Commands findest du hier: [$classUrl]($classUrl)"
+                "Den Quellcode des Befehls findest du hier: [$classUrl]($classUrl)"
             )
         )
     }

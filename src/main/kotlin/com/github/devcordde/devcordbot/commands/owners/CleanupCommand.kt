@@ -34,7 +34,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
  */
 class CleanupCommand : AbstractSingleCommand() {
     override val name: String = "cleanup"
-    override val description: String = "Entfernt die Level von ungültigen Membern"
+    override val description: String = "Entfernt die Level von ungültigen Membern."
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val permission: Permission = Permission.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
@@ -50,8 +50,8 @@ class CleanupCommand : AbstractSingleCommand() {
             Embeds.info(
                 "Erfolgreich ausgeführt!",
                 """
-                Entfernte User: $cleanedUsers
-                Veränderte Tags: $cleanedTags
+                Entfernte Nutzer: $cleanedUsers
+                Übertragene Tags: $cleanedTags
                 """
             )
         )

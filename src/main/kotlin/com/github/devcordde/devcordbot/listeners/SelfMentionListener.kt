@@ -80,17 +80,17 @@ class SelfMentionListener(private val bot: DevCordBot) {
                 inline = true
             }
             field {
-                name = "Source"
-                value = "[github.com/devcordde/Devcordbot](https://github.com/devcordde/Devcordbot)"
+                name = "Sourcecode"
+                value = "[devcordde/DevcordBot](https://github.com/devcordde/DevcordBot)"
                 inline = true
             }
             field {
-                name = "User"
+                name = "Nutzer"
                 value = bot.guild.memberCount.toString()
                 inline = true
             }
             field {
-                name = "Prefix"
+                name = "Präfix"
                 value = "`${Constants.firstPrefix}`"
                 inline = true
             }

@@ -38,7 +38,7 @@ class GoogleCommand : AbstractSingleCommand() {
     override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
     override fun ApplicationCommandCreateBuilder.applyOptions() {
-        string("query", "Die Query nach der gesucht werden soll") {
+        string("query", "Die Query, nach der gesucht werden soll") {
             required = true
         }
     }

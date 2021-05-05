@@ -42,7 +42,7 @@ import kotlin.time.ExperimentalTime
 class TagCommand : AbstractRootCommand() {
     private val reservedNames: List<String>
     override val name: String = "tag"
-    override val description: String = "Zeigt dir einen Tag an"
+    override val description: String = "Zeigt einen Tag an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
@@ -67,13 +67,13 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class TagReadCommand : AbstractSingleCommand() {
         override val name: String = "t"
-        override val description: String = "Zeigt dir einen Tag an"
+        override val description: String = "Zeigt einen Tag an."
         override val permission: Permission = Permission.ANY
         override val category: CommandCategory = CommandCategory.GENERAL
         override val commandPlace: CommandPlace = CommandPlace.ALL
 
         override fun ApplicationCommandCreateBuilder.applyOptions() {
-            string("tag", "Der Name des Tags welcher angezeigt werden soll") {
+            string("tag", "Der Name des Tags, welcher angezeigt werden soll") {
                 required = true
             }
         }
@@ -90,7 +90,7 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class CreateCommand : AbstractSubCommand.Command(this) {
         override val name: String = "create"
-        override val description: String = "Erstellt einen neuen Tag"
+        override val description: String = "Erstellt einen neuen Tag."
 
         override fun SubCommandBuilder.applyOptions() {
             string("name", "Der Name des zu erstellenden Tags") {
@@ -128,14 +128,14 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class AliasCommand : AbstractSubCommand.Command(this) {
         override val name: String = "alias"
-        override val description: String = "Erstellt einen neuen Tag Alias"
+        override val description: String = "Erstellt einen neuen Alias für einen Tag."
 
         override fun SubCommandBuilder.applyOptions() {
-            string("alias", "Der Name der Alias für den Tag") {
+            string("alias", "Der Name des Alias für den Tag") {
                 required = true
             }
 
-            string("tag", "Der Name des Tags für den die Alias erstellt werden soll") {
+            string("tag", "Der Name des Tags, für den der Alias erstellt werden soll") {
                 required = true
             }
         }
@@ -163,7 +163,7 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class EditCommand : AbstractSubCommand.Command(this) {
         override val name: String = "edit"
-        override val description: String = "Editiert einen existierenden Tag"
+        override val description: String = "Bearbeitet einen existierenden Tag."
 
         override fun SubCommandBuilder.applyOptions() {
             string("name", "Der Name des zu berarbeitenden Tags") {
@@ -193,7 +193,7 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class InfoCommand : AbstractSubCommand.Command(this) {
         override val name: String = "info"
-        override val description: String = "Zeigt Informationen über einen Tag an"
+        override val description: String = "Zeigt Informationen zu einem Tag an."
 
         override fun SubCommandBuilder.applyOptions() {
             string("tag", "Der Name des Tags für den eine Info angezeigt werden soll") {
@@ -257,10 +257,10 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class DeleteCommand : AbstractSubCommand.Command(this) {
         override val name: String = "delete"
-        override val description: String = "Löscht einen Tag"
+        override val description: String = "Löscht einen Tag."
 
         override fun SubCommandBuilder.applyOptions() {
-            string("tag", "Der Name des Tags der gelöscht soll") {
+            string("tag", "Der Name des Tags, der gelöscht soll") {
                 required = true
             }
         }
@@ -285,14 +285,14 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class TransferCommand : AbstractSubCommand.Command(this) {
         override val name: String = "transfer"
-        override val description: String = "Überschreibt einen Tag an einen anderen Benutzer"
+        override val description: String = "Überschreibt einen Tag an einen anderen Benutzer."
 
         override fun SubCommandBuilder.applyOptions() {
             user("target", "Der neue Besitzer des Tags") {
                 required = true
             }
 
-            string("tag", "Der Name des Tags der übertragen werden soll") {
+            string("tag", "Der Name des Tags, der übertragen werden soll") {
                 required = true
             }
         }
@@ -321,7 +321,7 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class ListCommand : AbstractSubCommand.Command(this) {
         override val name: String = "list"
-        override val description: String = "Gibt eine Liste aller Tags aus"
+        override val description: String = "Zeigt eine Liste aller Tags an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override suspend fun execute(context: Context) {
@@ -336,18 +336,18 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class FromCommand : AbstractSubCommand.Command(this) {
         override val name: String = "from"
-        override val description: String = "Gibt eine Liste aller Tags eines bestimmten Benutzers aus"
+        override val description: String = "Zeigt eine Liste aller Tags eines Nutzers an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override fun SubCommandBuilder.applyOptions() {
-            user("author", "Der Benutzer für den die Tags angezeigt werden sollen")
+            user("author", "Der Nutzer, dessen Tags angezeigt werden sollen")
         }
 
         override suspend fun execute(context: Context) {
             val user = context.args.optionalUser("author") ?: context.author
             val tags = transaction { Tag.find { Tags.author eq user.id }.map(Tag::name) }
             if (tags.isEmpty()) {
-                context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
+                context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Nutzer."))
                 return
             }
             val author = context.author.asUser()
@@ -357,11 +357,11 @@ class TagCommand : AbstractRootCommand() {
 
     private inner class SearchCommand : AbstractSubCommand.Command(this) {
         override val name: String = "search"
-        override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
+        override val description: String = "Zeigt die ersten 25 Tags mit dem angegebenen Namen an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override fun SubCommandBuilder.applyOptions() {
-            string("query", "Die Query nach der gesucht werden soll") {
+            string("query", "Die Query, nach der gesucht werden soll") {
                 required = true
             }
         }
@@ -373,19 +373,19 @@ class TagCommand : AbstractRootCommand() {
                     .map(Tag::name)
             }
             if (tags.isEmpty()) {
-                context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Namen."))
+                context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags mit diesem Namen."))
                 return
             }
-            Paginator(tags, context.author.asUser(), context, "Suche für $name")
+            Paginator(tags, context.author.asUser(), context, "Suche nach $name")
         }
     }
 
     private inner class RawCommand : AbstractSubCommand.Command(this) {
         override val name: String = "raw"
-        override val description: String = "Zeigt dir einen Tag ohne Markdown an"
+        override val description: String = "Zeigt einen Tag ohne Markdown-Formatierung an."
 
         override fun SubCommandBuilder.applyOptions() {
-            string("tag", "Der Name des Tags der unformatiert angezeigt werden soll") {
+            string("tag", "Der Name des Tags, der unformatiert angezeigt werden soll") {
                 required = true
             }
         }
@@ -415,7 +415,7 @@ class TagCommand : AbstractRootCommand() {
             context.respond(
                 Embeds.error(
                     "Keine Berechtigung!",
-                    "Nur Teammitglieder können nicht selbst-erstelle Tags bearbeiten."
+                    "Nur Teammitglieder können fremde Tags bearbeiten."
                 )
             )
             return true
@@ -458,7 +458,7 @@ class TagCommand : AbstractRootCommand() {
         return if (foundTag != null) foundTag else {
             val similarTag =
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).firstOrNull()
-            val similarTagHint = if (similarTag != null) " Meintest du vielleicht `${similarTag.name}`?" else ""
+            val similarTagHint = if (similarTag != null) " Meinst du vielleicht `${similarTag.name}`?" else ""
             context.respond(
                 Embeds.error(
                     "Tag nicht gefunden!",
@@ -487,7 +487,7 @@ class TagCommand : AbstractRootCommand() {
             context.respond(
                 Embeds.error(
                     "Reservierter Name!",
-                    "Die folgenden Namen sind reserviert `${reservedNames.joinToString()}`."
+                    "Die folgenden Namen sind reserviert: `${reservedNames.joinToString()}`."
                 )
             )
             return true

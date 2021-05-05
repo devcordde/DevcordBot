@@ -52,7 +52,7 @@ class EvalCommand : AbstractRootCommand() {
         override val description: String = "Führt den angegebenen Code aus."
 
         override fun SubCommandBuilder.applyOptions() {
-            int("language", "Die Sprache in der das Codesnippet ist") {
+            int("language", "Die Sprache, in der das Codesnippet ist") {
                 required = true
                 Language.values().forEach {
                     choice(it.humanReadable, it.ordinal)
@@ -64,7 +64,7 @@ class EvalCommand : AbstractRootCommand() {
             val origin = context.respond(
                 Embeds.info(
                     "Bitte gebe Code an",
-                    "Bitte sende den Code der ausgeführt werden soll in einer neuen Nachricht"
+                    "Bitte sende den Code, der ausgeführt werden soll, in einer neuen Nachricht"
                 )
             )
 
@@ -81,16 +81,16 @@ class EvalCommand : AbstractRootCommand() {
             val loading = context.acknowledgement.edit(
                 Embeds.loading(
                     "Code wird ausgeführt.",
-                    "Bitte warten"
+                    "Bitte warten..."
                 )
             )
 
             val (output) = JDoodle.execute(context.bot, language, script)
 
-            if (output.length > TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
+            if (output.length > TEXT_MAX_LENGTH - "Ausgabe: ``````".length) {
                 val result = Embeds.info(
                     "Erfolgreich ausgeführt!",
-                    "Ergebnis: ${Emotes.LOADING}"
+                    "Ausgabe: ${Emotes.LOADING}"
                 )
 
                 loading.edit(result)
@@ -99,7 +99,7 @@ class EvalCommand : AbstractRootCommand() {
                 description.replace(Emotes.LOADING.toRegex(), hasteUrl)
             } else {
                 loading.edit(
-                    Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$output```")
+                    Embeds.info("Erfolgreich ausgeführt!", "Ausgabe: ```$output```")
                 )
             }
         }
@@ -113,7 +113,7 @@ class EvalCommand : AbstractRootCommand() {
 
     private inner class ListCommand : AbstractSubCommand.Command(this) {
         override val name: String = "list"
-        override val description: String = "Listet die verfügbaren Sprachen auf."
+        override val description: String = "Listet die verfügbaren Programmiersprachen auf."
 
         override suspend fun execute(context: Context) {
             context.respond(

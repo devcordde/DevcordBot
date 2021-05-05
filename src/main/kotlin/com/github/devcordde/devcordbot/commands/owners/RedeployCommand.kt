@@ -29,7 +29,7 @@ import io.ktor.client.request.*
  */
 class RedeployCommand(private val host: String, private val token: String) : AbstractSingleCommand() {
     override val name: String = "redeploy"
-    override val description: String = "Erlaubt dem Bot sich zu updaten und neu zu starten."
+    override val description: String = "Updatet den Bot und startet ihn neu."
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
