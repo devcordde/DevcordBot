@@ -74,7 +74,7 @@ class DatabaseUpdater(private val bot: DevCordBot) {
             return@on
         }
 
-        if (message.channel.id !in bot.config.xpWhielist) {
+        if (message.channel.id !in bot.config.xpWhitelist) {
             return@on
         }
 

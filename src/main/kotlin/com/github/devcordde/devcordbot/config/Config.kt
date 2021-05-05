@@ -33,7 +33,7 @@ class Config internal constructor(private val config: Konfig) {
      * Default: Empty
      * Key: `XP_WHITELIST`
      */
-    val xpWhielist: List<Snowflake> by config.property(ConfigSpec.xpWhitelist)
+    val xpWhitelist: List<Snowflake> by config.property(ConfigSpec.xpWhitelist)
 
     /**
      * The URL to the hastebin server the bot should use
