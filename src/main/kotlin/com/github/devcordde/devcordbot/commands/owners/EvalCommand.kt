@@ -78,10 +78,12 @@ class EvalCommand : AbstractSingleCommand() {
                     "Ergebnis: ${Emotes.LOADING}"
                 )
                 val hasteUrl = HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient)
-                message.edit(result.apply {
-                    @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
-                    description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-                })
+                message.edit(
+                    result.apply {
+                        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
+                        description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
+                    }
+                )
                 result
             } else {
                 Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$evaluation```")
@@ -92,10 +94,12 @@ class EvalCommand : AbstractSingleCommand() {
                 "Es ist folgender Fehler aufgetreten: ```${e.message?.limit(1024)}``` Detailierter Fehler: ${Emotes.LOADING}"
             )
             val hasteUrl = HastebinUtil.postErrorToHastebin(e.stackTraceToString(), context.bot.httpClient)
-            message.edit(result.apply {
-                @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
-                description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
-            })
+            message.edit(
+                result.apply {
+                    @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Description is set above
+                    description = description!!.replace(Emotes.LOADING.toRegex(), hasteUrl)
+                }
+            )
             result
         }
         context.ack.edit(result)

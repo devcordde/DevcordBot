@@ -32,7 +32,6 @@ class SourceCommand : AbstractSingleCommand() {
     override val category: CommandCategory = CommandCategory.FUN
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-
     override fun ApplicationCommandCreateBuilder.applyOptions() {
         string("command", "Der Name des Commands für den der SourceCode angezeigt werden soll")
     }
@@ -53,8 +52,8 @@ class SourceCommand : AbstractSingleCommand() {
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // All command classes are not anonymous or local
         val classUrl =
             "$GITHUB_BASE$GITHUB_FILE_APPENDIX${
-                parentCommand::class.qualifiedName!!.replace(".", "/")
-                    .replace(".", "/")
+            parentCommand::class.qualifiedName!!.replace(".", "/")
+                .replace(".", "/")
             }.kt#L$definitionLine"
         context.respond(
             Embeds.info(

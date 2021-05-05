@@ -69,9 +69,9 @@ class DevmarktRequestUpdater(
      * Sends the event on an incoming reaction.
      */
     private fun Kord.onMessageReceived() = on<MessageCreateEvent> {
-        if (message.channelId != config.requestChannel
-            || message.author?.id != kord.selfId
-            || !isNewEntryMessage(message)
+        if (message.channelId != config.requestChannel ||
+            message.author?.id != kord.selfId ||
+            !isNewEntryMessage(message)
         ) {
             return@on
         }
@@ -84,9 +84,9 @@ class DevmarktRequestUpdater(
      * Sends the event on an incoming reaction.
      */
     private fun Kord.onReactionInDevmarktRequestChannel() = on<ReactionAddEvent> {
-        if (message.channelId != config.requestChannel
-            || userId == kord.selfId
-            || (emoji as? ReactionEmoji.Custom)?.id != config.checkEmote
+        if (message.channelId != config.requestChannel ||
+            userId == kord.selfId ||
+            (emoji as? ReactionEmoji.Custom)?.id != config.checkEmote
         ) {
             return@on
         }
@@ -169,8 +169,8 @@ class DevmarktRequestUpdater(
      * Sends the event on an incoming reaction.
      */
     private fun Kord.onReactonOnReasonMessage() = on<ReactionAddEvent> {
-        if (message.channel.id != config.requestChannel
-            || userId == kord.selfId
+        if (message.channel.id != config.requestChannel ||
+            userId == kord.selfId
         ) {
             return@on
         }
@@ -192,7 +192,6 @@ class DevmarktRequestUpdater(
         }
 
         val reason = getFieldValue(realMessage, "Begründung") ?: return@on
-
 
         message.delete()
         process(userId, requestId, reason, "decline")

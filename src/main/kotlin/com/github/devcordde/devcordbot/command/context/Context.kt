@@ -151,5 +151,4 @@ data class Context(
      */
     suspend fun hasPermission(permission: Permission): Boolean =
         commandClient.permissionHandler.isCovered(permission, member, devCordUser) == PermissionState.ACCEPTED
-
 }

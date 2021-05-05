@@ -47,7 +47,6 @@ class TagCommand : AbstractRootCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-
     init {
         registerCommands(
             CreateCommand(),
@@ -288,7 +287,6 @@ class TagCommand : AbstractRootCommand() {
         override val name: String = "transfer"
         override val description: String = "Überschreibt einen Tag an einen anderen Benutzer"
 
-
         override fun SubCommandBuilder.applyOptions() {
             user("target", "Der neue Besitzer des Tags") {
                 required = true
@@ -453,7 +451,6 @@ class TagCommand : AbstractRootCommand() {
             return true
         }
         return false
-
     }
 
     private suspend fun checkNotTagExists(name: String, context: Context): Tag? {
@@ -465,7 +462,7 @@ class TagCommand : AbstractRootCommand() {
             context.respond(
                 Embeds.error(
                     "Tag nicht gefunden!",
-                    "Es wurde kein Tag mit dem Namen `${name}` gefunden.$similarTagHint"
+                    "Es wurde kein Tag mit dem Namen `$name` gefunden.$similarTagHint"
                 )
             )
             return null

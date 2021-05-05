@@ -83,7 +83,8 @@ class HelpCommand : AbstractSingleCommand() {
     private suspend fun sendCommandList(context: Context) {
         context.respond(
             Embeds.info(
-                "Befehls-Hilfe", """Dies ist eine Liste aller Befehle, die du benutzen kannst,
+                "Befehls-Hilfe",
+                """Dies ist eine Liste aller Befehle, die du benutzen kannst,
             | um mehr über einen Befehl zu erfahren kannst du `sudo help [command]` ausführen
         """.trimMargin()
             ) {

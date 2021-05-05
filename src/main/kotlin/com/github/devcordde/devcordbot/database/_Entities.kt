@@ -98,7 +98,6 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
     var author: Snowflake by Tags.author
     var content: String by Tags.content
     val createdAt: Instant by Tags.createdAt
-
 }
 
 /**

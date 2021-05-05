@@ -42,7 +42,6 @@ abstract class AbstractCommand {
     abstract val category: CommandCategory
     open val commandPlace: CommandPlace = CommandPlace.ALL
 
-
     /**
      * Generates a list of [DiscordApplicationCommandPermissions][DiscordGuildApplicationCommandPermission]
      * required to register slash command permissions

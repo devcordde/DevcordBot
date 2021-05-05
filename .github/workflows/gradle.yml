@@ -27,7 +27,7 @@ jobs:
       with:
         java-version: 1.14
     - name: Test with Gradle
-      run: ./gradlew test 
+      run: ./gradlew test ktlintCheck
     - name: Build with Gradle
       run: ./gradlew build
     - name: Docker Publish

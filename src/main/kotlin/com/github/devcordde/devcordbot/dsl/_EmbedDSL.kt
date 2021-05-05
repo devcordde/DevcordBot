@@ -18,7 +18,6 @@ package com.github.devcordde.devcordbot.dsl
 
 import dev.kord.rest.builder.message.EmbedBuilder
 
-
 /**
  * Lambda that applies onto an [EmbedBuilder].
  *

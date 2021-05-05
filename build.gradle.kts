@@ -18,6 +18,7 @@ plugins {
     application
     kotlin("jvm") version "1.4.32"
     kotlin("plugin.serialization") version "1.4.32"
+    id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
 }
 
 group = "com.github.devcord.devcordbot"
@@ -85,7 +86,6 @@ dependencies {
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
     testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.7.1")
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.7.1")
-
 }
 
 application {
@@ -100,6 +100,10 @@ tasks {
             freeCompilerArgs =
                 freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn" + "-Xopt-in=dev.kord.common.annotation.KordPreview" + "-Xopt-in=dev.kord.common.annotation.KordExperimental"
         }
+    }
+
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        disabledRules.set(setOf("no-wildcard-imports"))
     }
 
     test {

@@ -131,7 +131,6 @@ internal class DevCordBotImpl(
         kord.listeners()
     }
 
-
     suspend fun start() {
         registerCommands()
 

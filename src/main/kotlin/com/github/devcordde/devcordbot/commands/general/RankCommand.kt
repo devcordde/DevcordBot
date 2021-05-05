@@ -80,7 +80,7 @@ class RankCommand : AbstractRootCommand() {
                 }
                 field {
                     name = "Nächstes Level"
-                    value = "${currentXP}/${nextLevelXP}XP ${buildProgressBar(currentXP, nextLevelXP)}"
+                    value = "$currentXP/${nextLevelXP}XP ${buildProgressBar(currentXP, nextLevelXP)}"
                 }
             }
         )
@@ -127,7 +127,7 @@ class RankCommand : AbstractRootCommand() {
                     .mapIndexed { index, it ->
                         val name =
                             context.guild.getMemberOrNull(it.userID)?.effictiveName ?: "Nicht auf dem Guild"
-                        "`${index + offset + 1}.` `${name}`: Level `${it.level}`"
+                        "`${index + offset + 1}.` `$name`: Level `${it.level}`"
                     }
             }
 

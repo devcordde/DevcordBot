@@ -21,7 +21,6 @@ import com.github.devcordde.devcordbot.command.AbstractRootCommand
 import com.github.devcordde.devcordbot.dsl.EmbedCreator
 import dev.kord.rest.builder.message.EmbedBuilder
 
-
 /**
  * Some presets for frequently used embeds.
  */

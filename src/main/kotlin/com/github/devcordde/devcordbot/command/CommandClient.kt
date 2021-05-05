@@ -17,8 +17,8 @@
 package com.github.devcordde.devcordbot.command
 
 import dev.kord.core.Kord
-import dev.kord.core.on
 import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.core.on
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 

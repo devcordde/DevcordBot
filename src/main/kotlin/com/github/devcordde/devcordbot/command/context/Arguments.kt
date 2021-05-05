@@ -22,7 +22,6 @@ import dev.kord.core.entity.User
 import dev.kord.core.entity.channel.MessageChannel
 import dev.kord.core.entity.interaction.OptionValue
 
-
 /**
  * Representation of a commands' arguments.
  * @property options a map storing a [OptionValue]s with their keys
@@ -55,7 +54,6 @@ data class Arguments(
      * Retrieves the an optional option by [name].
      */
     fun optionalArgument(name: String): OptionValue<*>? = options[name]
-
 
     @Suppress("unchecked_cast")
     private fun <T> optionalTypedArgument(name: String): OptionValue<T>? = optionalArgument(name) as OptionValue<T>?
@@ -95,7 +93,6 @@ data class Arguments(
         name: String
     ): MessageChannel? =
         optionalTypedArgument<MessageChannel>(name)?.value
-
 
     /**
      * Retrieves the an required option by [name].

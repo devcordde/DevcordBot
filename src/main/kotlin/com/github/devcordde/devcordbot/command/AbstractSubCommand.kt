@@ -70,7 +70,8 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
     /**
      * Representation of a [sub commands group](https://discord.com/developers/docs/interactions/slash-commands#subcommands-and-subcommand-groups).
      */
-    abstract class Group(parent: AbstractCommand) : AbstractSubCommand(parent),
+    abstract class Group(parent: AbstractCommand) :
+        AbstractSubCommand(parent),
         CommandRegistry<Command> {
         override fun ApplicationCommandCreateBuilder.applyCommand() {
             group(name, description) {

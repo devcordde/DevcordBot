@@ -31,7 +31,6 @@ import dev.kord.core.entity.interaction.PublicFollowupMessage
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.EmbedBuilder
 
-
 /**
  * Checks whether a string is numeric or not.
  */

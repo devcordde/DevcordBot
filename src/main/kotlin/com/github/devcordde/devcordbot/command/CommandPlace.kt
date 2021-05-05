@@ -20,7 +20,6 @@ import dev.kord.core.entity.interaction.DmInteraction
 import dev.kord.core.entity.interaction.GuildInteraction
 import dev.kord.core.event.interaction.InteractionCreateEvent
 
-
 /**
  * CommandPlace defines the places where the command may be executed.
  */
@@ -39,7 +38,6 @@ enum class CommandPlace {
      * Guild and Private Messages
      */
     ALL;
-
 
     /**
      * Check if the message matches the CommandPlace.
