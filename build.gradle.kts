@@ -39,7 +39,7 @@ dependencies {
     runtimeOnly(kotlin("scripting-jsr223"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.4.3")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.5.0-RC")
 
     // Logging
     implementation("io.github.microutils", "kotlin-logging", "1.12.5")
@@ -57,8 +57,8 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "4.0.3")
 
     // Discord
-    implementation("dev.kord", "kord-core", "0.7.0-RC2")
-    implementation("dev.kord.x", "emoji", "0.5.0-SNAPSHOT")
+    implementation("dev.kord", "kord-core", "kotlin-1.5-20210505.195343-2")
+//    implementation("dev.kord.x", "emoji", "0.5.0-SNAPSHOT")
 
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
@@ -70,14 +70,19 @@ dependencies {
     implementation("io.ktor", "ktor-client")
     implementation("io.ktor", "ktor-client-okhttp")
     implementation("io.ktor", "ktor-client-serialization")
-    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.1.0")
+    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.2.0")
 
     // Config
     implementation("com.github.uchuhimo.konf", "konf", "master-SNAPSHOT")
     implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.12.+")
 
     // Autohelp
-    implementation("me.schlaubi.autohelp", "kord", "1.1.1")
+    implementation("me.schlaubi.autohelp", "kord", "1.1.1") {
+        exclude("dev.kord.x", "emoji")
+    }
+    implementation("dev.kord.x", "emoji", "0.5.0-SNAPSHOT") {
+        exclude("dev.kord")
+    }
     implementation("dev.schlaubi.forp", "forp-analyze-client", "1.0-SNAPSHOT")
     implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.60.2")
 

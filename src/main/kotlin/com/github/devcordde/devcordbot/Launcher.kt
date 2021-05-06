@@ -29,13 +29,14 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import org.slf4j.LoggerFactory
+import kotlin.time.ExperimentalTime
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
 import org.slf4j.event.Level as SLF4JLevel
 
 /**
  * DevCordBot entry point.
  */
-@OptIn(PrivilegedIntent::class)
+@OptIn(PrivilegedIntent::class, ExperimentalTime::class)
 suspend fun main(args: Array<String>) {
     val cliParser = ArgParser("devcordbot")
     val debugMode by cliParser.option(

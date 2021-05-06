@@ -35,7 +35,10 @@ import dev.kord.core.live.onShutDown
 import dev.kord.x.emoji.DiscordEmoji
 import dev.kord.x.emoji.Emojis
 import dev.kord.x.emoji.addReaction
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.min
@@ -184,7 +187,7 @@ class Paginator internal constructor(
         if (canceller.isActive) {
             canceller.cancel()
         }
-        canceller = GlobalScope.launch {
+        canceller = launch {
             delay(timeoutMillis)
             close(false)
         }

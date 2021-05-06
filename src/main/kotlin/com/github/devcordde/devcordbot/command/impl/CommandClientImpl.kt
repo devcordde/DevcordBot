@@ -37,9 +37,12 @@ import dev.kord.core.entity.interaction.InteractionCommand
 import dev.kord.core.entity.interaction.SubCommand
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.core.on
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.Executors
@@ -146,7 +149,7 @@ class CommandClientImpl(
         val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
             errorHandler.handleException(throwable, context, Thread.currentThread(), coroutineContext)
         }
-        GlobalScope.launch(executor + exceptionHandler) {
+        bot.launch(executor + exceptionHandler) {
             logger.info { "Command $command was executed by ${context.member}" }
             when (command) {
                 is AbstractSingleCommand -> command.execute(context)
