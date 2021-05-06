@@ -38,7 +38,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  */
 class RankCommand : AbstractRootCommand() {
     override val name: String = "rank"
-    override val description: String = "Zeigt die Ränge von Usern an."
+    override val description: String = "Zeigt das Level von Nutzern an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
@@ -50,10 +50,10 @@ class RankCommand : AbstractRootCommand() {
 
     private inner class StatsCommand : AbstractSubCommand.Command(this) {
         override val name: String = "stats"
-        override val description: String = "Zeigt die Statistik eines Users an"
+        override val description: String = "Zeigt den Rang eines Nutzers an."
 
         override fun SubCommandBuilder.applyOptions() {
-            user("target", "Der User für den die Statistik angezeigt werden soll")
+            user("target", "Der Nutzer, von dem der Rang angezeigt werden soll")
         }
 
         override suspend fun execute(context: Context) {
@@ -99,7 +99,7 @@ class RankCommand : AbstractRootCommand() {
         override val description: String = "Zeigt die 10 User mit dem höchsten Rang an."
 
         override fun SubCommandBuilder.applyOptions() {
-            int("offset", "Der Index um den die Liste verschoben werden soll")
+            int("offset", "Der Index, um den die Liste verschoben werden soll")
         }
 
         override suspend fun execute(context: Context) {
@@ -126,7 +126,7 @@ class RankCommand : AbstractRootCommand() {
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
                     .mapIndexed { index, it ->
                         val name =
-                            context.guild.getMemberOrNull(it.userID)?.effictiveName ?: "Nicht auf dem Guild"
+                            context.guild.getMemberOrNull(it.userID)?.effictiveName ?: "Nicht auf dem Server"
                         "`${index + offset + 1}.` `$name`: Level `${it.level}`"
                     }
             }

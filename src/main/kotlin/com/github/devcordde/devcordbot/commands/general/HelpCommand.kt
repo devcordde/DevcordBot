@@ -31,13 +31,13 @@ import java.util.*
  */
 class HelpCommand : AbstractSingleCommand() {
     override val name: String = "help"
-    override val description: String = "Zeigt eine Liste aller Befehle"
+    override val description: String = "Zeigt eine Liste aller Befehle."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override fun ApplicationCommandCreateBuilder.applyOptions() {
-        string("command", "Der Name eines Commands für den Hilfe angezeigt werden soll")
+        string("command", "Der Name eines Befehls, für den Hilfe angezeigt werden soll")
     }
 
     override suspend fun execute(context: Context) {
@@ -71,8 +71,8 @@ class HelpCommand : AbstractSingleCommand() {
         if (!command.commandPlace.matches(context.event)) {
             context.respond(
                 Embeds.error(
-                    "Falscher Context!",
-                    "Der Command ist in diesem Channel nicht ausführbar."
+                    "Falscher Ort!",
+                    "Der Command ist in diesem Kanal nicht ausführbar."
                 )
             )
             return
@@ -86,7 +86,7 @@ class HelpCommand : AbstractSingleCommand() {
             Embeds.info(
                 "Befehls-Hilfe",
                 """Dies ist eine Liste aller Befehle, die du benutzen kannst,
-            | um mehr über einen Befehl zu erfahren kannst du `sudo help [command]` ausführen
+            | um mehr über einen Befehl zu erfahren, kannst du `sudo help [command]` ausführen.
         """.trimMargin()
             ) {
                 val commands = context.commandClient.registeredCommands.filter {

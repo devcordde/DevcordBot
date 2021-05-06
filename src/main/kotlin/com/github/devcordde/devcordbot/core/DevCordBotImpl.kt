@@ -124,10 +124,10 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
-        logger.info { "Establishing connection to the database …" }
+        logger.info { "Establishing connection to the database..." }
         connectToDatabase()
 
-        logger.info { "Registering commands …" }
+        logger.info { "Registering commands..." }
         kord.listeners()
     }
 
@@ -172,7 +172,7 @@ internal class DevCordBotImpl(
      */
     @OptIn(ExperimentalTime::class)
     private fun Kord.whenReady() = on<ReadyEvent> {
-        logger.info { "Received Ready event initializing bot internals …" }
+        logger.info { "Received Ready event, initializing bot internals..." }
         isInitialized = true
     }
 
@@ -180,7 +180,7 @@ internal class DevCordBotImpl(
      * Fired when the Discord connection gets interrupted
      */
     private fun Kord.whenDisconnected() = on<DisconnectEvent> {
-        logger.warn { "Bot got disconnected (code: $this) disabling Discord specific internals" }
+        logger.warn { "Bot got disconnected (code: $this), disabling Discord specific internals" }
         isInitialized = false
         gameAnimator.stop()
     }

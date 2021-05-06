@@ -35,7 +35,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  */
 class BlacklistCommand : AbstractRootCommand() {
     override val name: String = "blacklist"
-    override val description: String = "Hindert einen User daran Commands auszuführen."
+    override val description: String = "Hindert einen Nutzer daran, Befehle auszuführen."
     override val permission: Permission = Permission.ADMIN
     override val category: CommandCategory = CommandCategory.MODERATION
     override val commandPlace: CommandPlace = CommandPlace.ALL
@@ -47,10 +47,10 @@ class BlacklistCommand : AbstractRootCommand() {
 
     private inner class BlacklistToggleCommand : AbstractSubCommand.Command(this) {
         override val name: String = "toggle"
-        override val description: String = "Fügt hinzu/Entfernt einen Nutzer von der blacklist"
+        override val description: String = "Ändert den Blacklist-Status eines Nutzers."
 
         override fun SubCommandBuilder.applyOptions() {
-            user("target", "Der Nutzer der zur/von der Schwarzen Liste hinzugefügt/entfernt werden soll") {
+            user("target", "Der Nutzer, dessen Blacklist-Status geändert werden soll") {
                 required = true
             }
         }
@@ -65,28 +65,28 @@ class BlacklistCommand : AbstractRootCommand() {
                 devcordUser.blacklisted
             }
 
-            context.respond(Embeds.success(if (blacklisted) "User zur Blacklist hinzugefügt." else "User aus der Blacklist entfernt."))
+            context.respond(Embeds.success(if (blacklisted) "Nutzer zur Blacklist hinzugefügt." else "Nutzer aus der Blacklist entfernt."))
         }
     }
 
     private inner class BlacklistListCommand : AbstractSubCommand.Command(this) {
         override val name: String = "list"
-        override val description: String = "Listet geblacklistete User auf."
+        override val description: String = "Listet geblacklistete Nutzer auf."
 
         override suspend fun execute(context: Context) {
             val userNames = newSuspendedTransaction {
                 DatabaseDevCordUser.find {
                     Users.blacklisted eq true
                 }.map {
-                    "`${context.guild.getMemberOrNull(it.userID)?.effictiveName ?: "Nicht auf dem Guild"}`"
+                    "`${context.guild.getMemberOrNull(it.userID)?.effictiveName ?: "Nicht auf dem Server"}`"
                 }
             }
 
             if (userNames.isEmpty()) {
-                context.respond(Embeds.warn("Niemand da!", "Es ist niemand auf der blacklist"))
+                context.respond(Embeds.warn("Niemand da!", "Es ist niemand auf der Blacklist"))
                 return
             }
-            context.respond(Embeds.success("Blacklisted Users", userNames.joinToString(", ")))
+            context.respond(Embeds.success("Geblacklistete Nutzer", userNames.joinToString(", ")))
         }
     }
 }

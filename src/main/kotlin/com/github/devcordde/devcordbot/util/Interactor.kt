@@ -36,7 +36,7 @@ import kotlin.time.ExperimentalTime
  * Updates a message to a timed out message.
  */
 suspend fun MessageBehavior.timeout(): Message = edit {
-    Embeds.error("Timed out", "Du hast zu lange gebraucht.")
+    Embeds.error("Zeit abgelaufen!", "Du hast zu lange gebraucht.")
 }
 
 /**

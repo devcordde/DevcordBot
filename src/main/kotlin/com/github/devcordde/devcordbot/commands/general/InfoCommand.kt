@@ -30,7 +30,7 @@ import kotlinx.coroutines.async
  */
 class InfoCommand : AbstractSingleCommand() {
     override val name: String = "info"
-    override val description: String = "Zeigt Bot-Informationen an."
+    override val description: String = "Zeigt Infos über den Bot an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL

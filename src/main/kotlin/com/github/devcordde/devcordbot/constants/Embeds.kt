@@ -96,14 +96,14 @@ object Embeds {
                 value = command.name
             }
             field {
-                name = "Permission"
+                name = "Berechtigung"
                 value = command.permission.name
             }
             val subCommands =
                 (command as? AbstractRootCommand)?.registeredCommands?.map(AbstractCommand::name)
             if (!subCommands.isNullOrEmpty()) {
                 field {
-                    name = "Sub commands"
+                    name = "Unterbefehle"
                     value = subCommands.joinToString("\n")
                 }
             }

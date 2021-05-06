@@ -36,7 +36,7 @@ import javax.script.ScriptException
  */
 class EvalCommand : AbstractSingleCommand() {
     override val name: String = "ev"
-    override val description: String = "Führt Kotlin Code über den Bot aus"
+    override val description: String = "Führt Kotlin-Code über den Bot aus."
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
@@ -49,7 +49,7 @@ class EvalCommand : AbstractSingleCommand() {
         val message = context.respond(
             Embeds.loading(
                 "Code wird kompiliert und ausgeführt",
-                "Bitte warte einen Augenblick während dein Script kompiliert und ausgeführt wird"
+                "Bitte warte einen Augenblick, während dein Script kompiliert und ausgeführt wird..."
             )
         )
 
@@ -70,10 +70,10 @@ class EvalCommand : AbstractSingleCommand() {
         scriptEngine.put("context", context)
         val result = try {
             val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
-            if (evaluation.length > TEXT_MAX_LENGTH - "Ergebnis: ``````".length) {
+            if (evaluation.length > TEXT_MAX_LENGTH - "Ausgabe: ``````".length) {
                 val result = Embeds.info(
                     "Erfolgreich ausgeführt!",
-                    "Ergebnis: ${Emotes.LOADING}"
+                    "Ausgabe: ${Emotes.LOADING}"
                 )
                 val hasteUrl = HastebinUtil.postErrorToHastebin(evaluation, context.bot.httpClient)
                 message.edit(
@@ -84,7 +84,7 @@ class EvalCommand : AbstractSingleCommand() {
                 )
                 result
             } else {
-                Embeds.info("Erfolgreich ausgeführt!", "Ergebnis: ```$evaluation```")
+                Embeds.info("Erfolgreich ausgeführt!", "Ausgabe: ```$evaluation```")
             }
         } catch (e: ScriptException) {
             val result = Embeds.error(
