@@ -24,6 +24,8 @@ import dev.kord.core.Kord
 import dev.kord.gateway.Intent
 import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
 import io.sentry.Sentry
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -67,6 +69,7 @@ suspend fun main(args: Array<String>) {
     Constants.hastebinUrl = config.hasteHost
 
     val kord = Kord(config.discord.token) {
+        httpClient = HttpClient(CIO)
         intents = Intents.nonPrivileged + Intent.GuildMembers
     }
     val guild = kord.getGuild(config.discord.guildId) ?: error("Could not find dev guild")

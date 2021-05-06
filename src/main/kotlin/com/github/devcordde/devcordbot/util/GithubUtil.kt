@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.util
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -49,4 +50,4 @@ class GithubUtil(private val client: HttpClient) {
  * @property url the url to the contributors GitHub profile
  */
 @Serializable
-data class GitHubContributor(val name: String, val url: String)
+data class GitHubContributor(@SerialName("login") val name: String, val url: String)

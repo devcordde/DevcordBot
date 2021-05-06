@@ -46,11 +46,12 @@ import dev.kord.core.event.gateway.ResumedEvent
 import dev.kord.core.on
 import dev.schlaubi.forp.analyze.client.RemoteStackTraceAnalyzer
 import io.ktor.client.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import me.schlaubi.autohelp.AutoHelp
@@ -90,7 +91,7 @@ internal class DevCordBotImpl(
         }
     }
     override val github: GithubUtil = GithubUtil(httpClient)
-    override val coroutineContext: CoroutineContext = Dispatchers.IO + Job()
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
     override val googler: Googler = Googler(this)
 
@@ -104,6 +105,7 @@ internal class DevCordBotImpl(
         htmlRenderer { de.nycode.bankobot.docdex.htmlRenderer.convert(this) }
 
         analyzer = RemoteStackTraceAnalyzer {
+            httpEngine = CIO
             serverUrl = config.autoHelp.host
             authKey = config.autoHelp.key
         }

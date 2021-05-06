@@ -17,6 +17,7 @@
 package com.github.devcordde.devcordbot.database
 
 import dev.kord.common.entity.Snowflake
+import mu.KotlinLogging
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -25,6 +26,8 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.currentDialect
+
+private val LOG = KotlinLogging.logger {}
 
 /**
  * Adds a column of type [Snowflake] to the table
@@ -41,7 +44,17 @@ fun Table.snowflake(name: String): Column<Snowflake> = registerColumn(name, Snow
 object SnowflakeColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
-    override fun valueFromDB(value: Any): Any = Snowflake(value.toString())
+    override fun valueFromDB(value: Any): Any {
+        return when (value) {
+            is Snowflake -> value
+            is Long -> Snowflake(value)
+            is String -> Snowflake(value)
+            else -> {
+                LOG.warn { "Unexpected type of snowflake: ${value::class.qualifiedName}" }
+                Snowflake(value.toString())
+            }
+        }
+    }
 
     override fun valueToDB(value: Any?): Any {
         require(value is Snowflake) { "Value has to be Snowflake" }

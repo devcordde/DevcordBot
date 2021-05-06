@@ -23,6 +23,7 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.listeners.Level
+import kotlinx.coroutines.flow.toList
 
 /**
  * RanksCommand.
@@ -35,10 +36,11 @@ class RanksCommand : AbstractSingleCommand() {
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
+        val roles = context.guild.roles.toList().associateBy { it.id }
         context.respond(
             Embeds.info("Rollen") {
                 Level.values().forEach {
-                    val roleName = context.guild.getRoleOrNull(it.roleId)?.name ?: "Rolle nicht gefunden"
+                    val roleName = roles[it.roleId]?.name ?: "Rolle nicht gefunden"
                     field {
                         name = "Level ${it.level}"
                         value = roleName

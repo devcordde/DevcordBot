@@ -169,19 +169,27 @@ class TagCommand : AbstractRootCommand() {
             string("name", "Der Name des zu berarbeitenden Tags") {
                 required = true
             }
-
-            string("content", "Der neue Inhalt des Tags") {
-                required = true
-            }
         }
 
+        @OptIn(ExperimentalTime::class)
         override suspend fun execute(context: Context) {
-            val (name, content) = parseTag(context) ?: return
+            val name = context.args.string("name")
             val tag = newSuspendedTransaction { checkNotTagExists(name, context) } ?: return
             if (checkPermission(tag, context)) return
+
+            val status = context.respond(
+                Embeds.info(
+                    "Bitte gebe den Inhalt an!",
+                    "Bitte gebe den Inhalt des Tags in einer neuen Nachricht an."
+                )
+            )
+
+            val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
+
             transaction {
                 tag.content = content
             }
+
             context.respond(
                 Embeds.success(
                     "Tag erfolgreich bearbeitet!",

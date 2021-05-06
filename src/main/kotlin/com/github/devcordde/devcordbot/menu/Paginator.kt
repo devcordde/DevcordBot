@@ -162,12 +162,11 @@ class Paginator internal constructor(
         if (event.user.id != event.kord.selfId) {
             event.message.deleteReaction(event.userId, event.emoji)
         } else return // Don't react to the bots reactions
-
-        val nextPage = when (Emojis[emoji.name]) {
-            BULK_LEFT -> 1
-            LEFT -> currentPage - 1
-            RIGHT -> currentPage + 1
-            BULK_RIGHT -> pages
+        val nextPage = when (emoji.name) {
+            BULK_LEFT.unicode -> 1
+            LEFT.unicode -> currentPage - 1
+            RIGHT.unicode -> currentPage + 1
+            BULK_RIGHT.unicode -> pages
             else -> -1
         }
 
@@ -184,7 +183,7 @@ class Paginator internal constructor(
     }
 
     private fun rescheduleTimeout() {
-        if (canceller.isActive) {
+        if (::canceller.isInitialized && canceller.isActive) {
             canceller.cancel()
         }
         canceller = launch {

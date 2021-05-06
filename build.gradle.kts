@@ -57,8 +57,11 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "4.0.3")
 
     // Discord
-    implementation("dev.kord", "kord-core", "kotlin-1.5-20210505.195343-2")
-//    implementation("dev.kord.x", "emoji", "0.5.0-SNAPSHOT")
+    implementation("dev.kord", "kord-core", "kotlin-1.5-20210505.195343-2") {
+        version {
+            strictly("kotlin-1.5-20210505.195343-2")
+        }
+    }
 
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
@@ -69,20 +72,21 @@ dependencies {
     implementation(platform("io.ktor:ktor-bom:1.5.3"))
     implementation("io.ktor", "ktor-client")
     implementation("io.ktor", "ktor-client-okhttp")
-    implementation("io.ktor", "ktor-client-serialization")
-    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.2.0")
+    implementation("io.ktor", "ktor-client-serialization-jvm") {
+        exclude("org.jetbrains.kotlinx", "kotlinx-serialization-json")
+    }
+    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.0.0") {
+        version {
+            strictly("1.0.0")
+        }
+    }
 
     // Config
     implementation("com.github.uchuhimo.konf", "konf", "master-SNAPSHOT")
     implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.12.+")
 
     // Autohelp
-    implementation("me.schlaubi.autohelp", "kord", "1.1.1") {
-        exclude("dev.kord.x", "emoji")
-    }
-    implementation("dev.kord.x", "emoji", "0.5.0-SNAPSHOT") {
-        exclude("dev.kord")
-    }
+    implementation("me.schlaubi.autohelp", "kord", "1.1.1")
     implementation("dev.schlaubi.forp", "forp-analyze-client", "1.0-SNAPSHOT")
     implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.60.2")
 
