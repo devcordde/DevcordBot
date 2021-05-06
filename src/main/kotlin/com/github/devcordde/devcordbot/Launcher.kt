@@ -55,9 +55,6 @@ suspend fun main(args: Array<String>) {
     ).default("INFO")
     cliParser.parse(args)
 
-    val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
-    rootLogger.level = Level.valueOf(logLevelRaw)
-
     val config = Config()
 
     if (debugMode) {
@@ -65,6 +62,9 @@ suspend fun main(args: Array<String>) {
     } else {
         Sentry.init("${config.sentry.dsn}?stacktrace.app.packages=com.github.devcordde.devcordbot")
     }
+
+    val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
+    rootLogger.level = Level.valueOf(logLevelRaw)
 
     Constants.hastebinUrl = config.hasteHost
 
