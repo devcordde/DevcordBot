@@ -108,6 +108,7 @@ internal class DevCordBotImpl(
             httpEngine = CIO
             serverUrl = config.autoHelp.host
             authKey = config.autoHelp.key
+            dispatcher = coroutineContext
         }
 
         kordContext {
