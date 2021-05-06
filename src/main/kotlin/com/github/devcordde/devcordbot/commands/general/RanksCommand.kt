@@ -16,37 +16,37 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.listeners.Level
+import kotlinx.coroutines.flow.toList
 
 /**
  * RanksCommand.
  */
-class RanksCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("ranks", "levels")
-    override val displayName: String = "ranks"
+class RanksCommand : AbstractSingleCommand() {
+    override val name: String = "ranks"
     override val description: String = "Zeigt die verfügbaren Ränge an."
-    override val usage: String = ""
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
+        val roles = context.guild.roles.toList().associateBy { it.id }
         context.respond(
             Embeds.info("Rollen") {
                 Level.values().forEach {
-                    val roleName = context.guild.getRoleById(it.roleId)?.name ?: "Rolle nicht gefunden"
-                    addField(
-                        "Level ${it.level}",
-                        roleName
-                    )
+                    val roleName = roles[it.roleId]?.name ?: "Rolle nicht gefunden"
+                    field {
+                        name = "Level ${it.level}"
+                        value = roleName
+                    }
                 }
             }
-        ).queue()
+        )
     }
 }

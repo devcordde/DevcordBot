@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.owners
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
@@ -24,19 +24,17 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Tag
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.entity.Guild
 import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.User
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 /**
  * Cleanup Command
  */
-class CleanupCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("cleanup")
-    override val displayName: String = "Cleanup"
-    override val description: String = "Entfernt die Level von ungültigen Membern"
-    override val usage: String = "<tagname>"
+class CleanupCommand : AbstractSingleCommand() {
+    override val name: String = "cleanup"
+    override val description: String = "Entfernt die Level von ungültigen Membern."
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val permission: Permission = Permission.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
@@ -46,22 +44,22 @@ class CleanupCommand : AbstractCommand() {
     override suspend fun execute(context: Context) {
         val guild = context.bot.guild
         val cleanedUsers = cleanupRanks(guild)
-        val cleanedTags = cleanupTags(guild, context.bot.jda.selfUser)
+        val cleanedTags = cleanupTags(guild, context.bot.kord.selfId)
 
-        return context.respond(
+        context.respond(
             Embeds.info(
                 "Erfolgreich ausgeführt!",
                 """
-                Entfernte User: $cleanedUsers
-                Veränderte Tags: $cleanedTags
+                Entfernte Nutzer: $cleanedUsers
+                Übertragene Tags: $cleanedTags
                 """
             )
-        ).queue()
+        )
     }
 
-    private fun cleanupRanks(guild: Guild): Int {
+    private suspend fun cleanupRanks(guild: Guild): Int {
         var clearedEntries = 0
-        transaction {
+        newSuspendedTransaction {
             DatabaseDevCordUser.all().forEach {
                 if (!isMemberOfGuild(guild, it.userID)) {
                     logger.info { "User gelöscht: ID ${it.userID}, Level: ${it.level}, XP: ${it.experience}" }
@@ -73,13 +71,13 @@ class CleanupCommand : AbstractCommand() {
         return clearedEntries
     }
 
-    private fun cleanupTags(guild: Guild, selfUser: User): Int {
+    private suspend fun cleanupTags(guild: Guild, selfId: Snowflake): Int {
         var movedEntries = 0
-        transaction {
+        newSuspendedTransaction {
             Tag.all().forEach {
                 if (!isMemberOfGuild(guild, it.author)) {
                     logger.info { "Autor geändert: Alter Author: ${it.author}, Name: ${it.name}" }
-                    it.author = selfUser.idLong
+                    it.author = selfId
                     movedEntries++
                 }
             }
@@ -87,7 +85,6 @@ class CleanupCommand : AbstractCommand() {
         return movedEntries
     }
 
-    private fun isMemberOfGuild(guild: Guild, userID: Long): Boolean {
-        return guild.getMemberById(userID) != null
-    }
+    private suspend fun isMemberOfGuild(guild: Guild, userID: Snowflake): Boolean =
+        guild.getMemberOrNull(userID) != null
 }

@@ -25,7 +25,7 @@ jobs:
       with:
         java-version: 15
     - name: Test with Gradle
-      run: ./gradlew test
+      run: ./gradlew test ktlintCheck
     - name: Build with Gradle
       run: ./gradlew installDist
     - name: Docker Publish

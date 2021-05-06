@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractRootCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
@@ -26,53 +26,64 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.XPUtil
-import net.dv8tion.jda.api.entities.User
+import com.github.devcordde.devcordbot.util.effictiveName
+import dev.kord.core.entity.User
+import dev.kord.rest.builder.interaction.SubCommandBuilder
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Rank command.
  */
-class RankCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("rank", "r", "level", "chrank")
-    override val displayName: String = "Rank"
-    override val description: String = "Zeigt die Ränge von Usern an."
-    override val usage: String = ""
+class RankCommand : AbstractRootCommand() {
+    override val name: String = "rank"
+    override val description: String = "Zeigt das Level von Nutzern an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     init {
+        registerCommands(StatsCommand())
         registerCommands(TopCommand())
     }
 
-    override suspend fun execute(context: Context) {
-        val user = context.args.optionalUser(0, jda = context.jda)
-            ?: return sendRankInformation(context.author, context, true)
-        sendRankInformation(user, context)
+    private inner class StatsCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "stats"
+        override val description: String = "Zeigt den Rang eines Nutzers an."
+
+        override fun SubCommandBuilder.applyOptions() {
+            user("target", "Der Nutzer, von dem der Rang angezeigt werden soll")
+        }
+
+        override suspend fun execute(context: Context) {
+            val user = context.args.optionalUser("target")
+                ?: return sendRankInformation(context.author.asUser(), context, true)
+            sendRankInformation(user, context)
+        }
     }
 
-    private fun sendRankInformation(user: User, context: Context, default: Boolean = false) {
+    private suspend fun sendRankInformation(user: User, context: Context, default: Boolean = false) {
         val entry =
-            if (default) context.devCordUser else transaction { DatabaseDevCordUser.findOrCreateById(user.idLong) }
+            if (default) context.devCordUser else transaction { DatabaseDevCordUser.findOrCreateById(user.id.value) }
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(
             Embeds.info(
-                "Rang von ${user.asTag}",
+                "Rang von ${user.tag}",
                 ""
             ) {
-                addField(
-                    "Level",
-                    entry.level.toString(),
-                    true
-                )
-                addField(
-                    "Nächstes Level",
-                    "${currentXP}/${nextLevelXP}XP ${buildProgressBar(currentXP, nextLevelXP)}"
-                )
+                field {
+                    name = "Level"
+                    value = entry.level.toString()
+                    inline = true
+                }
+                field {
+                    name = "Nächstes Level"
+                    value = "$currentXP/${nextLevelXP}XP ${buildProgressBar(currentXP, nextLevelXP)}"
+                }
             }
-        ).queue()
+        )
     }
 
     private fun buildProgressBar(current: Long, next: Long): String {
@@ -83,14 +94,16 @@ class RankCommand : AbstractCommand() {
         return stringBuilder.toString()
     }
 
-    private inner class TopCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("top", "t", "leaderboard", "thebest")
-        override val displayName: String = "Top"
+    private inner class TopCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "top"
         override val description: String = "Zeigt die 10 User mit dem höchsten Rang an."
-        override val usage: String = "[offset]"
+
+        override fun SubCommandBuilder.applyOptions() {
+            int("offset", "Der Index, um den die Liste verschoben werden soll")
+        }
 
         override suspend fun execute(context: Context) {
-            var offset = context.args.optionalInt(0) ?: 0
+            var offset = context.args.optionalInt("offset") ?: 0
             var invalidOffset = false
             var maxOffset = 0
             if (offset < 0) offset = 0
@@ -108,12 +121,13 @@ class RankCommand : AbstractCommand() {
                 }
             }
 
-            val users = transaction {
+            val users = newSuspendedTransaction {
                 DatabaseDevCordUser.all().limit(10, offset.toLong())
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
                     .mapIndexed { index, it ->
-                        val name = context.guild.getMemberById(it.userID)?.effectiveName ?: "Nicht auf dem Guild"
-                        "`${index + offset + 1}.` `${name}`: Level `${it.level}`"
+                        val name =
+                            context.guild.getMemberOrNull(it.userID)?.effictiveName ?: "Nicht auf dem Server"
+                        "`${index + offset + 1}.` `$name`: Level `${it.level}`"
                     }
             }
 
@@ -123,11 +137,10 @@ class RankCommand : AbstractCommand() {
                         "Rangliste | Zu hoher Offset! (Maximum: ${maxOffset - 1})",
                         users.joinToString("\n")
                     )
-                ).queue()
+                )
                 return
             }
-            context.respond(Embeds.info("Rangliste", users.joinToString("\n"))).queue()
+            context.respond(Embeds.info("Rangliste", users.joinToString("\n")))
         }
-
     }
 }

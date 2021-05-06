@@ -16,16 +16,17 @@
 
 package com.github.devcordde.devcordbot.listeners
 
+import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
-import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.database.Tags
 import com.github.devcordde.devcordbot.database.Users
-import com.github.devcordde.devcordbot.event.DevCordGuildMessageReceivedEvent
 import com.github.devcordde.devcordbot.util.XPUtil
-import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent
-import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.hooks.SubscribeEvent
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.Kord
+import dev.kord.core.event.guild.MemberJoinEvent
+import dev.kord.core.event.guild.MemberLeaveEvent
+import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.on
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -36,25 +37,27 @@ import java.time.Instant
 /**
  * Updates the Database based on Discord events.
  */
-class DatabaseUpdater(private val whiteList: List<String>) {
+class DatabaseUpdater(private val bot: DevCordBot) {
 
     /**
-     * Adds a user to the database when a user joins the guild.
+     * Registers all required listeners.
      */
-    @SubscribeEvent
-    fun onMemberJoin(event: GuildMemberJoinEvent): DevCordUser? =
-        transaction { DatabaseDevCordUser.findOrCreateById(event.user.idLong) }
+    fun Kord.registerListeners() {
+        onMemberJoin()
+        onMemberLeave()
+        onMessageSent()
+    }
 
-    /**
-     * Removes a user from the database when the user leaves the guild.
-     */
-    @SubscribeEvent
-    fun onMemberLeave(event: GuildMemberRemoveEvent) {
-        val id = event.member?.idLong ?: return
+    private fun Kord.onMemberJoin() = on<MemberJoinEvent> {
+        transaction { DatabaseDevCordUser.findOrCreateById(member.id.value) }
+    }
+
+    private fun Kord.onMemberLeave() = on<MemberLeaveEvent> {
+        val id = user.id
 
         transaction {
             Tags.update({ Tags.author eq id }) {
-                it[author] = event.jda.selfUser.idLong
+                it[author] = kord.selfId
             }
         }
 
@@ -66,32 +69,34 @@ class DatabaseUpdater(private val whiteList: List<String>) {
     /**
      * Adds XP to a user
      */
-    @SubscribeEvent
-    fun onMessageSent(event: DevCordGuildMessageReceivedEvent) {
-        if (event.author.isBot) {
-            return
+    private fun Kord.onMessageSent() = on<MessageCreateEvent> {
+        if (message.author == null || message.author?.isBot == true) {
+            return@on
         }
 
-        if (event.channel.id !in whiteList) {
-            return
+        if (message.channel.id !in bot.config.xpWhitelist) {
+            return@on
         }
 
-        val user = event.devCordUser
+        val author = message.author ?: return@on
+
+        val user = DatabaseDevCordUser.findOrCreateById(author.id.value)
 
         if (user.blacklisted) {
-            return
+            return@on
         }
 
         if (Duration.between(user.lastUpgrade, Instant.now()) < Duration.ofSeconds(15)) {
-            return
+            return@on
         }
+
         val previousLevel = user.level
         var newLevel = previousLevel
         transaction {
             // For some bizarre reasons using the DAO update performs a useless SELECT query before the update query
             Users.update(
                 {
-                    Users.id eq event.author.idLong
+                    Users.id eq message.author!!.id
                 }
             ) {
                 @Suppress("UNCHECKED_CAST") // Users.update will give you UpdateStatement<User> :smart:
@@ -108,25 +113,25 @@ class DatabaseUpdater(private val whiteList: List<String>) {
         }
 
         if (previousLevel != newLevel) {
-            updateLevel(event, newLevel)
+            updateLevel(newLevel)
         }
     }
 
-    private fun updateLevel(event: GuildMessageReceivedEvent, level: Int) {
+    private suspend fun MessageCreateEvent.updateLevel(level: Int) {
         val rankLevel = Level.values().findLast { it.level <= level } ?: return
-        val guild = event.guild
-        val user = event.member ?: return
+        val guild = getGuild() ?: return
+        val user = message.getAuthorAsMember() ?: return
 
         if (rankLevel.previousLevel != null) {
-            val role = guild.getRoleById(rankLevel.previousLevel.roleId)
-            if (role != null && role in user.roles) {
-                guild.removeRoleFromMember(user, role).queue()
+            val role = guild.getRoleOrNull(rankLevel.previousLevel.roleId)
+            if (role != null && role.id in user.roleIds) {
+                user.removeRole(role.id, "Rank system")
             }
         }
 
-        val role = guild.getRoleById(rankLevel.roleId)
-        if (role != null && role !in user.roles) {
-            guild.addRoleToMember(user, role).queue()
+        val role = guild.getRoleOrNull(rankLevel.roleId)
+        if (role != null && role.id !in user.roleIds) {
+            user.addRole(role.id, "Rank system")
         }
     }
 }
@@ -139,7 +144,7 @@ class DatabaseUpdater(private val whiteList: List<String>) {
  */
 @Suppress("KDocMissingDocumentation")
 enum class Level(
-    val roleId: Long,
+    val roleId: Snowflake,
     val level: Int,
     val previousLevel: Level?
 ) {
@@ -150,5 +155,7 @@ enum class Level(
     LEVEL_35(739065293808205904, 35, LEVEL_20),
     LEVEL_50(739064877842432010, 50, LEVEL_35),
     LEVEL_75(739064774427541514, 75, LEVEL_50),
-    LEVEL_100(739064698498187286, 100, LEVEL_75)
+    LEVEL_100(739064698498187286, 100, LEVEL_75);
+
+    constructor(roleId: Long, level: Int, previousLevel: Level?) : this(Snowflake(roleId), level, previousLevel)
 }

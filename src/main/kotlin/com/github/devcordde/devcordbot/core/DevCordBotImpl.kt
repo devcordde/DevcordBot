@@ -25,105 +25,98 @@ import com.github.devcordde.devcordbot.commands.general.jdoodle.EvalCommand
 import com.github.devcordde.devcordbot.commands.moderation.BlacklistCommand
 import com.github.devcordde.devcordbot.commands.owners.CleanupCommand
 import com.github.devcordde.devcordbot.commands.owners.RedeployCommand
+import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
-import com.github.devcordde.devcordbot.core.autohelp.AutoHelp
-import com.github.devcordde.devcordbot.database.*
-import com.github.devcordde.devcordbot.event.AnnotatedEventManager
-import com.github.devcordde.devcordbot.event.EventSubscriber
-import com.github.devcordde.devcordbot.event.MessageListener
+import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.core.autohelp.DevCordTagSupplier
+import com.github.devcordde.devcordbot.database.TagAliases
+import com.github.devcordde.devcordbot.database.Tags
+import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
 import com.github.devcordde.devcordbot.listeners.DevmarktRequestUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import com.zaxxer.hikari.HikariDataSource
-import io.github.cdimascio.dotenv.Dotenv
+import dev.kord.core.Kord
+import dev.kord.core.entity.Guild
+import dev.kord.core.event.gateway.DisconnectEvent
+import dev.kord.core.event.gateway.ReadyEvent
+import dev.kord.core.event.gateway.ResumedEvent
+import dev.kord.core.on
+import dev.schlaubi.forp.analyze.client.RemoteStackTraceAnalyzer
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import me.schlaubi.autohelp.AutoHelp
+import me.schlaubi.autohelp.autoHelp
+import me.schlaubi.autohelp.kord.kordContext
+import me.schlaubi.autohelp.kord.kordEventSource
+import me.schlaubi.autohelp.kord.useKordMessageRenderer
 import mu.KotlinLogging
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.OnlineStatus
-import net.dv8tion.jda.api.entities.Activity
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.events.DisconnectEvent
-import net.dv8tion.jda.api.events.ReadyEvent
-import net.dv8tion.jda.api.events.ReconnectedEvent
-import net.dv8tion.jda.api.events.ResumedEvent
-import net.dv8tion.jda.api.requests.GatewayIntent
-import net.dv8tion.jda.api.requests.RestAction
-import net.dv8tion.jda.api.utils.MemberCachePolicy
-import net.dv8tion.jda.api.utils.cache.CacheFlag
-import okhttp3.OkHttpClient
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
-import com.github.devcordde.devcordbot.commands.owners.EvalCommand as OwnerEvalCommand
+import kotlin.coroutines.CoroutineContext
+import kotlin.time.ExperimentalTime
+import com.github.devcordde.devcordbot.commands.owners.EvalCommand as BotOwnerEvalCommand
 
 /**
  * General class to manage the Discord bot.
  */
 internal class DevCordBotImpl(
-    token: String,
-    games: List<GameAnimator.AnimatedGame>,
-    env: Dotenv,
-    override val debugMode: Boolean
+    override val config: Config,
+    override val debugMode: Boolean,
+    override val kord: Kord,
+    override val guild: Guild
 ) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
-    private val restActionLogger = KotlinLogging.logger("RestAction")
     private lateinit var dataSource: HikariDataSource
 
     override val commandClient: CommandClient =
-        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(env["BOT_OWNERS"]!!.split(',')))
-    override val httpClient: OkHttpClient = OkHttpClient()
+        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(emptyList()))
+    override val json: Json = Json {
+        ignoreUnknownKeys = true
+    }
+    override val httpClient: HttpClient = HttpClient(OkHttp) {
+        install(JsonFeature) {
+            serializer = KotlinxSerializer(json)
+        }
+    }
     override val github: GithubUtil = GithubUtil(httpClient)
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
-    override val googler: Googler = Googler(env["CSE_KEY"]!!, env["CSE_ID"]!!)
+    override val googler: Googler = Googler(this)
 
-    override val jda: JDA = JDABuilder.create(
-        token,
-        GatewayIntent.getIntents(
-            GatewayIntent.ALL_INTENTS and GatewayIntent.getRaw(
-                GatewayIntent.GUILD_MESSAGE_TYPING,
-                GatewayIntent.DIRECT_MESSAGE_TYPING
-            ).inv()
-        )
-    )
-        .setEventManager(AnnotatedEventManager())
-        .disableCache(EnumSet.of(CacheFlag.VOICE_STATE, CacheFlag.CLIENT_STATUS))
-        .setMemberCachePolicy(MemberCachePolicy.ALL)
-        .setActivity(Activity.playing("Starting ..."))
-        .setStatus(OnlineStatus.DO_NOT_DISTURB)
-        .setHttpClient(httpClient)
-        .addEventListeners(
-            RatProtector(env["RAT_CHANNEL_ID"]!!.toLong(), env["RAT_ROLE_ID"]!!.toLong(), this),
-            MessageListener(),
-            this@DevCordBotImpl,
-            SelfMentionListener(this),
-            DatabaseUpdater(env["XP_WHITELIST"]!!.split(",")),
-            commandClient,
-            AutoHelp(
-                this,
-                env["AUTO_HELP_WHITELIST"]!!.split(','),
-                env["AUTO_HELP_BLACKLIST"]!!.split(','),
-                env["AUTO_HELP_KNOWN_LANGUAGES"]!!.split(','),
-                env["AUTO_HELP_BYPASS"]!!,
-                Integer.parseInt(env["AUTO_HELP_MAX_LINES"])
-            ),
-            DevmarktRequestUpdater(
-                env["DEVMARKT_REQUEST_CHANNEL"]!!,
-                env["BOT_ACCESS_TOKEN"]!!,
-                env["DEVMARKT_BASE_URL"]!!,
-                env["EMOTE_CHECK_ID"]!!,
-                env["EMOTE_BLOCK_ID"]!!,
-            ),
-        )
-        .build()
-    override val gameAnimator = GameAnimator(jda, games)
+    override val gameAnimator = GameAnimator(this)
 
-    private val guildId = env["GUILD_ID"]!!
-    override val guild: Guild
-        get() = jda.getGuildById(guildId)!!
+    override val autoHelp: AutoHelp = autoHelp {
+        tagSupplier = DevCordTagSupplier
+        loadingEmote = Emotes.LOADING
+
+        useKordMessageRenderer(kord)
+        htmlRenderer { de.nycode.bankobot.docdex.htmlRenderer.convert(this) }
+
+        analyzer = RemoteStackTraceAnalyzer {
+            httpEngine = CIO
+            serverUrl = config.autoHelp.host
+            authKey = config.autoHelp.key
+        }
+
+        kordContext {
+            kordEventSource(kord)
+            filter {
+                it.kordMessage.author?.isBot != true && it.channelId in config.autoHelp.channels
+            }
+        }
+    }
 
     /**
      * Whether the bot received the [ReadyEvent] or not.
@@ -133,34 +126,63 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
-        RestAction.setDefaultFailure {
-            restActionLogger.error(it) { "An error occurred while executing restaction" }
+        logger.info { "Establishing connection to the database..." }
+        connectToDatabase()
+
+        logger.info { "Registering commands..." }
+        kord.listeners()
+    }
+
+    suspend fun start() {
+        registerCommands()
+
+        kord.login()
+    }
+
+    private fun Kord.listeners() {
+        whenReady()
+        whenDisconnected()
+        whenResumed()
+
+        val ratProtector = RatProtector(this@DevCordBotImpl)
+        with(ratProtector) {
+            onReactionAdd()
         }
 
-        logger.info { "Establishing connection to the database …" }
-        connectToDatabase(env)
+        val selfMentionListener = SelfMentionListener(this@DevCordBotImpl)
+        with(selfMentionListener) {
+            onMessageReceive()
+        }
 
-        logger.info { "Registering commands …" }
-        registerCommands(env)
+        val databaseUpdater = DatabaseUpdater(this@DevCordBotImpl)
+        with(databaseUpdater) {
+            registerListeners()
+        }
+
+        with(commandClient) {
+            onInteraction()
+        }
+
+        val devmarkt = DevmarktRequestUpdater(this@DevCordBotImpl)
+        with(devmarkt) {
+            registerListeners()
+        }
     }
 
     /**
      * Fired when the Discord bot has started successfully.
      */
-    @EventSubscriber
-    fun whenReady(event: ReadyEvent) {
-        logger.info { "Received Ready event initializing bot internals …" }
+    @OptIn(ExperimentalTime::class)
+    private fun Kord.whenReady() = on<ReadyEvent> {
+        logger.info { "Received Ready event, initializing bot internals..." }
         isInitialized = true
-        event.jda.presence.setStatus(OnlineStatus.ONLINE)
-        gameAnimator.start()
     }
 
     /**
      * Fired when the Discord connection gets interrupted
      */
-    @EventSubscriber
-    fun whenDisconnected(event: DisconnectEvent) {
-        logger.warn { "Bot got disconnected (code: ${event.closeCode}) disabling Discord specific internals" }
+    private fun Kord.whenDisconnected() = on<DisconnectEvent> {
+        logger.warn { "Bot got disconnected (code: $this), disabling Discord specific internals" }
         isInitialized = false
         gameAnimator.stop()
     }
@@ -168,14 +190,7 @@ internal class DevCordBotImpl(
     /**
      * Fired when the bot can resume its previous connections when reconnecting.
      */
-    @EventSubscriber
-    fun whenResumed(@Suppress("UNUSED_PARAMETER") event: ResumedEvent) = reinitialize()
-
-    /**
-     * Fired when the bot reconnects.
-     */
-    @EventSubscriber
-    fun whenReconnect(@Suppress("UNUSED_PARAMETER") event: ReconnectedEvent) = reinitialize()
+    private fun Kord.whenResumed() = on<ResumedEvent> { reinitialize() }
 
     private fun reinitialize() {
         logger.info {
@@ -186,11 +201,12 @@ internal class DevCordBotImpl(
         gameAnimator.start()
     }
 
-    private fun connectToDatabase(env: Dotenv) {
+    private fun connectToDatabase() {
+        val databaseConfig = config.database
         dataSource = HikariDataSource().apply {
-            jdbcUrl = "jdbc:postgresql://${env["DATABASE_HOST"]}/${env["DATABASE"]}"
-            username = env["DATABASE_USERNAME"]
-            password = env["DATABASE_PASSWORD"]
+            jdbcUrl = "jdbc:postgresql://${databaseConfig.host}/${databaseConfig.database}"
+            username = databaseConfig.username
+            password = databaseConfig.password
         }
         Database.connect(dataSource)
         transaction {
@@ -206,39 +222,34 @@ internal class DevCordBotImpl(
     private fun shutdown() {
         gameAnimator.close()
         dataSource.close()
+        runBlocking {
+            autoHelp.close()
+        }
     }
 
-    private fun registerCommands(env: Dotenv) {
+    private suspend fun registerCommands() {
         commandClient.registerCommands(
             HelpCommand(),
-            TagCommand(),
+            TagCommand().apply {
+                registerReadCommand(commandClient)
+            },
             EvalCommand(),
-            OwnerEvalCommand(),
+            BotOwnerEvalCommand(),
             SourceCommand(),
             RankCommand(),
             RanksCommand(),
             BlacklistCommand(),
             InfoCommand(),
-            OracleJavaDocCommand(),
-            SpigotJavaDocCommand(),
-            SpigotLegacyJavaDocCommand(),
             CleanupCommand(),
             GoogleCommand()
         )
 
-        val javadocEnabled = env["JAVADOC_ENABLED"]
-        if (javadocEnabled != null) {
-            commandClient.registerCommands(
-                OracleJavaDocCommand(),
-                SpigotJavaDocCommand(),
-                SpigotLegacyJavaDocCommand()
-            )
-        }
-
-        val redeployHost = env["REDEPLOY_HOST"]
-        val redeployToken = env["REDEPLOY_TOKEN"]
+        val redeployHost = config.redeployment.host
+        val redeployToken = config.redeployment.token
         if (redeployHost != null && redeployToken != null && redeployHost.isNotBlank() && redeployToken.isNotBlank()) {
             commandClient.registerCommands(RedeployCommand(redeployHost, redeployToken))
         }
+
+        (commandClient as CommandClientImpl).updateCommands()
     }
 }

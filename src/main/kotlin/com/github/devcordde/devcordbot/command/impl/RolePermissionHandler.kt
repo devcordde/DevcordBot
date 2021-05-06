@@ -20,24 +20,28 @@ import com.github.devcordde.devcordbot.command.PermissionHandler
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.database.DevCordUser
-import net.dv8tion.jda.api.entities.Member
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.any
+import dev.kord.core.entity.Member
 
 /**
  * Implementation of [PermissionHandler] that checks the users roles.
  */
 class RolePermissionHandler(
-    private val botOwners: List<String>
+    private val botOwners: List<Snowflake>
 ) : PermissionHandler {
     private val moderatorPattern = "(?i)moderator|admin(istrator)?".toRegex()
     private val adminPattern = "(?i)admin(istrator)?".toRegex()
 
-    override fun isCovered(
+    override suspend fun isCovered(
         permission: Permission,
         executor: Member?,
         devCordUser: DevCordUser?,
-        acknowledgeBlacklist: Boolean
+        acknowledgeBlacklist: Boolean,
+        isSlashCommand: Boolean
     ): PermissionState {
         executor ?: return PermissionState.DECLINED
+        if (isSlashCommand) return PermissionState.ACCEPTED // Slash commands have discord perm handling
         if (executor.id in botOwners) return PermissionState.ACCEPTED
         if (acknowledgeBlacklist && requireNotNull(devCordUser) { "Devcorduser must not be null if blacklist ist acknowledged" }.blacklisted) return PermissionState.IGNORED
         return when (permission) {

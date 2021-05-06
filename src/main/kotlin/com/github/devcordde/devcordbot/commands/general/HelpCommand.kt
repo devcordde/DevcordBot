@@ -16,28 +16,32 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import java.util.*
 
 /**
  * Help command.
  */
-class HelpCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("help", "h", "hilfe")
-    override val displayName: String = "help"
-    override val description: String = "Zeigt eine Liste aller Befehle"
-    override val usage: String = "[command]"
+class HelpCommand : AbstractSingleCommand() {
+    override val name: String = "help"
+    override val description: String = "Zeigt eine Liste aller Befehle."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
+    override fun ApplicationCommandCreateBuilder.applyOptions() {
+        string("command", "Der Name eines Befehls, für den Hilfe angezeigt werden soll")
+    }
+
     override suspend fun execute(context: Context) {
-        val commandName = context.args.optionalArgument(0)
+        val commandName = context.args.optionalString("command")
         if (commandName == null) {
             sendCommandList(context)
         } else {
@@ -45,8 +49,8 @@ class HelpCommand : AbstractCommand() {
         }
     }
 
-    private fun sendCommandHelpMessage(context: Context, commandName: String) {
-        val command = context.commandClient.commandAssociations[commandName.toLowerCase()]
+    private suspend fun sendCommandHelpMessage(context: Context, commandName: String) {
+        val command = context.commandClient.commandAssociations[commandName.lowercase(Locale.getDefault())]
 
         if (command == null || context.commandClient.permissionHandler.isCovered(
                 command.permission,
@@ -55,31 +59,34 @@ class HelpCommand : AbstractCommand() {
                 acknowledgeBlacklist = false
             ) != PermissionState.ACCEPTED
         ) {
-            return context.respond(
+            context.respond(
                 Embeds.error(
                     "Befehl nicht gefunden!",
                     "Es scheint für dich keinen Befehl mit diesem Namen zu geben."
                 )
-            ).queue()
+            )
+            return
         }
 
-        if (!command.commandPlace.matches(context.message)) {
-            return context.respond(
+        if (!command.commandPlace.matches(context.event)) {
+            context.respond(
                 Embeds.error(
-                    "Falscher Context!",
-                    "Der Command ist in diesem Channel nicht ausführbar."
+                    "Falscher Ort!",
+                    "Der Command ist in diesem Kanal nicht ausführbar."
                 )
-            ).queue()
+            )
+            return
         }
 
-        context.respond(Embeds.command(command)).queue()
+        context.respond(Embeds.command(command))
     }
 
-    private fun sendCommandList(context: Context) {
+    private suspend fun sendCommandList(context: Context) {
         context.respond(
             Embeds.info(
-                "Befehls-Hilfe", """Dies ist eine Liste aller Befehle, die du benutzen kannst,
-            | um mehr über einen Befehl zu erfahren kannst du `sudo help [command]` ausführen
+                "Befehls-Hilfe",
+                """Dies ist eine Liste aller Befehle, die du benutzen kannst,
+            | um mehr über einen Befehl zu erfahren, kannst du `sudo help [command]` ausführen.
         """.trimMargin()
             ) {
                 val commands = context.commandClient.registeredCommands.filter {
@@ -88,18 +95,19 @@ class HelpCommand : AbstractCommand() {
                         context.member,
                         context.devCordUser,
                         acknowledgeBlacklist = false // Ignore BL to save DB Query since BLed users cannot execute help anyways
-                    ) == PermissionState.ACCEPTED && it.commandPlace.matches(context.message)
+                    ) == PermissionState.ACCEPTED && it.commandPlace.matches(context.event)
                 }
                 CommandCategory.values().forEach { category ->
                     val categoryCommands = commands.filter { it.category == category }.map { it.name }
                     if (categoryCommands.isNotEmpty()) {
-                        addField(
-                            category.displayName,
-                            categoryCommands.joinToString(prefix = "`", separator = "`, `", postfix = "`")
-                        )
+                        field {
+                            name = category.displayName
+                            value =
+                                categoryCommands.joinToString(prefix = "`", separator = "`, `", postfix = "`")
+                        }
                     }
                 }
             }
-        ).queue()
+        )
     }
 }

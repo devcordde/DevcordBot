@@ -27,8 +27,14 @@ interface CommandRegistry<T : AbstractCommand> {
     val registeredCommands: List<T>
         get() = commandAssociations.values.distinct()
 
-    private fun registerCommand(command: T) =
-        command.aliases.associateWithTo(commandAssociations) { command }
+    private fun registerCommand(command: T) {
+        commandAssociations[command.name] = command
+    }
+
+    /**
+     * Whether this has commands registered or not.
+     */
+    fun isNotEmpty(): Boolean = commandAssociations.isNotEmpty()
 
     /**
      * Registers the [commands].
@@ -39,16 +45,5 @@ interface CommandRegistry<T : AbstractCommand> {
      * Unregisters the [command].
      * @return whether a command got removed or not
      */
-    fun unregisterCommand(command: T): Boolean {
-        var removed = false
-        commandAssociations.forEach { (alias, foundCommand) ->
-            run {
-                if (foundCommand == command) {
-                    commandAssociations.remove(alias)
-                    removed = true
-                }
-            }
-        }
-        return removed
-    }
+    fun unregisterCommand(command: T): Boolean = commandAssociations.remove(command.name) != null
 }

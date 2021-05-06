@@ -16,7 +16,9 @@
 
 plugins {
     application
-    kotlin("jvm") version "1.4.32"
+    kotlin("jvm") version "1.5.0"
+    kotlin("plugin.serialization") version "1.5.0"
+    id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
 }
 
 group = "com.github.devcord.devcordbot"
@@ -24,9 +26,9 @@ version = "2.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    jcenter()
-    maven("https://kotlin.bintray.com/kotlinx")
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
     maven("https://jitpack.io")
+    maven("https://schlaubi.jfrog.io/artifactory/forp")
 }
 
 dependencies {
@@ -37,59 +39,79 @@ dependencies {
     runtimeOnly(kotlin("scripting-jsr223"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.4.3")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.5.0-RC")
 
     // Logging
-    implementation("io.github.microutils", "kotlin-logging", "2.0.4")
+    implementation("io.github.microutils", "kotlin-logging", "1.12.5")
     implementation("org.slf4j", "slf4j-api", "2.0.0alpha1")
     implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
-    implementation("io.sentry", "sentry", "4.2.0")
-    implementation("io.sentry", "sentry-logback", "4.2.0")
+    implementation("io.sentry", "sentry", "4.3.0")
+    implementation("io.sentry", "sentry-logback", "4.3.0")
 
     // Database
-    implementation("org.jetbrains.exposed", "exposed-core", "0.29.1")
-    implementation("org.jetbrains.exposed", "exposed-dao", "0.29.1")
-    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.29.1")
-    implementation("org.jetbrains.exposed", "exposed-java-time", "0.29.1")
+    implementation("org.jetbrains.exposed", "exposed-core", "0.30.2")
+    implementation("org.jetbrains.exposed", "exposed-dao", "0.30.2")
+    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.30.2")
+    implementation("org.jetbrains.exposed", "exposed-java-time", "0.30.2")
     implementation("org.postgresql", "postgresql", "42.2.19")
     implementation("com.zaxxer", "HikariCP", "4.0.3")
 
     // Discord
-    implementation("net.dv8tion", "JDA", "4.2.0_231") {
-        exclude(module = "opus-java")
+    implementation("dev.kord", "kord-core", "kotlin-1.5-20210505.195343-2") {
+        version {
+            strictly("kotlin-1.5-20210505.195343-2")
+        }
     }
 
     // Util
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
-    implementation("com.squareup.okhttp3", "okhttp", "4.9.1")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
-    implementation("com.codewaves.codehighlight", "codehighlight", "1.0.2")
-    implementation("com.github.johnnyjayjay", "javadox", "adb3613484")
-    implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.62.2")
-    implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200408-1.30.9")
-    implementation("com.google.cloud", "google-cloud-vision", "1.101.1")
+    implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200917-1.31.0")
+
+    // Http
+    implementation(platform("io.ktor:ktor-bom:1.5.3"))
+    implementation("io.ktor", "ktor-client")
+    implementation("io.ktor", "ktor-client-okhttp")
+    implementation("io.ktor", "ktor-client-serialization-jvm") {
+        exclude("org.jetbrains.kotlinx", "kotlinx-serialization-json")
+    }
+    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.0.0") {
+        version {
+            strictly("1.0.0")
+        }
+    }
+
+    // Config
+    implementation("com.github.uchuhimo.konf", "konf", "master-SNAPSHOT")
+    implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.12.+")
+
+    // Autohelp
+    implementation("me.schlaubi.autohelp", "kord", "1.1.1")
+    implementation("dev.schlaubi.forp", "forp-analyze-client", "1.0-SNAPSHOT")
+    implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.60.2")
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "3.8.0")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
     testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.7.1")
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.7.1")
-
 }
 
 application {
-    // Changing this as the deprecation suggests will break the ShadowJar plugin
-    // Alternative code for when it gets updated:
-    // mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
-    mainClassName = "com.github.devcordde.devcordbot.LauncherKt"
+    mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
 }
 
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions {
-            jvmTarget = "15"
-            useIR = true
+            jvmTarget = "16"
+            freeCompilerArgs =
+                freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn" + "-Xopt-in=dev.kord.common.annotation.KordPreview" + "-Xopt-in=dev.kord.common.annotation.KordExperimental"
         }
+    }
+
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        disabledRules.set(setOf("no-wildcard-imports"))
     }
 
     test {

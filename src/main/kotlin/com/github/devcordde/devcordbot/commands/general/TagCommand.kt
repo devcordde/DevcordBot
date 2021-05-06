@@ -16,39 +16,33 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
-import com.github.devcordde.devcordbot.command.AbstractSubCommand
-import com.github.devcordde.devcordbot.command.CommandCategory
-import com.github.devcordde.devcordbot.command.CommandPlace
+import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
-import com.github.devcordde.devcordbot.constants.Colors
-import com.github.devcordde.devcordbot.constants.Constants
-import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.constants.Emotes
+import com.github.devcordde.devcordbot.constants.*
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.menu.Paginator
-import com.github.devcordde.devcordbot.util.HastebinUtil
-import net.dv8tion.jda.api.entities.IMentionable
-import net.dv8tion.jda.api.entities.Member
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.Role
+import com.github.devcordde.devcordbot.util.*
+import dev.kord.core.behavior.edit
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.SubCommandBuilder
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 /**
  * Tag command.
  */
-class TagCommand : AbstractCommand() {
+class TagCommand : AbstractRootCommand() {
     private val reservedNames: List<String>
-    override val aliases: List<String> = listOf("tag", "tags", "t")
-    override val displayName: String = "Tag"
-    override val description: String = ""
-    override val usage: String = "<tagname>"
+    override val name: String = "tag"
+    override val description: String = "Zeigt einen Tag an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
@@ -66,64 +60,92 @@ class TagCommand : AbstractCommand() {
             RawCommand(),
             TransferCommand()
         )
-        reservedNames = registeredCommands.flatMap { it.aliases }
+        reservedNames = registeredCommands.map(AbstractCommand::name)
     }
 
-    override suspend fun execute(context: Context) {
-        val args = context.args
-        if (args.isEmpty()) {
-            return context.sendHelp().queue()
-        }
-        val tagName = context.args.join()
-        val tag = transaction { checkNotTagExists(tagName, context) } ?: return
-        context.respond(tag.content).queue()
-        transaction {
-            tag.usages++
-        }
-    }
+    internal fun registerReadCommand(commandClient: CommandClient) = commandClient.registerCommands(TagReadCommand())
 
-    private inner class CreateCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("create", "c", "add", "a")
-        override val displayName: String = "Add"
-        override val description: String = "Erstellt einen neuen Tag"
-        override val usage: String = "<name> \n <text>"
+    private inner class TagReadCommand : AbstractSingleCommand() {
+        override val name: String = "t"
+        override val description: String = "Zeigt einen Tag an."
+        override val permission: Permission = Permission.ANY
+        override val category: CommandCategory = CommandCategory.GENERAL
+        override val commandPlace: CommandPlace = CommandPlace.ALL
+
+        override fun ApplicationCommandCreateBuilder.applyOptions() {
+            string("tag", "Der Name des Tags, welcher angezeigt werden soll") {
+                required = true
+            }
+        }
 
         override suspend fun execute(context: Context) {
-            val (name, content) = parseTag(context) ?: return
-            if (transaction { checkTagExists(name, context) }) return
+            val tagName = context.args.string("tag")
+            val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
+            context.respond(tag.content)
+            transaction {
+                tag.usages++
+            }
+        }
+    }
+
+    private inner class CreateCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "create"
+        override val description: String = "Erstellt einen neuen Tag."
+
+        override fun SubCommandBuilder.applyOptions() {
+            string("name", "Der Name des zu erstellenden Tags") {
+                required = true
+            }
+        }
+
+        @OptIn(ExperimentalTime::class)
+        override suspend fun execute(context: Context) {
+            val name = context.args.string("name")
+            if (newSuspendedTransaction { checkTagExists(name, context) }) return
+            val status = context.respond(
+                Embeds.info(
+                    "Bitte gebe den Inhalt an!",
+                    "Bitte gebe den Inhalt des Tags in einer neuen Nachricht an."
+                )
+            )
+
+            val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
+
             val tag = transaction {
                 Tag.new(name) {
                     this.content = content
-                    author = context.author.idLong
+                    author = context.author.id
                 }
             }
-            context.respond(
+            context.acknowledgement.followUp(
                 Embeds.success(
                     "Erfolgreich erstellt!",
                     "Der Tag mit dem Namen `${tag.name}` wurde erfolgreich erstellt."
                 )
-            ).queue()
+            )
         }
     }
 
-    private inner class AliasCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("alias")
-        override val displayName: String = "Add"
-        override val description: String = "Erstellt einen neuen Tag Alias"
-        override val usage: String = """<alias> <tag> / "<alias>" "<tag>""""
+    private inner class AliasCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "alias"
+        override val description: String = "Erstellt einen neuen Alias für einen Tag."
+
+        override fun SubCommandBuilder.applyOptions() {
+            string("alias", "Der Name des Alias für den Tag") {
+                required = true
+            }
+
+            string("tag", "Der Name des Tags, für den der Alias erstellt werden soll") {
+                required = true
+            }
+        }
 
         override suspend fun execute(context: Context) {
             val args = context.args
-            val multiWordMatcher = multiWordAliasRegex.matchEntire(args.join())
-            val (aliasName, tagName) = if (multiWordMatcher == null) {
-                if (args.size < 2) return context.sendHelp().queue()
-                args.first() to args[1]
-            } else {
-                @Suppress("ReplaceNotNullAssertionWithElvisReturn") // We know this pattern has 2 groups
-                multiWordMatcher.groups[1]!!.value to multiWordMatcher.groups[2]!!.value
-            }
-            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
-            if (transaction { checkTagExists(aliasName, context) }) return
+            val aliasName = args.string("alias")
+            val tagName = args.string("tag")
+            val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
+            if (newSuspendedTransaction { checkTagExists(aliasName, context) }) return
             val (newAliasName, newTagName) = transaction {
                 val alias = TagAlias.new(aliasName) {
                     this.tag = tag
@@ -135,92 +157,124 @@ class TagCommand : AbstractCommand() {
                     "Alias erfolgreich erstellt",
                     "Es wurde erfolgreich ein Alias mit dem Namen `$newAliasName` für den Tag `$newTagName` erstellt"
                 )
-            ).queue()
+            )
         }
-
     }
 
-    private inner class EditCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("edit", "e")
-        override val displayName: String = "Edit"
-        override val description: String = "Editiert einen existierenden Tag"
-        override val usage: String = "<tagname> \n <newcontent>"
+    private inner class EditCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "edit"
+        override val description: String = "Bearbeitet einen existierenden Tag."
 
+        override fun SubCommandBuilder.applyOptions() {
+            string("name", "Der Name des zu berarbeitenden Tags") {
+                required = true
+            }
+        }
+
+        @OptIn(ExperimentalTime::class)
         override suspend fun execute(context: Context) {
-            val (name, content) = parseTag(context) ?: return
-            val tag = transaction { checkNotTagExists(name, context) } ?: return
+            val name = context.args.string("name")
+            val tag = newSuspendedTransaction { checkNotTagExists(name, context) } ?: return
             if (checkPermission(tag, context)) return
+
+            val status = context.respond(
+                Embeds.info(
+                    "Bitte gebe den Inhalt an!",
+                    "Bitte gebe den Inhalt des Tags in einer neuen Nachricht an."
+                )
+            )
+
+            val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
+
             transaction {
                 tag.content = content
             }
+
             context.respond(
                 Embeds.success(
                     "Tag erfolgreich bearbeitet!",
                     "Du hast den Tag mit dem Namen `${tag.name}` erfolgreich bearbeitet."
                 )
-            ).queue()
+            )
         }
     }
 
-    private inner class InfoCommand : AbstractSubCommand(this) {
+    private inner class InfoCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "info"
+        override val description: String = "Zeigt Informationen zu einem Tag an."
 
-        override val aliases: List<String> = listOf("info", "i")
-        override val displayName: String = "Info"
-        override val description: String = "Zeigt Informationen über einen Tag an"
-        override val usage: String = "<tag>"
+        override fun SubCommandBuilder.applyOptions() {
+            string("tag", "Der Name des Tags für den eine Info angezeigt werden soll") {
+                required = true
+            }
+        }
+
         override suspend fun execute(context: Context) {
             val args = context.args
-            if (args.isEmpty()) {
-                return context.sendHelp().queue()
-            }
-            val name = args.join()
-            val tag = transaction { checkNotTagExists(name, context) } ?: return
+            val name = args.string("tag")
+            val tag = newSuspendedTransaction { checkNotTagExists(name, context) } ?: return
             val rank = transaction {
                 Tags.select { (Tags.usages greaterEq tag.usages) }.count()
             }
-            val author = context.jda.getUserById(tag.author)
+            val author = context.kord.getUser(tag.author)
             context.respond(
                 embed {
                     color = Colors.BLUE
-                    val creator = author?.name ?: "Mysteriöse Person"
+                    val creator = author?.username ?: "Mysteriöse Person"
                     author {
                         this.name = creator
-                        iconUrl = author?.avatarUrl
+                        icon = author?.effectiveAvatarUrl
                     }
-                    addField("Erstellt von", creator, inline = true)
-                    addField("Benutzungen", tag.usages.toString(), inline = true)
-                    addField("Rang", rank.toString(), inline = true)
-                    addField("Erstellt", Constants.DATE_FORMAT.format(tag.createdAt))
+                    field {
+                        this.name = "Erstellt von"
+                        value = creator
+                        inline = true
+                    }
+                    field {
+                        this.name = "Benutzungen"
+                        value = tag.usages.toString()
+                        inline = true
+                    }
+                    field {
+                        this.name = "Rang"
+                        value = rank.toString()
+                        inline = true
+                    }
+                    field {
+                        this.name = "Erstellt"
+                        value = Constants.DATE_FORMAT.format(tag.createdAt)
+                    }
                     transaction {
                         val aliases = TagAlias.find { TagAliases.tag eq tag.name }
                         if (!aliases.empty()) {
-                            addField(
-                                "Aliase",
-                                aliases.joinToString(
+                            field {
+                                this.name = "Aliase"
+                                value = aliases.joinToString(
                                     prefix = "`",
                                     separator = "`, `",
                                     postfix = "`"
-                                ) { it.name },
+                                ) { it.name }
                                 inline = true
-                            )
+                            }
                         }
                     }
                 }
-            ).queue()
+            )
         }
-
     }
 
-    private inner class DeleteCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("delete", "del", "d", "remove", "rem", "r")
-        override val displayName: String = "delete"
-        override val description: String = "Löscht einen Tag"
-        override val usage: String = "<tag>"
-        override suspend fun execute(context: Context) {
-            if (context.args.isEmpty()) {
-                return context.sendHelp().queue()
+    private inner class DeleteCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "delete"
+        override val description: String = "Löscht einen Tag."
+
+        override fun SubCommandBuilder.applyOptions() {
+            string("tag", "Der Name des Tags, der gelöscht soll") {
+                required = true
             }
-            val tag = transaction { checkNotTagExists(context.args.join(), context) } ?: return
+        }
+
+        override suspend fun execute(context: Context) {
+            val tag = newSuspendedTransaction { checkNotTagExists(context.args.string("tag"), context) } ?: return
             if (checkPermission(tag, context)) return
 
             transaction {
@@ -233,178 +287,160 @@ class TagCommand : AbstractCommand() {
                     "Tag erfolgreich gelöscht!",
                     "Du hast den Tag mit dem Namen `${tag.name}` erfolgreich gelöscht."
                 )
-            ).queue()
+            )
         }
     }
 
-    private inner class TransferCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("transfer")
-        override val displayName: String = "Transfer"
-        override val description: String = "Überschreibt einen Tag an einen anderen Benutzer"
-        override val usage: String = "<@user> <tag>"
+    private inner class TransferCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "transfer"
+        override val description: String = "Überschreibt einen Tag an einen anderen Benutzer."
+
+        override fun SubCommandBuilder.applyOptions() {
+            user("target", "Der neue Besitzer des Tags") {
+                required = true
+            }
+
+            string("tag", "Der Name des Tags, der übertragen werden soll") {
+                required = true
+            }
+        }
 
         override suspend fun execute(context: Context) {
             val args = context.args
-            if (args.size < 2) return context.sendHelp().queue()
+            val user = args.user("target")
 
-            val user = args.user(0, true, context) ?: return
-
-            val tagName = args.subList(1, args.size).joinToString(" ")
-            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
+            val tagName = args.string("tag")
+            val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
 
             if (checkPermission(tag, context)) return
 
             transaction {
-                tag.author = user.idLong
+                tag.author = user.id
             }
 
-            return context.respond(
+            context.respond(
                 Embeds.success(
                     "Tag erfolgreich überschrieben!",
-                    "Der Tag wurde erfolgreich an ${user.asMention} überschrieben."
+                    "Der Tag wurde erfolgreich an ${user.mention} überschrieben."
                 )
-            ).queue()
+            )
         }
     }
 
-    private inner class ListCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("list", "all")
-        override val displayName: String = "List"
-        override val description: String = "Gibt eine Liste aller Tags aus"
-        override val usage: String = ""
+    private inner class ListCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "list"
+        override val description: String = "Zeigt eine Liste aller Tags an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override suspend fun execute(context: Context) {
             val tags = transaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
             if (tags.isEmpty()) {
-                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags.")).queue()
+                context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags."))
+                return
             }
-            Paginator(tags, context.author, context, "Tags")
+            Paginator(tags, context.author.asUser(), context, "Tags")
         }
     }
 
-    private inner class FromCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("from", "by")
-        override val displayName: String = "from"
-        override val description: String = "Gibt eine Liste aller Tags eines bestimmten Benutzers aus"
-        override val usage: String = "<@user>"
+    private inner class FromCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "from"
+        override val description: String = "Zeigt eine Liste aller Tags eines Nutzers an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
+        override fun SubCommandBuilder.applyOptions() {
+            user("author", "Der Nutzer, dessen Tags angezeigt werden sollen")
+        }
+
         override suspend fun execute(context: Context) {
-            val user = context.args.optionalUser(0, jda = context.jda) ?: context.author
-            val tags = transaction { Tag.find { Tags.author eq user.idLong }.map(Tag::name) }
+            val user = context.args.optionalUser("author") ?: context.author
+            val tags = transaction { Tag.find { Tags.author eq user.id }.map(Tag::name) }
             if (tags.isEmpty()) {
-                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem User."))
-                    .queue()
+                context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Nutzer."))
+                return
             }
-            Paginator(tags, context.author, context, "Tags von ${user.name}")
+            val author = context.author.asUser()
+            Paginator(tags, author, context, "Tags von ${author.username}")
         }
     }
 
-    private inner class SearchCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("search", "find")
-        override val displayName: String = "search"
-        override val description: String = "Gibt die ersten 25 Tags mit dem angegebenen Namen"
-        override val usage: String = "<query>"
+    private inner class SearchCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "search"
+        override val description: String = "Zeigt die ersten 25 Tags mit dem angegebenen Namen an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
-        override suspend fun execute(context: Context) {
-            if (context.args.isEmpty()) {
-                return context.sendHelp().queue()
+        override fun SubCommandBuilder.applyOptions() {
+            string("query", "Die Query, nach der gesucht werden soll") {
+                required = true
             }
-            val name = context.args.join()
+        }
+
+        override suspend fun execute(context: Context) {
+            val name = context.args.string("query")
             val tags = transaction {
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).limit(25)
                     .map(Tag::name)
             }
             if (tags.isEmpty()) {
-                return context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Namen."))
-                    .queue()
+                context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags mit diesem Namen."))
+                return
             }
-            Paginator(tags, context.author, context, "Suche für $name")
+            Paginator(tags, context.author.asUser(), context, "Suche nach $name")
         }
     }
 
-    private inner class RawCommand : AbstractSubCommand(this) {
-        override val aliases: List<String> = listOf("raw")
-        override val displayName: String = "Raw"
-        override val description: String = "Zeigt dir einen Tag ohne Markdown an"
-        override val usage: String = "<tagname>"
+    private inner class RawCommand : AbstractSubCommand.Command(this) {
+        override val name: String = "raw"
+        override val description: String = "Zeigt einen Tag ohne Markdown-Formatierung an."
+
+        override fun SubCommandBuilder.applyOptions() {
+            string("tag", "Der Name des Tags, der unformatiert angezeigt werden soll") {
+                required = true
+            }
+        }
 
         override suspend fun execute(context: Context) {
-            if (context.args.isEmpty()) {
-                return context.sendHelp().queue()
-            }
-            val tagName = context.args.join()
-            val tag = transaction { checkNotTagExists(tagName, context) } ?: return
+            val tagName = context.args.string("tag")
+            val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
             val content =
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
-            if (content.length > Message.MAX_CONTENT_LENGTH) {
-                context.respond(Emotes.LOADING).submit()
-                    .thenCombine(HastebinUtil.postErrorToHastebin(content, context.bot.httpClient)) { message, code ->
-                        message.editMessage(code).queue()
-                    }
+            if (content.length > MAX_CONTENT_LENGTH) {
+                val message = context.respond(Emotes.LOADING)
+                val code = HastebinUtil.postErrorToHastebin(content, context.bot.httpClient)
+                message.edit { this.content = code }
                 return
             }
-            context.respond(content).queue()
+            context.respond(content)
         }
     }
 
     private fun Tag.Companion.findByName(name: String) = findByNameId(name) ?: TagAlias.findById(name)?.tag
 
-    private fun checkPermission(
+    private suspend fun checkPermission(
         tag: Tag,
         context: Context
     ): Boolean {
-        if (tag.author != context.author.idLong && !context.hasModerator()) {
+        if (tag.author != context.author.id && !context.hasModerator()) {
             context.respond(
                 Embeds.error(
                     "Keine Berechtigung!",
-                    "Nur Teammitglieder können nicht selbst-erstelle Tags bearbeiten."
+                    "Nur Teammitglieder können fremde Tags bearbeiten."
                 )
-            ).queue()
+            )
             return true
         }
         return false
     }
 
-    private fun parseTag(context: Context): Pair<String, String>? {
-        fun sanitizeMentions(content: String): String {
-            fun sanitizeMention(mentionable: IMentionable): String {
-                return when (mentionable) {
-                    is Member -> mentionable.user.asTag
-                    is Role -> mentionable.name
-                    else -> "Unknown mention"
-                }
-            }
-
-            val mentions: List<IMentionable> = context.message.mentionedMembers + context.message.mentionedRoles
-
-            return mentions
-                .fold(content, fun(previous: String, mentionable: IMentionable): String {
-                    val mention = mentionable.asMention
-                    if (content.contains(mention)) {
-                        return previous.replace(mention, sanitizeMention(mentionable))
-                    }
-                    return previous
-                })
-        }
-
-        val args = context.args.split("\n")
-        val (name, content) = when {
-            context.args.isEmpty() -> {
-                "" to ""
-            }
-            args.size == 1 -> {
-                val name = context.args.first()
-                name to sanitizeMentions(context.args.join().substring(name.length))
-            }
-            else -> {
-                args.first().trim() to sanitizeMentions(args.subList(1, args.size).joinToString("\n"))
-            }
-        }
+    private suspend fun parseTag(
+        context: Context,
+        tagParam: String = "name",
+        contentParam: String = "content"
+    ): Pair<String, String>? {
+        val args = context.args
+        val name = args.string(tagParam)
+        val content = args.string(contentParam)
         if (name.isBlank() or content.isBlank()) {
-            context.sendHelp().queue()
+            context.sendHelp()
             return null
         }
         if (checkNameLength(name, context) or checkReservedName(name, context)) return null
@@ -412,63 +448,58 @@ class TagCommand : AbstractCommand() {
         return name to content
     }
 
-    private fun checkTagExists(name: String, context: Context): Boolean {
+    private suspend fun checkTagExists(name: String, context: Context): Boolean {
         val tag = Tag.findByName(name)
         if (tag != null) {
             context.respond(
                 Embeds.error(
                     "Tag existiert bereits!", "Dieser Tag existiert bereits."
                 )
-            ).queue()
+            )
             return true
         }
         return false
-
     }
 
-    private fun checkNotTagExists(name: String, context: Context): Tag? {
-        if (checkNameLength(name, context)) return null
+    private suspend fun checkNotTagExists(name: String, context: Context): Tag? {
         val foundTag = Tag.findByName(name)
         return if (foundTag != null) foundTag else {
             val similarTag =
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).firstOrNull()
-            val similarTagHint = if (similarTag != null) " Meintest du vielleicht `${similarTag.name}`?" else ""
-            return context.respond(
+            val similarTagHint = if (similarTag != null) " Meinst du vielleicht `${similarTag.name}`?" else ""
+            context.respond(
                 Embeds.error(
                     "Tag nicht gefunden!",
-                    "Es wurde kein Tag mit dem Namen `${name}` gefunden.$similarTagHint"
+                    "Es wurde kein Tag mit dem Namen `$name` gefunden.$similarTagHint"
                 )
-            ).queue().run { null }
+            )
+            return null
         }
     }
 
-    private fun checkNameLength(name: String, context: Context): Boolean {
+    private suspend fun checkNameLength(name: String, context: Context): Boolean {
         if (name.length > Tag.NAME_MAX_LENGTH) {
             context.respond(
                 Embeds.error(
                     "Zu langer Name!",
                     "Der Name darf maximal ${Tag.NAME_MAX_LENGTH} Zeichen lang sein."
                 )
-            ).queue()
+            )
             return true
         }
         return false
     }
 
-    private fun checkReservedName(name: String, context: Context): Boolean {
+    private suspend fun checkReservedName(name: String, context: Context): Boolean {
         if (name.split(' ').first() in reservedNames) {
             context.respond(
                 Embeds.error(
                     "Reservierter Name!",
-                    "Die folgenden Namen sind reserviert `${reservedNames.joinToString()}`."
+                    "Die folgenden Namen sind reserviert: `${reservedNames.joinToString()}`."
                 )
-            ).queue()
+            )
             return true
         }
         return false
-    }
-
-    companion object {
-        private val multiWordAliasRegex = """"(.*)" "(.*)"""".toRegex()
     }
 }

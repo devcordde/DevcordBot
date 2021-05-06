@@ -18,29 +18,28 @@ package com.github.devcordde.devcordbot
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
-import com.github.devcordde.devcordbot.core.GameAnimator
-import com.github.devcordde.devcordbot.core.JavaDocManager
-import com.github.devcordde.devcordbot.core.autohelp.ImageReader
-import io.github.cdimascio.dotenv.dotenv
+import dev.kord.core.Kord
+import dev.kord.gateway.Intent
+import dev.kord.gateway.Intents
+import dev.kord.gateway.PrivilegedIntent
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
 import io.sentry.Sentry
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.Activity
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.LoggerFactory
-import kotlin.system.exitProcess
+import kotlin.time.ExperimentalTime
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
 import org.slf4j.event.Level as SLF4JLevel
-
-private val logger = KotlinLogging.logger {}
 
 /**
  * DevCordBot entry point.
  */
-fun main(args: Array<String>) {
+@OptIn(PrivilegedIntent::class, ExperimentalTime::class)
+suspend fun main(args: Array<String>) {
     val cliParser = ArgParser("devcordbot")
     val debugMode by cliParser.option(
         ArgType.Boolean,
@@ -59,38 +58,21 @@ fun main(args: Array<String>) {
     val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
     rootLogger.level = Level.valueOf(logLevelRaw)
 
-    val env = dotenv()
+    val config = Config()
+
     if (debugMode) {
-        Sentry.init() // Initilizing sentry with null does mute sentry
+        Sentry.init("") // Initilizing sentry with empty dsn does mute sentry
     } else {
-        env["SENTRY_DSN"]?.let {
-            Sentry.init("$it?stacktrace.app.packages=com.github.devcordde.devcordbot")
-        }
+        Sentry.init("${config.sentry.dsn}?stacktrace.app.packages=com.github.devcordde.devcordbot")
     }
 
-    val token = env["DISCORD_TOKEN"]
+    Constants.hastebinUrl = config.hasteHost
 
-    var games = env["GAMES"]?.split(";")?.map {
-        if (it.startsWith("!")) {
-            GameAnimator.AnimatedGame(it, Activity.ActivityType.LISTENING)
-        } else {
-            GameAnimator.AnimatedGame(it, Activity.ActivityType.DEFAULT)
-        }
+    val kord = Kord(config.discord.token) {
+        httpClient = HttpClient(CIO)
+        intents = Intents.nonPrivileged + Intent.GuildMembers
     }
+    val guild = kord.getGuild(config.discord.guildId) ?: error("Could not find dev guild")
 
-    if (token == null) {
-        logger.error { "The Discord bot token must not be null" }
-        exitProcess(1)
-    }
-    if (games == null) {
-        logger.warn { "Games could not be found, returning to fallback status..." }
-        games = listOf(GameAnimator.AnimatedGame("with errors"))
-    }
-
-    Constants.hastebinUrl = env["HASTE_HOST"]?.toHttpUrl() ?: "https://haste.devcord.xyz".toHttpUrl()
-
-    logger.info { "Launching DevCordBot..." }
-    logger.info { "OCR Available: ${ImageReader.available}" }
-    JavaDocManager.javadocPool // for some reason the object instance is made lazly which is to late here
-    DevCordBot(token, games, env, debugMode)
+    DevCordBot(config, debugMode, kord, guild).start()
 }

@@ -16,30 +16,34 @@
 
 package com.github.devcordde.devcordbot.core
 
-import com.github.devcordde.devcordbot.util.DefaultThreadFactory
-import kotlinx.coroutines.*
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.Activity
+import dev.kord.common.entity.ActivityType
+import dev.kord.core.Kord
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.ticker
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.io.Closeable
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 /**
  * Animates the bot's activity status.
  */
 @Suppress("EXPERIMENTAL_API_USAGE")
-class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) : Closeable {
+class GameAnimator(private val bot: DevCordBot) : Closeable {
 
     private lateinit var job: Job
-    private val executor = DefaultThreadFactory.newSingleThreadExecutor("GameAnimator").asCoroutineDispatcher()
+
+    @OptIn(ExperimentalTime::class)
+    private val ticker = ticker(Duration.seconds(30).inWholeMilliseconds)
 
     /**
      * Starts the game animation.
      */
     fun start() {
-        job = GlobalScope.launch(executor) {
-            while (true) {
+        job = bot.launch {
+            for (unit in ticker) {
                 animate()
-                delay(TimeUnit.SECONDS.toMillis(30))
             }
         }
     }
@@ -51,11 +55,10 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
         if (::job.isInitialized) {
             job.cancel()
         }
-        executor.close()
     }
 
-    private fun animate() {
-        jda.presence.activity = games.random().animate(jda)
+    private suspend fun animate() {
+        bot.config.discord.games.random().animate(bot.kord)
     }
 
     /**
@@ -63,7 +66,6 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
      */
     override fun close() {
         stop()
-        executor.close()
     }
 
     /**
@@ -71,11 +73,19 @@ class GameAnimator(private val jda: JDA, private val games: List<AnimatedGame>) 
      * @property content The games content
      * @property type The activity type this game should be displayed as
      */
-    data class AnimatedGame(val content: String, val type: Activity.ActivityType = Activity.ActivityType.DEFAULT) {
+    data class AnimatedGame(val content: String, val type: ActivityType = ActivityType.Game) {
         /**
          * Replaces possible placeholders.
          */
-        fun animate(jda: JDA): Activity = Activity.of(type, content.replace("%users%", jda.users.size.toString()))
+        suspend fun animate(kord: Kord): Unit = kord.editPresence {
+            val content = content.replace("%users%", kord.guilds.first().memberCount.toString())
+            when (type) {
+                ActivityType.Game -> playing(content)
+                ActivityType.Streaming -> streaming(content, "")
+                ActivityType.Listening -> listening(content)
+                ActivityType.Watching -> watching(content)
+                else -> error("Unsupported type: $type")
+            }
+        }
     }
-
 }

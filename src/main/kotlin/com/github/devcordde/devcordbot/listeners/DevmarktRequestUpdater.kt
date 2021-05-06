@@ -16,25 +16,39 @@
 
 package com.github.devcordde.devcordbot.listeners
 
-import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent
-import net.dv8tion.jda.api.hooks.SubscribeEvent
-import okhttp3.FormBody
-import okhttp3.Request
-import java.time.OffsetDateTime
+import com.github.devcordde.devcordbot.config.Config
+import com.github.devcordde.devcordbot.core.DevCordBot
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.Kord
+import dev.kord.core.behavior.channel.createEmbed
+import dev.kord.core.entity.Message
+import dev.kord.core.entity.ReactionEmoji
+import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.event.message.ReactionAddEvent
+import dev.kord.core.on
+import dev.kord.rest.Image
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import java.time.Instant
 
 /**
  * Sends an event to the Devmarkt bot on emote action.
  */
 class DevmarktRequestUpdater(
-    private val modChannel: String,
-    private val accessToken: String,
-    private val baseUrl: String,
-    private val emoteCheckId: String,
-    @Suppress("unused") private val emoteBlockId: String
+    private val bot: DevCordBot,
 ) {
+
+    private val config: Config.Devmarkt get() = bot.config.devmarkt
+
+    /**
+     * Registers the necessary listeners.
+     */
+    fun Kord.registerListeners() {
+        onMessageReceived()
+        onReactionInDevmarktRequestChannel()
+        onReceiveDenyMessage()
+        onReactonOnReasonMessage()
+    }
 
     private fun isNewEntryMessage(message: Message): Boolean {
         val embeds = message.embeds
@@ -47,150 +61,162 @@ class DevmarktRequestUpdater(
     }
 
     private fun getFieldValue(message: Message, name: String): String? {
-        return message.embeds[0].fields.stream()
-            .filter { field -> name == field.name }
-            .findAny()
-            .orElse(null).value
+        return message.embeds[0].fields
+            .firstOrNull { field -> name == field.name }?.value
     }
 
     /**
      * Sends the event on an incoming reaction.
      */
-    @SubscribeEvent
-    fun onMessageReceived(event: GuildMessageReceivedEvent) {
-        if (event.channel.id != modChannel
-            || event.message.member?.idLong != event.jda.selfUser.idLong
-            || !isNewEntryMessage(event.message)
+    private fun Kord.onMessageReceived() = on<MessageCreateEvent> {
+        if (message.channelId != config.requestChannel ||
+            message.author?.id != kord.selfId ||
+            !isNewEntryMessage(message)
         ) {
-            return
+            return@on
         }
 
-        val check = event.guild.getEmoteById(emoteCheckId) ?: return
-        event.message.addReaction(check).queue()
+        val check = getGuild()?.getEmoji(config.checkEmote) ?: return@on
+        message.addReaction(check)
     }
 
     /**
      * Sends the event on an incoming reaction.
      */
-    @SubscribeEvent
-    fun onReactionInDevmarktRequestChannel(event: MessageReactionAddEvent) {
-        if (event.channel.id != modChannel
-            || event.userId == event.jda.selfUser.id
-            || event.reactionEmote.id != emoteCheckId
+    private fun Kord.onReactionInDevmarktRequestChannel() = on<ReactionAddEvent> {
+        if (message.channelId != config.requestChannel ||
+            userId == kord.selfId ||
+            (emoji as? ReactionEmoji.Custom)?.id != config.checkEmote
         ) {
-            return
+            return@on
         }
 
-        val message = event.retrieveMessage().complete()
-        if (!isNewEntryMessage(message)) {
-            return
+        val realMessage = message.asMessage()
+        if (!isNewEntryMessage(realMessage)) {
+            return@on
         }
 
-        val requestId = getFieldValue(message, "Request-ID") ?: return
+        val requestId = getFieldValue(realMessage, "Request-ID") ?: return@on
 
-        val formBody = FormBody.Builder()
-            .add("moderator_id", event.userId)
-            .add("action", "accept")
-            .add("access_token", accessToken)
-            .add("req_id", requestId)
-            .build()
-
-        val request = Request.Builder()
-            .url("$baseUrl/process.php")
-            .post(formBody)
-            .build()
-
-        event.jda.httpClient.newCall(request).execute()
+        process(userId, requestId, action = "accept")
     }
 
     /**
      * Reacts if a message is received
      */
-    @SubscribeEvent
-    fun onReceiveDenyMessage(event: GuildMessageReceivedEvent) {
-        if (event.channel.id != modChannel) {
-            return
+    private fun Kord.onReceiveDenyMessage() = on<MessageCreateEvent> {
+        if (message.channelId != config.requestChannel) {
+            return@on
         }
 
-        val check = event.guild.getEmoteById(emoteCheckId) ?: return
-        val block = event.guild.getEmoteById(emoteBlockId) ?: return
-        val message = event.message
-        val referencedMessage = event.message.referencedMessage ?: return
+        val guild = getGuild() ?: return@on
 
-        if (!isNewEntryMessage(referencedMessage) || !message.contentRaw.startsWith("deny: ")) {
-            return
+        val check = guild.getEmoji(config.checkEmote)
+        val block = guild.getEmoji(config.blockEmote)
+        val message = message
+        val referencedMessage = message.referencedMessage ?: return@on
+
+        if (!isNewEntryMessage(referencedMessage) || !message.content.startsWith("deny: ")) {
+            return@on
         }
 
-        val reason = event.message.contentRaw.drop(6)
-        val builder = EmbedBuilder()
-        val user = event.member?.user ?: return
+        val reason = message.content.drop(6)
+        val user = message.author ?: return@on
 
-        val requestId = getFieldValue(referencedMessage, "Request-ID") ?: return
-        val requestTitel = getFieldValue(referencedMessage, "Titel") ?: return
-        val requestAuthor = referencedMessage.embeds[0].footer?.text ?: return
-        val requestColor = referencedMessage.embeds[0].color ?: return
+        val requestId = getFieldValue(referencedMessage, "Request-ID") ?: return@on
+        val requestTitel = getFieldValue(referencedMessage, "Titel") ?: return@on
+        val requestAuthor = referencedMessage.embeds[0].footer?.text ?: return@on
+        val requestColor = referencedMessage.embeds[0].color ?: return@on
 
-        builder.setTitle("Begründung")
-        builder
-            .addField("Titel", "`$requestTitel`", true)
-            .addField("Autor", "`$requestAuthor`", true)
-            .addField("Begründung", "`$reason`", false)
-            .addField("Request-ID", requestId, true)
-            .setFooter(user.name + "#" + user.discriminator, user.effectiveAvatarUrl)
-            .setColor(requestColor)
-            .setTimestamp(OffsetDateTime.now())
+        val messageReason = message.channel.createEmbed {
+            title = "Begründung"
+            field {
+                name = "Titel"
+                value = "`$requestTitel`"
+                inline = true
+            }
+            field {
+                name = "Autor"
+                value = "`$requestAuthor`"
+                inline = true
+            }
+            field {
+                name = "Begründung"
+                value = "`$reason`"
+                inline = false
+            }
+            field {
+                name = "Request-ID"
+                value = requestId
+                inline = true
+            }
 
-        val messageReason = event.channel.sendMessage(builder.build()).complete()
-        messageReason.addReaction(check).queue()
-        messageReason.addReaction(block).queue()
-        event.message.delete().queue()
+            footer {
+                text = user.tag
+                icon = user.avatar.run { if (isCustom) getUrl(Image.Size.Size64) else defaultUrl }
+            }
 
+            color = requestColor
+            timestamp = Instant.now()
+        }
+
+        messageReason.addReaction(check)
+        messageReason.addReaction(block)
+        message.delete()
     }
 
     /**
      * Sends the event on an incoming reaction.
      */
-    @SubscribeEvent
-    fun onReactonOnReasonMessage(event: MessageReactionAddEvent) {
-        if (event.channel.id != modChannel
-            || event.userId == event.jda.selfUser.id
+    private fun Kord.onReactonOnReasonMessage() = on<ReactionAddEvent> {
+        if (message.channel.id != config.requestChannel ||
+            userId == kord.selfId
         ) {
-            return
+            return@on
         }
 
-        val message = event.retrieveMessage().complete() ?: return
+        val realMessage = getMessageOrNull() ?: return@on
 
-        if (!isNewReasonMessage(message)) {
-            return
+        if (!isNewReasonMessage(realMessage)) {
+            return@on
         }
 
-        val reactionEmoteId = event.reactionEmote.id
-        val requestId = getFieldValue(message, "Request-ID") ?: return
+        val reactionEmoteId = (emoji as? ReactionEmoji.Custom)?.id ?: return@on
+        val requestId = getFieldValue(realMessage, "Request-ID") ?: return@on
 
-        if (reactionEmoteId == emoteBlockId) {
-            message.delete().queue()
+        if (reactionEmoteId == config.blockEmote) {
+            message.delete()
         }
-        if (reactionEmoteId != emoteCheckId) {
-            return
+        if (reactionEmoteId != config.checkEmote) {
+            return@on
         }
 
-        val reason = getFieldValue(message, "Begründung") ?: return
+        val reason = getFieldValue(realMessage, "Begründung") ?: return@on
 
-        val formBody = FormBody.Builder()
-            .add("moderator_id", event.userId)
-            .add("action", "decline")
-            .add("access_token", accessToken)
-            .add("req_id", requestId)
-            .add("reason", reason)
-            .build()
+        message.delete()
+        process(userId, requestId, reason, "decline")
+    }
 
-        val request = Request.Builder()
-            .url("$baseUrl/process.php")
-            .post(formBody)
-            .build()
+    private suspend fun process(
+        userId: Snowflake,
+        requestId: String,
+        reason: String? = null,
+        action: String
+    ) {
+        bot.httpClient.post<Unit>(config.baseUrl) {
+            url {
+                path("process.php")
+            }
 
-        message.delete().queue()
-        event.jda.httpClient.newCall(request).execute()
-
+            formData {
+                append("moderator_id", userId.asString)
+                append("action", action)
+                append("access_token", config.accessToken)
+                append("req_id", requestId)
+                if (reason != null) {
+                    append("reason", reason)
+                }
+            }
+        }
     }
 }

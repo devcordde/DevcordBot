@@ -16,67 +16,72 @@
 
 package com.github.devcordde.devcordbot.commands.`fun`
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
-import com.github.devcordde.devcordbot.command.AbstractSubCommand
-import com.github.devcordde.devcordbot.command.CommandCategory
-import com.github.devcordde.devcordbot.command.CommandPlace
-import com.github.devcordde.devcordbot.command.context.Arguments
+import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.util.hasSubCommands
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 
 /**
  * Source command.
  */
-class SourceCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("source", "skid", "code")
-    override val displayName: String = "source"
-    override val description: String = "Displays the source code of the bot"
-    override val usage: String = "[command]"
+class SourceCommand : AbstractSingleCommand() {
+    override val name: String = "source"
+    override val description: String = "Zeigt den Quellcode des Bots an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.FUN
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
+    override fun ApplicationCommandCreateBuilder.applyOptions() {
+        string("command", "Der Name des Befehls, für den der Quellcode angezeigt werden soll")
+    }
+
     override suspend fun execute(context: Context) {
-        val command = findCommand(context) ?: return context.respond(
-            Embeds.info(
-                "Quellcode:", "Den code vom Bot findest du [hier]($GITHUB_BASE)"
+        val commandName = context.args.optionalString("command")
+        val command = commandName?.let { findCommand(it, context) } ?: return run {
+            context.respond(
+                Embeds.info(
+                    "Quellcode", "Den Code vom Bot findest du [hier]($GITHUB_BASE)"
+                )
             )
-        ).queue()
+        }
         val parentCommand = getParent(command)
 
         val definitionLine = command.callback.stackTrace[1].lineNumber
 
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // All command classes are not anonymous or local
         val classUrl =
-            "$GITHUB_BASE$GITHUB_FILE_APPENDIX${parentCommand::class.qualifiedName!!.replace(".", "/")
-                .replace(".", "/")}.kt#L$definitionLine"
+            "$GITHUB_BASE$GITHUB_FILE_APPENDIX${
+            parentCommand::class.qualifiedName!!.replace(".", "/")
+                .replace(".", "/")
+            }.kt#L$definitionLine"
         context.respond(
             Embeds.info(
                 "${command.name} - Source",
-                "Den Quellcode des Commands findest du hier: [$classUrl]($classUrl)"
+                "Den Quellcode des Befehls findest du hier: [$classUrl]($classUrl)"
             )
-        ).queue()
+        )
     }
 
-    private fun findCommand(context: Context): AbstractCommand? {
+    private fun findCommand(argument: String, context: Context): AbstractCommand? {
         tailrec fun find(
-            args: Arguments,
+            args: List<String>,
             index: Int,
             commandAssociations: Map<String, AbstractCommand> = context.commandClient.commandAssociations
         ): AbstractCommand? {
             val current = args.getOrNull(index)
             val currentCommand = commandAssociations[current]
             val next = args.getOrNull(index + 1)
-            if (currentCommand?.hasSubCommands() == true && next != null && currentCommand.commandAssociations.containsKey(
+            val childAssociations = currentCommand as? CommandRegistry<*>
+            if (childAssociations?.isNotEmpty() == true && next != null && childAssociations.commandAssociations.containsKey(
                     next
                 )
             )
-                return find(args, index + 1, currentCommand.commandAssociations)
+                return find(args, index + 1, childAssociations.commandAssociations)
             return currentCommand
         }
-        return find(context.args, 0)
+
+        return find(argument.split("\\s+".toRegex()), 0)
     }
 
     private fun getParent(abstractCommand: AbstractCommand): AbstractCommand =

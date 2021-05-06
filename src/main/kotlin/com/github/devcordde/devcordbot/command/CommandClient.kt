@@ -16,6 +16,10 @@
 
 package com.github.devcordde.devcordbot.command
 
+import dev.kord.core.Kord
+import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.core.on
+import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -39,4 +43,11 @@ interface CommandClient : CommandRegistry<AbstractCommand> {
      * @see ErrorHandler
      */
     val errorHandler: ErrorHandler
+
+    /**
+     * Extension of [Kord] which registers a listener for the [InteractionCreateEvent].
+     *
+     * @see on
+     */
+    fun Kord.onInteraction(): Job
 }
