@@ -97,4 +97,3 @@ object TagAliases : IdTable<String>() {
 
     override val primaryKey: PrimaryKey = PrimaryKey(id)
 }
-
