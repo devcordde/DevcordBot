@@ -16,21 +16,20 @@
 
 package com.github.devcordde.devcordbot.util
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
-import kotlinx.coroutines.future.await
-import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.Member
-import net.dv8tion.jda.api.requests.RestAction
-import net.dv8tion.jda.api.utils.data.DataObject
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.Response
-import java.io.IOException
-import java.io.PrintWriter
-import java.io.StringWriter
-import java.util.concurrent.CompletableFuture
-
-private val httpLogger = KotlinLogging.logger("HttpClient")
+import dev.kord.core.behavior.MemberBehavior
+import dev.kord.core.behavior.MessageBehavior
+import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.channel.createMessage
+import dev.kord.core.behavior.edit
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
+import dev.kord.core.behavior.interaction.edit
+import dev.kord.core.behavior.interaction.followUp
+import dev.kord.core.entity.Member
+import dev.kord.core.entity.Message
+import dev.kord.core.entity.User
+import dev.kord.core.entity.interaction.PublicFollowupMessage
+import dev.kord.rest.Image
+import dev.kord.rest.builder.message.EmbedBuilder
 
 /**
  * Checks whether a string is numeric or not.
@@ -45,38 +44,9 @@ fun String.isNumeric(): Boolean = all(Char::isDigit)
 fun String.isNotNumeric(): Boolean = !isNumeric()
 
 /**
- * Checks whether a command has subcommands or not.
+ * Modification of [MemberBehavior.mention] which can validate any format.
  */
-fun AbstractCommand.hasSubCommands(): Boolean = commandAssociations.isNotEmpty()
-
-/**
- * @see net.dv8tion.jda.api.entities.IMentionable.getAsMention
- */
-fun Member.asMention(): Regex = "<@!?$id>\\s?".toRegex()
-
-/**
- * Executes a [Call] asynchronously.
- * @see Call.enqueue
- * @return a [CompletableFuture] containing the [Response]
- */
-fun Call.executeAsync(): CompletableFuture<Response> {
-    val future = CompletableFuture<Response>().exceptionally {
-        httpLogger.error(it) { "An error ocurred while executing an HTTP request" }
-        null
-    }
-    enqueue(object : Callback {
-        override fun onFailure(call: Call, e: IOException) {
-            future.completeExceptionally(e)
-        }
-
-        override fun onResponse(call: Call, response: Response) {
-            future.complete(response)
-        }
-
-    })
-    return future
-}
-
+fun MemberBehavior.asMention(): Regex = "<@!?$id>\\s?".toRegex()
 
 /**
  * Limits the length of a string by [amount] and adds [contraction] at the end.
@@ -85,12 +55,36 @@ fun String.limit(amount: Int, contraction: String = "..."): String =
     if (length < amount) this else "${substring(0, amount - contraction.length)}$contraction"
 
 /**
- * Public map constructor of [DataObject].
+ * Creates a new message in this channel containing [embedBuilder].
  */
-class MapJsonObject(map: Map<String, Any>) : DataObject(map)
+suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder): Message =
+    createMessage { embed = embedBuilder }
 
 /**
- * **Only use in coroutines**
- * Awaits the [RestAction] to finish
+ * Edits this [public slash command acknowledgement][PublicInteractionResponseBehavior] to contain [embedBuilder].
  */
-suspend fun <T> RestAction<T>.await(): T = submit().await()
+suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder): Message =
+    edit { embeds = mutableListOf(embedBuilder) }
+
+/**
+ * Follows up in the interaction thread with [embedBuilder].
+ */
+suspend fun PublicInteractionResponseBehavior.followUp(embedBuilder: EmbedBuilder): PublicFollowupMessage =
+    followUp { embeds = mutableListOf(embedBuilder.toRequest()) }
+
+/**
+ * Edits this message to contain [embedBuilder].
+ */
+suspend fun MessageBehavior.edit(embedBuilder: EmbedBuilder): Message = edit { embed = embedBuilder }
+
+/**
+ * This uses [User.Avatar.defaultUrl] if [User.Avatar.isCustom] is `false` otherwhise it uses [User.Avatar.getUrl]
+ */
+val User.effectiveAvatarUrl: String
+    get() = with(avatar) { if (isCustom) getUrl(Image.Size.Size64) else defaultUrl }
+
+/**
+ * The users nick name if specified, otherwise the username, effectivly the name that is rendered in the Discord UI.
+ */
+val Member.effictiveName: String
+    get() = nickname ?: username

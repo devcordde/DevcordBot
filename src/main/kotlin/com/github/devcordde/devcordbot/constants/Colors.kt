@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.constants
 
-import java.awt.Color
+import dev.kord.common.Color
 
 /**
  * Wrapper for [Discordapp.com/branding][https://discordapp.com/branding] colors and some other colors:

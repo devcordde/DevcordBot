@@ -16,41 +16,72 @@
 
 package com.github.devcordde.devcordbot.command
 
-import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import dev.kord.common.entity.DiscordGuildApplicationCommandPermission
+import dev.kord.common.entity.Snowflake
 
 /**
- * Skeleton of a command.
- * @property aliases list of strings that invoke the command
- * @property name the name used in usage messages
- * @property displayName name that is used on help messages
+ * Base class for all commands.
+ * **DO NOT INHERIT FROM THISE** Use [AbstractSingleCommand] and [AbstractRootCommand] instead
+ *
+ * @property name the name of the command
  * @property description the description of the command
- * @property usage the full usage of the command
- * @property permission the command permissions
- * @property commandAssociations all alias-command associations of sub-commands
- * @property category the [CommandCategory] of the command
- * @property commandPlace th [CommandPlace] of the command
- * @property callback an [Exception] that is supposed to highlight class defention line
+ * @property permission the [Permission] required to execute this command
+ * @property category the [CommandCategory] of this command
+ * @property commandPlace the [CommandPlace] in which this command can be executed
  */
-abstract class AbstractCommand : CommandRegistry<AbstractSubCommand> {
+abstract class AbstractCommand {
+    /**
+     * Internal field.
+     */
     open val callback: Exception = Exception()
 
-    override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
-
-    abstract val aliases: List<String>
-    val name: String
-        get() = aliases.first()
-    abstract val displayName: String
+    abstract val name: String
     abstract val description: String
-    abstract val usage: String
     abstract val permission: Permission
     abstract val category: CommandCategory
-    abstract val commandPlace: CommandPlace
+    open val commandPlace: CommandPlace = CommandPlace.ALL
 
     /**
-     * Invokes the command.
-     * @param context the [Context] in which the command is invoked
+     * Generates a list of [DiscordApplicationCommandPermissions][DiscordGuildApplicationCommandPermission]
+     * required to register slash command permissions
+     *
+     * @param botOwners a list of ids which can bypass [Permission.BOT_OWNER]
+     * @param modId the id of the role for [Permission.MODERATOR]
+     * @param adminId the id of the role for [Permission.ADMIN]
      */
-    abstract suspend fun execute(context: Context)
-
+    @OptIn(ExperimentalStdlibApi::class)
+    fun generatePermissions(
+        botOwners: List<Snowflake>,
+        modId: Snowflake,
+        adminId: Snowflake
+    ): List<DiscordGuildApplicationCommandPermission> = when (permission) {
+        Permission.ANY -> emptyList()
+        Permission.BOT_OWNER -> botOwners.map {
+            DiscordGuildApplicationCommandPermission(
+                it,
+                DiscordGuildApplicationCommandPermission.Type.User,
+                true
+            )
+        }
+        Permission.MODERATOR -> listOf(
+            DiscordGuildApplicationCommandPermission(
+                modId,
+                DiscordGuildApplicationCommandPermission.Type.Role,
+                true
+            )
+        )
+        Permission.ADMIN -> listOf(
+            DiscordGuildApplicationCommandPermission(
+                modId,
+                DiscordGuildApplicationCommandPermission.Type.Role,
+                true
+            ),
+            DiscordGuildApplicationCommandPermission(
+                adminId,
+                DiscordGuildApplicationCommandPermission.Type.Role,
+                true
+            )
+        )
+    }
 }

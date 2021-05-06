@@ -16,36 +16,14 @@
 
 package com.github.devcordde.devcordbot.commands.general.jdoodle
 
-import com.github.devcordde.devcordbot.util.MapJsonObject
-import io.github.cdimascio.dotenv.dotenv
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.time.Duration
-
+import com.github.devcordde.devcordbot.core.DevCordBot
+import io.ktor.client.request.*
+import kotlinx.serialization.Serializable
 
 /**
  * JDoodle Api wrapper
  */
 object JDoodle {
-    private val clientId: String
-    private val clientSecret: String
-    private val httpClient = OkHttpClient.Builder()
-        .callTimeout(Duration.ofMinutes(2))
-        .connectTimeout(Duration.ofMinutes(2))
-        .readTimeout(Duration.ofMinutes(2))
-        .writeTimeout(Duration.ofMinutes(2))
-        .build()
-
-    /**
-     * Init the values for execution.
-     */
-    init {
-        val env = dotenv()
-        clientId = env["JDOODLE_CLIENTID"].orEmpty()
-        clientSecret = env["JDOODLE_CLIENTSECRET"].orEmpty()
-    }
 
     /**
      * Executes the given script in the given language
@@ -53,29 +31,34 @@ object JDoodle {
      * @param language the script's language
      * @param script the script
      */
-    fun execute(language: Language, script: String): String? {
-        val dataObject = MapJsonObject(
-            mapOf(
-                "clientId" to clientId,
-                "clientSecret" to clientSecret,
-                "script" to script,
-                "language" to language.lang,
-                "versionIndex" to language.code
+    suspend fun execute(bot: DevCordBot, language: Language, script: String): JDoodleResponse {
+        val config = bot.config.jdoodle
+        val httpClient = bot.httpClient
+        return httpClient.post("https://api.jdoodle.com/v1/execute") {
+            body = JDoodleRequest(
+                config.clientId,
+                config.clientSecret,
+                script,
+                language.lang,
+                language.code
             )
-        )
-
-        val bodyString = dataObject.toString()
-
-        val request = Request.Builder()
-            .url("https://api.jdoodle.com/v1/execute")
-            .post(bodyString.toRequestBody("application/json".toMediaTypeOrNull())).build()
-
-        val response = httpClient.newCall(request).execute()
-
-        if (response.code != 200) {
-            return null
         }
-
-        return response.body?.string()
     }
 }
+
+@Serializable
+private data class JDoodleRequest(
+    val clientId: String,
+    val clientSecret: String,
+    val script: String,
+    val language: String,
+    val versionIndex: Int
+)
+
+/**
+ * Response from a JDoodle execute request.
+ *
+ * @property output the output of the code executed
+ */
+@Serializable
+data class JDoodleResponse(val output: String)

@@ -15,3 +15,13 @@
  */
 
 rootProject.name = "devcordbot"
+
+pluginManagement {
+    resolutionStrategy {
+        eachPlugin {
+            repositories {
+                mavenCentral()
+            }
+        }
+    }
+}

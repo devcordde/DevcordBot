@@ -36,8 +36,8 @@ class DefaultThreadFactory(poolName: String?) : ThreadFactory {
         val s = System.getSecurityManager()
         group = if (s != null) s.threadGroup else Thread.currentThread().threadGroup
         namePrefix = (if (poolName != null) "$poolName-" else "") + "pool-" +
-                poolNumber.getAndIncrement() +
-                "-thread-"
+            poolNumber.getAndIncrement() +
+            "-thread-"
     }
 
     /**

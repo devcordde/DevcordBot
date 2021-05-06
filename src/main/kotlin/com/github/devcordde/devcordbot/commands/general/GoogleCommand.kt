@@ -16,42 +16,48 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.menu.Paginator
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 
 /**
  * Google command.
  */
-class GoogleCommand : AbstractCommand() {
+class GoogleCommand : AbstractSingleCommand() {
 
-    override val aliases: List<String> = listOf("google", "search", "g")
-    override val displayName: String = "google"
+    override val name: String = "google"
     override val description: String =
         "Sucht nach der angegebenen Query bei Google und zeigt die ersten 10 Ergebnisse an."
-    override val usage: String = "<query>"
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
-    override suspend fun execute(context: Context) {
-        val query = context.args.join()
+    override fun ApplicationCommandCreateBuilder.applyOptions() {
+        string("query", "Die Query, nach der gesucht werden soll") {
+            required = true
+        }
+    }
 
-        if (query.isBlank()) return context.sendHelp().queue()
+    override suspend fun execute(context: Context) {
+        val query = context.args.string("query")
+
+        if (query.isBlank()) return run { context.sendHelp() }
 
         val results = context.bot.googler.google(query)
 
         if (results.isEmpty()) {
-            return context.respond(
+            context.respond(
                 Embeds.error(
                     title = "Keine Suchergebnisse gefunden",
                     description = "Für die Anfrage `$query` konnten keine Ergebnisse gefunden werden."
                 )
-            ).queue()
+            )
+            return
         }
 
         val displayResults = results.map {
@@ -59,7 +65,7 @@ class GoogleCommand : AbstractCommand() {
         }
         Paginator(
             items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
-            context = context, user = context.author, timeoutMillis = 25 * 1000
+            context = context, user = context.author.asUser(), timeoutMillis = 25 * 1000
         )
     }
 }

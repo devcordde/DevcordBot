@@ -17,25 +17,30 @@
 package com.github.devcordde.devcordbot.core
 
 import com.github.devcordde.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.entities.Guild
-import okhttp3.OkHttpClient
+import dev.kord.core.Kord
+import dev.kord.core.entity.Guild
+import dev.kord.core.event.gateway.ReadyEvent
+import io.ktor.client.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.json.Json
+import me.schlaubi.autohelp.AutoHelp
 
 /**
  * Main class of the bot
  */
-interface DevCordBot {
+interface DevCordBot : CoroutineScope {
     /**
      * The [CommandClient] used for command parsing.
      */
     val commandClient: CommandClient
 
     /**
-     * The [JDA] instance.
+     * The [Kord] instance.
      */
-    val jda: JDA
+    val kord: Kord
 
     /**
      * The [GameAnimator] instance.
@@ -43,14 +48,14 @@ interface DevCordBot {
     val gameAnimator: GameAnimator
 
     /**
-     * Whether the bot received the [net.dv8tion.jda.api.events.ReadyEvent] or not.
+     * Whether the bot received the [ReadyEvent] or not.
      */
     val isInitialized: Boolean
 
     /**
      * Http client used for JDA and the bot.
      */
-    val httpClient: OkHttpClient
+    val httpClient: HttpClient
 
     /**
      * Whether the bot is in debug mode or not.
@@ -71,4 +76,20 @@ interface DevCordBot {
      * See [Googler].
      */
     val googler: Googler
+
+    /**
+     * The [Json] instance used for serialization.
+     */
+    val json: Json
+
+    /**
+     * The bots central configuration.
+     * @see Config
+     */
+    val config: Config
+
+    /**
+     * The autohelp instance of the bot.
+     */
+    val autoHelp: AutoHelp
 }

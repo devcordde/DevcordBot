@@ -16,26 +16,31 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.util.edit
+import kotlinx.coroutines.async
 
 /**
  * InfoCommand.
  */
-class InfoCommand : AbstractCommand() {
-    override val aliases: List<String> = listOf("info")
-    override val displayName: String = "info"
-    override val description: String = "Zeigt Bot-Informationen an."
-    override val usage: String = ""
+class InfoCommand : AbstractSingleCommand() {
+    override val name: String = "info"
+    override val description: String = "Zeigt Infos über den Bot an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override suspend fun execute(context: Context) {
-        SelfMentionListener.sendInfo(context.channel, context.jda.users.size, context.bot)
+        val devCordBot = context.bot
+        val contributors = devCordBot.async { SelfMentionListener.fetchContributors(devCordBot) }
+
+        val origin = context.respond(SelfMentionListener.makeEmbed(devCordBot))
+
+        origin.edit(SelfMentionListener.makeEmbed(devCordBot, contributors.await()))
     }
 }

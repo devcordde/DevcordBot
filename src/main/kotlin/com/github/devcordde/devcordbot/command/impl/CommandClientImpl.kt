@@ -16,35 +16,36 @@
 
 package com.github.devcordde.devcordbot.command.impl
 
-import com.github.devcordde.devcordbot.command.AbstractCommand
-import com.github.devcordde.devcordbot.command.CommandClient
-import com.github.devcordde.devcordbot.command.ErrorHandler
-import com.github.devcordde.devcordbot.command.PermissionHandler
+import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Arguments
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
-import com.github.devcordde.devcordbot.dsl.sendMessage
-import com.github.devcordde.devcordbot.event.*
+import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.util.DefaultThreadFactory
-import com.github.devcordde.devcordbot.util.asMention
-import com.github.devcordde.devcordbot.util.hasSubCommands
-import kotlinx.coroutines.*
+import com.github.devcordde.devcordbot.util.createMessage
+import com.github.devcordde.devcordbot.util.edit
+import dev.kord.common.entity.PartialDiscordGuildApplicationCommandPermissions
+import dev.kord.core.Kord
+import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
+import dev.kord.core.entity.interaction.GroupCommand
+import dev.kord.core.entity.interaction.GuildInteraction
+import dev.kord.core.entity.interaction.InteractionCommand
+import dev.kord.core.entity.interaction.SubCommand
+import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.core.on
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import net.dv8tion.jda.api.entities.ChannelType
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.events.Event
-import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent
-import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
-import java.time.Duration
-import java.time.OffsetDateTime
-import java.time.temporal.ChronoUnit
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.Executors
-import javax.annotation.Nonnull
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -64,111 +65,82 @@ class CommandClientImpl(
 ) : CommandClient {
 
     private val logger = KotlinLogging.logger { }
-    private val delimiter = "\\s+".toRegex()
-    private val messageStorage = mutableMapOf<Long, Pair<Long, Long>>()
-    private val responsePool = Executors.newSingleThreadExecutor(
-        DefaultThreadFactory("CommandResponseWatcher")
-    ).asCoroutineDispatcher()
-    private val editThreshold = Duration.of(
-        30,
-        ChronoUnit.SECONDS
-    )
 
     override val commandAssociations: MutableMap<String, AbstractCommand> = mutableMapOf()
     override val errorHandler: ErrorHandler = if (bot.debugMode) DebugErrorHandler() else HastebinErrorHandler()
 
-    internal fun acknowledgeResponse(key: Long, channelId: Long, messageId: Long) {
-        messageStorage[key] = channelId to messageId
-        GlobalScope.launch(responsePool) {
-            delay(editThreshold.toMillis())
-            messageStorage.remove(key)
+    /**
+     * Updates the slash commands definitions.
+     */
+    suspend fun updateCommands() {
+        val slashCommands = bot.kord.slashCommands
+        val guildId = bot.guild.id
+        val commandUpdate = slashCommands.createGuildApplicationCommands(guildId) {
+            commandAssociations.values.distinct().forEach {
+                when (it) {
+                    is RegisterableCommand -> with(it) { applyCommand() }
+                    else -> error("Invalid command: $it")
+                }
+            }
         }
+
+        val permissions = commandUpdate.mapNotNull {
+            val command = commandAssociations[it.name]
+            if (command == null) {
+                null
+            } else {
+                val permissions = bot.config.permissions
+                PartialDiscordGuildApplicationCommandPermissions(
+                    it.id,
+                    command.generatePermissions(permissions.botOwners, permissions.modId, permissions.adminId)
+                )
+            }
+        }.toList()
+
+        slashCommands.service.bulkEditApplicationCommandPermissions(
+            slashCommands.applicationId,
+            guildId,
+            permissions
+        )
     }
 
-
     /**
-     * Deletes old command response
+     * Consumer for slash command invocations.
      */
-    @EventSubscriber
-    fun onMessageDelete(event: GuildMessageDeleteEvent): Boolean = deleteOldMessage(event.messageIdLong, event.guild)
+    override fun Kord.onInteraction(): Job = on<InteractionCreateEvent> { dipatchSlashCommand(this) }
 
-    /**
-     * Listens for new private messages
-     */
-    @EventSubscriber
-    fun onPrivateMessage(event: DevCordMessageReceivedEvent): Unit = dispatchPrivateMessageCommand(event.message, event)
-
-    private fun dispatchPrivateMessageCommand(message: Message, event: Event) {
+    private suspend fun dipatchSlashCommand(event: InteractionCreateEvent) {
         if (!bot.isInitialized) return
 
-        val author = message.author
-        if (message.isWebhookMessage or author.isBot) return
-
-        bot.guild.getMemberById(author.id) ?: return
-
-        return parseCommand(message, event)
+        return parseCommand(event)
     }
 
-    /**
-     * Listens for message updates.
-     */
-    @EventSubscriber
-    fun onMessageEdit(event: DevCordGuildMessageEditEvent) {
-        if (Duration.between(event.message.timeCreated, OffsetDateTime.now()) > editThreshold
-        ) return
-        dispatchGuildCommand(event.message, event)
-        deleteOldMessage(event.messageIdLong, event.guild)
-    }
-
-    /**
-     * Listens for new messages.
-     */
-    @EventSubscriber
-    fun onMessage(event: DevCordGuildMessageReceivedEvent): Unit = dispatchGuildCommand(event.message, event)
-
-    private fun dispatchGuildCommand(message: Message, event: Event) {
-        if (!bot.isInitialized) return
-
-        if (message.guild.id != bot.guild.id) return
-
-        val author = message.author
-        if (message.isWebhookMessage or author.isBot) return
-
-        return parseCommand(message, event)
-    }
-
-    private fun parseCommand(message: Message, event: Event) {
-        val content = message.contentRaw
-        val prefixLength =
-            resolvePrefix(if (message.channelType == ChannelType.TEXT) message.guild else null, content)
-                ?: return
-        val nonPrefixedInput = content.substring(prefixLength)
-
-        val (command, arguments) = resolveCommand(nonPrefixedInput) ?: return // No command found
+    private suspend fun parseCommand(event: InteractionCreateEvent) {
+        val interaction = event.interaction as? GuildInteraction ?: return
+        val command = resolveCommand(interaction.command) ?: return // No command found
 
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
-        val member =
-            if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(message.author.id)
+        val member = interaction.member.asMember()
 
-        val user = event.devCordUser
+        val user = transaction { DatabaseDevCordUser.findOrCreateById(interaction.user.id.value) }
 
         val permissionState = permissionHandler.isCovered(
             command.permission,
             member,
-            user
+            user,
+            isSlashCommand = true
         )
 
+        val arguments = Arguments(interaction.command.options)
+        val acknowledgement = interaction.ackowledgePublic()
 
         when (permissionState) {
             PermissionState.IGNORED -> return
-            PermissionState.DECLINED -> return handleNoPermission(command.permission, message.channel)
+            PermissionState.DECLINED -> return handleNoPermission(command.permission, acknowledgement)
             PermissionState.ACCEPTED -> {
-                if (!command.commandPlace.matches(message)) return handleWrongContext(message.channel)
-                message.channel.sendTyping()
-                    .queue(fun(_: Void?) { // Since Void has a private constructor JDA passes in null, so it has to be nullable even if it is not used
-                        val context = Context(bot, command, arguments, message, this, user)
-                        processCommand(command, context)
-                    })
+                if (!command.commandPlace.matches(event)) return handleWrongContext(interaction.channel.asChannel())
+                val context = Context(bot, command, arguments, event, this, user, acknowledgement, member)
+                processCommand(command, context)
             }
         }
     }
@@ -177,73 +149,47 @@ class CommandClientImpl(
         val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
             errorHandler.handleException(throwable, context, Thread.currentThread(), coroutineContext)
         }
-        GlobalScope.launch(executor + exceptionHandler) {
+        bot.launch(executor + exceptionHandler) {
             logger.info { "Command $command was executed by ${context.member}" }
-            command.execute(context)
-        }
-    }
-
-    private fun resolveCommand(input: String): CommandContainer? {
-        tailrec fun findCommand(
-            arguments: Arguments,
-            associations: Map<String, AbstractCommand>,
-            command: AbstractCommand? = null
-        ): CommandContainer? {
-            // Get invoke
-            val invoke = arguments.first().toLowerCase()
-            // Search command associated with invoke or return previously found command
-            val foundCommand = associations[invoke] ?: return command?.let { CommandContainer(it, arguments) }
-            // Cut off invoke
-            val newArgs = Arguments(arguments.drop(1), raw = arguments.join().trim().substring(invoke.length).trim())
-            // Look for sub commands
-            if (foundCommand.hasSubCommands() and newArgs.isNotEmpty()) {
-                return findCommand(newArgs, foundCommand.commandAssociations, foundCommand)
+            when (command) {
+                is AbstractSingleCommand -> command.execute(context)
+                is AbstractSubCommand.Command -> command.execute(context)
             }
-            // Return command if now sub-commands were found
-            return CommandContainer(foundCommand, newArgs)
-        }
-
-        return findCommand(Arguments(input.trim().split(delimiter), raw = input), commandAssociations)
-    }
-
-    private fun resolvePrefix(guild: Guild?, content: String): Int? {
-        val mention = guild?.selfMember?.asMention()
-
-        val mentionPrefix = mention?.find(content)
-        val prefix = prefix.find(content)
-        return when {
-            mentionPrefix?.range?.first == 0 -> mentionPrefix.range.last
-            prefix != null -> prefix.range.last + 1
-            else -> null
         }
     }
 
-    private fun handleWrongContext(channel: MessageChannel) {
-        channel.sendMessage(
+    private fun resolveCommand(rootInteractionCommand: InteractionCommand): AbstractCommand? {
+        val rootCommandName = rootInteractionCommand.rootName
+        val rootCommand = commandAssociations[rootCommandName] ?: return null
+        if (rootCommand is AbstractSingleCommand) return rootCommand
+        val command = rootCommand as AbstractRootCommand
+        val base = if (rootInteractionCommand is GroupCommand) {
+            (command.commandAssociations[rootInteractionCommand.name] as AbstractSubCommand.Group).commandAssociations
+        } else {
+            rootCommand.commandAssociations
+        }
+        val subCommandName = (rootInteractionCommand as? SubCommand)?.name
+        if (subCommandName != null) {
+            return base[subCommandName]
+        }
+        return rootCommand
+    }
+
+    private suspend fun handleWrongContext(channel: MessageChannelBehavior) {
+        channel.createMessage(
             Embeds.error(
                 "Falscher Context!",
                 "Der Command ist in diesem Channel nicht ausführbar."
             )
-        ).queue()
+        )
     }
 
-    private fun handleNoPermission(permission: Permission, channel: MessageChannel) {
-        channel.sendMessage(
+    private suspend fun handleNoPermission(permission: Permission, acknowledgement: PublicInteractionResponseBehavior) {
+        acknowledgement.edit(
             Embeds.error(
                 "Keine Berechtigung!",
                 "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"
             )
-        ).queue()
-    }
-
-    private data class CommandContainer(val command: AbstractCommand, val args: Arguments)
-
-    private fun deleteOldMessage(
-        messageIdLong: Long,
-        guild: @Nonnull Guild
-    ): Boolean {
-        val (channel, message) = messageStorage[messageIdLong] ?: return true
-        guild.getTextChannelById(channel)?.retrieveMessageById(message)?.flatMap(Message::delete)?.queue()
-        return false
+        )
     }
 }

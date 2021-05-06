@@ -19,7 +19,7 @@ package com.github.devcordde.devcordbot.command
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.database.DevCordUser
-import net.dv8tion.jda.api.entities.Member
+import dev.kord.core.entity.Member
 
 /**
  * Handler for command permissions.
@@ -29,10 +29,11 @@ interface PermissionHandler {
     /**
      * Checks whether the [executor] covers the [permission] or not.
      */
-    fun isCovered(
+    suspend fun isCovered(
         permission: Permission,
         executor: Member?,
         devCordUser: DevCordUser?,
-        acknowledgeBlacklist: Boolean = true
+        acknowledgeBlacklist: Boolean = true,
+        isSlashCommand: Boolean = false,
     ): PermissionState
 }

@@ -18,20 +18,26 @@ package com.github.devcordde.devcordbot.command.context
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.CommandClient
-import com.github.devcordde.devcordbot.command.impl.CommandClientImpl
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DevCordUser
-import com.github.devcordde.devcordbot.dsl.EmbedConvention
-import com.github.devcordde.devcordbot.dsl.sendMessage
-import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.MessageBuilder
-import net.dv8tion.jda.api.entities.*
-import net.dv8tion.jda.api.requests.RestAction
-import net.dv8tion.jda.api.requests.restaction.MessageAction
+import dev.kord.common.annotation.KordUnsafe
+import dev.kord.common.entity.AllowedMentionType
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.Kord
+import dev.kord.core.behavior.GuildBehavior
+import dev.kord.core.behavior.MemberBehavior
+import dev.kord.core.behavior.UserBehavior
+import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
+import dev.kord.core.behavior.interaction.edit
+import dev.kord.core.entity.Member
+import dev.kord.core.entity.Message
+import dev.kord.core.entity.interaction.GuildInteraction
+import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.rest.builder.message.EmbedBuilder
 
 /**
  * Representation of a context of a command execution.
@@ -39,119 +45,110 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction
  * @property args the [Arguments] of the command
  * @property commandClient the [CommandClient] which executed this command
  * @property bot instance of the [DevCordBot]
- * @property message the message that triggered the command
+ * @property event the [InteractionCreateEvent] which triggered this invocation
+ * @property acknowledgement the [PublicInteractionResponseBehavior] which acknowledged the exeuction of the command
+ * it acts like a communication point between the bot and the interaction thread, all message sending should be
+ * handles using this [respond] and [sendHelp] methods will also refer to this
  * @property devCordUser User storing database settings. See [DevCordUser]
+ * @property member the [Member] which executed the command
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Context(
     val bot: DevCordBot,
     val command: AbstractCommand,
     val args: Arguments,
-    val message: Message,
+    val event: InteractionCreateEvent,
     val commandClient: CommandClient,
-    val devCordUser: DevCordUser
+    val devCordUser: DevCordUser,
+    var acknowledgement: PublicInteractionResponseBehavior,
+    val member: Member
 ) {
-    /**
-     * The [JDA] instance.
-     */
-    val jda: JDA
-        get() = message.jda
 
     /**
-     * The id of [message].
+     * The [Kord] instance.
      */
-    val messageId: Long
-        get() = message.idLong
+    val kord: Kord
+        get() = event.kord
 
     /**
-     * The [TextChannel] of [message].
+     * The id of [InteractionCreateEvent.interaction].
      */
-    val channel: MessageChannel
-        get() = message.channel
+    val interactionId: Snowflake
+        get() = event.interaction.id
 
     /**
-     * The author of the [message].
+     * The [MessageChannelBehavior] of [event].
      */
-    val author: User
-        get() = message.author
+    val channel: MessageChannelBehavior
+        get() = event.interaction.channel
 
     /**
-     * The member of the [author].
+     * The author of the [interactionId].
      */
-    val member: Member?
-        get() = if (message.isFromType(ChannelType.TEXT)) message.member else bot.guild.getMemberById(author.id)
+    val author: UserBehavior
+        get() = event.interaction.user
 
     /**
      * The guild of the [channel].
      */
-    val guild: Guild
-        get() = if (message.channelType == ChannelType.TEXT) message.guild else bot.guild
+    val guild: GuildBehavior
+        get() = (event.interaction as? GuildInteraction)?.guild ?: bot.guild
 
     /**
-     * The [self member][Member] of the bot.
+     * The [self member][MemberBehavior] of the bot.
      */
-    val me: Member
-        get() = guild.selfMember
+    @OptIn(KordUnsafe::class)
+    val me: MemberBehavior
+        get() = event.kord.unsafe.member(guild.id, event.kord.selfId)
 
     /**
-     * The [SelfUser] of the bot.
+     * The [UserBehavior] of the bot user.
      */
-    val selfUser: SelfUser
-        get() = jda.selfUser
+    @OptIn(KordUnsafe::class)
+    val selfUser: UserBehavior
+        get() = event.kord.unsafe.user(event.kord.selfId)
 
     /**
      * Sends [content] into [channel].
-     * @return a [MessageAction] that sends the message
+     * @return the [Message] which was sent
      */
-    fun respond(content: String): RestAction<Message> {
-        val message =
-            MessageBuilder(content).denyMentions(Message.MentionType.EVERYONE, Message.MentionType.HERE).build()
-        return notifyCommandHandler(channel.sendMessage(message))
+    suspend fun respond(content: String): Message {
+        return acknowledgement.edit {
+            allowedMentions {
+                +AllowedMentionType.UserMentions
+                +AllowedMentionType.RoleMentions
+            }
+            this.content = content
+        }
     }
 
     /**
-     * Sends [embed] into [channel].
-     * @return a [MessageAction] that sends the message
-     */
-    fun respond(embed: MessageEmbed): RestAction<Message> = notifyCommandHandler(channel.sendMessage(embed))
-
-    /**
      * Sends [embedBuilder] into [channel].
-     * @return a [MessageAction] that sends the message
+     * @return the [Message] which was sent
      */
-    fun respond(embedBuilder: EmbedBuilder): RestAction<Message> =
-        notifyCommandHandler(channel.sendMessage(embedBuilder.build()))
-
-    /**
-     * Sends [embed] into [channel].
-     * @return a [MessageAction] that sends the message
-     */
-    fun respond(embed: EmbedConvention): RestAction<Message> = notifyCommandHandler(channel.sendMessage(embed))
+    suspend fun respond(embedBuilder: EmbedBuilder): Message = acknowledgement.edit {
+        embeds = mutableListOf(embedBuilder)
+    }
 
     /**
      * Sends a help embed for [command].
      * @see Embeds.command
      */
-    fun sendHelp(): RestAction<Message> = respond(Embeds.command(command))
+    suspend fun sendHelp(): Message = respond(Embeds.command(command))
 
     /**
      * Checks whether the [member] has [Permission.ADMIN] or not.
      */
-    fun hasAdmin(): Boolean = hasPermission(Permission.ADMIN)
+    suspend fun hasAdmin(): Boolean = hasPermission(Permission.ADMIN)
 
     /**
      * Checks whether the [member] has [Permission.MODERATOR] or not.
      */
-    fun hasModerator(): Boolean = hasPermission(Permission.MODERATOR)
+    suspend fun hasModerator(): Boolean = hasPermission(Permission.MODERATOR)
 
     /**
      * Checks if [devCordUser] has [permission].
      */
-    fun hasPermission(permission: Permission): Boolean =
+    suspend fun hasPermission(permission: Permission): Boolean =
         commandClient.permissionHandler.isCovered(permission, member, devCordUser) == PermissionState.ACCEPTED
-
-    private fun notifyCommandHandler(action: MessageAction) = action.map {
-        (commandClient as CommandClientImpl).acknowledgeResponse(message.idLong, it.channel.idLong, it.idLong); it
-    }
-
 }

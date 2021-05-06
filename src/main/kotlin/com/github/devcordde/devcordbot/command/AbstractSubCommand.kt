@@ -16,7 +16,11 @@
 
 package com.github.devcordde.devcordbot.command
 
+import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
+import dev.kord.rest.builder.interaction.SubCommandBuilder
 
 /**
  * Skeleton of a sub command.
@@ -25,7 +29,7 @@ import com.github.devcordde.devcordbot.command.permission.Permission
  * @see AbstractCommand
  */
 @Suppress("MemberVisibilityCanBePrivate")
-abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
+sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand() {
     override val callback: Exception = Exception()
     override val category: CommandCategory
         get() = parent.category
@@ -33,4 +37,51 @@ abstract class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand
         get() = parent.permission
     override val commandPlace: CommandPlace
         get() = parent.commandPlace
+
+    /**
+     * Adds this command to the [ApplicationCommandsCreateBuilder].
+     */
+    abstract fun ApplicationCommandCreateBuilder.applyCommand()
+
+    /**
+     * Abstract implementation of a slash sub-command.
+     */
+    abstract class Command(parent: AbstractCommand) : AbstractSubCommand(parent) {
+
+        /**
+         * Function that is called when building command to add options.
+         * @see SubCommandBuilder
+         */
+        open fun SubCommandBuilder.applyOptions(): Unit = Unit
+
+        /**
+         * Invokes the command.
+         * @param context the [Context] in which the command is invoked
+         */
+        abstract suspend fun execute(context: Context)
+
+        final override fun ApplicationCommandCreateBuilder.applyCommand() {
+            subCommand(this@Command.name, description) {
+                applyOptions()
+            }
+        }
+    }
+
+    /**
+     * Representation of a [sub commands group](https://discord.com/developers/docs/interactions/slash-commands#subcommands-and-subcommand-groups).
+     */
+    abstract class Group(parent: AbstractCommand) :
+        AbstractSubCommand(parent),
+        CommandRegistry<Command> {
+        override fun ApplicationCommandCreateBuilder.applyCommand() {
+            group(name, description) {
+                commandAssociations.values
+                    .forEach {
+                        with(it as AbstractSubCommand) {
+                            this@applyCommand.applyCommand()
+                        }
+                    }
+            }
+        }
+    }
 }

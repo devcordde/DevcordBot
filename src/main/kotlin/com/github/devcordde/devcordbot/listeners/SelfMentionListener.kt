@@ -20,12 +20,16 @@ import com.github.devcordde.devcordbot.constants.Constants
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.core.DevCordBot
-import com.github.devcordde.devcordbot.dsl.editMessage
-import com.github.devcordde.devcordbot.dsl.sendMessage
 import com.github.devcordde.devcordbot.util.asMention
-import net.dv8tion.jda.api.entities.MessageChannel
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
-import net.dv8tion.jda.api.hooks.SubscribeEvent
+import dev.kord.core.Kord
+import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.channel.createMessage
+import dev.kord.core.behavior.edit
+import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.on
+import dev.kord.rest.builder.message.EmbedBuilder
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 /**
  * Listens for the bot being mentioned.
@@ -35,50 +39,77 @@ class SelfMentionListener(private val bot: DevCordBot) {
     /**
      * Listens for new Guild messages.
      */
-    @SubscribeEvent
-    fun onMessageReceive(event: GuildMessageReceivedEvent) {
-        if (event.author.isBot) return
-        if (event.guild.selfMember.asMention().matchEntire(event.message.contentRaw) != null) {
-            sendInfo(event.channel, event.jda.users.size, bot)
+    fun Kord.onMessageReceive() {
+        on<MessageCreateEvent> {
+            if (message.author?.isBot == true) return@on
+            val guild = getGuild() ?: return@on
+            if (message.content.matches(guild.getMember(kord.selfId).asMention())) {
+                bot.launch {
+                    sendInfo(message.channel, bot)
+                }
+            }
         }
     }
 
     companion object {
+
+        /**
+         * Fetches the Github contributors to [devCordBot].
+         */
+        suspend fun fetchContributors(devCordBot: DevCordBot): String {
+            val contributors = devCordBot.github.retrieveContributors()
+            return contributors.joinToString(", ") {
+                "[${it.name}](${it.url})"
+            }
+        }
+
+        /**
+         * Creates the info embed about [bot].
+         *
+         * @param devs the developers field
+         */
+        fun makeEmbed(bot: DevCordBot, devs: String = Emotes.LOADING): EmbedBuilder = Embeds.info("DevCordBot") {
+            field {
+                name = "Programmiersprache"
+                value = "[Kotlin](https://kotlinlang.org)"
+                inline = true
+            }
+            field {
+                name = "Entwickler"
+                value = devs
+                inline = true
+            }
+            field {
+                name = "Sourcecode"
+                value = "[devcordde/DevcordBot](https://github.com/devcordde/DevcordBot)"
+                inline = true
+            }
+            field {
+                name = "Nutzer"
+                value = bot.guild.memberCount.toString()
+                inline = true
+            }
+            field {
+                name = "Präfix"
+                value = "`${Constants.firstPrefix}`"
+                inline = true
+            }
+        }
+
         /**
          * Send Bot-Information to given channel
          */
-        fun sendInfo(textChannel: MessageChannel, userCount: Int, devCordBot: DevCordBot) {
-            val contributors = devCordBot.github.retrieveContributors().thenApply { contributors ->
-                contributors.joinToString(", ") {
-                    "[${it.name}](${it.url})"
-                }
-            }
+        suspend fun sendInfo(textChannel: MessageChannelBehavior, devCordBot: DevCordBot) {
+            val contributors = devCordBot.async { fetchContributors(devCordBot) }
 
-            textChannel.sendMessage(Embeds.info("DevCordBot") {
-                addField("Programmiersprache", "[Kotlin](https://kotlinlang.org)", inline = true)
-                addField("Entwickler", Emotes.LOADING, inline = true)
-                addField(
-                    "Source",
-                    "[github.com/devcordde/Devcordbot](https://github.com/devcordde/Devcordbot)",
-                    inline = true
-                )
-                addField("User", userCount.toString(), inline = true)
-                addField("Prefix", "`${Constants.firstPrefix}`", inline = true)
-            }).flatMap {
-                it.editMessage(
-                    Embeds.info("DevCordBot") {
-                        addField("Programmiersprache", "[Kotlin](https://kotlinlang.org)", inline = true)
-                        addField("Entwickler", contributors.join(), inline = true)
-                        addField(
-                            "Source",
-                            "[github.com/devcordde/Devcordbot](https://github.com/devcordde/Devcordbot)",
-                            inline = true
-                        )
-                        addField("User", userCount.toString(), inline = true)
-                        addField("Prefix", "`${Constants.firstPrefix}`", inline = true)
-                    }
-                )
-            }.queue()
+            val message = textChannel.createMessage {
+                embed = makeEmbed(devCordBot)
+            }
+            val contributorList = contributors.await()
+
+            message.edit {
+                embed = makeEmbed(devCordBot, contributorList)
+            }
         }
     }
 }
