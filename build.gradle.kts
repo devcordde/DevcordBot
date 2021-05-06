@@ -113,6 +113,10 @@ tasks {
     test {
         useJUnitPlatform()
     }
+
+    installDist {
+        destinationDir = buildDir.resolve("libs/install")
+    }
 }
 
 /**
