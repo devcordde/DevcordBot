@@ -41,7 +41,7 @@ class SourceCommand : AbstractSingleCommand() {
         val command = commandName?.let { findCommand(it, context) } ?: return run {
             context.respond(
                 Embeds.info(
-                    "Quellcode:", "Den Code vom Bot findest du [hier]($GITHUB_BASE)"
+                    "Quellcode", "Den Code vom Bot findest du [hier]($GITHUB_BASE)"
                 )
             )
         }
