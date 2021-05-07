@@ -32,14 +32,24 @@ object HastebinUtil {
      * Posts the [text] to [Constants.hastebinUrl] using the [client].
      * @return a [CompletableFuture] containing the haste-url
      */
-    suspend fun postErrorToHastebin(text: String, client: HttpClient): String {
-        return client.post<HastebinResponse>(Constants.hastebinUrl) {
+    suspend fun postToHastebin(text: String, client: HttpClient): String {
+        return hasteKeyToLink(client.post<HastebinResponse>(Constants.hastebinUrl) {
             url {
                 path("documents")
             }
 
             body = text
-        }.key
+        }.key)
+    }
+
+    /**
+     * Converts the [key] to a valid hastebin url.
+     * @return the url string
+     */
+    private fun hasteKeyToLink(key: String): String {
+        var url = Constants.hastebinUrl.toString()
+        url += if (url.endsWith("/")) "" else "/"
+        return url + key
     }
 }
 

@@ -95,7 +95,7 @@ class EvalCommand : AbstractRootCommand() {
 
                 loading.edit(result)
 
-                val hasteUrl = HastebinUtil.postErrorToHastebin(output, context.bot.httpClient)
+                val hasteUrl = HastebinUtil.postToHastebin(output, context.bot.httpClient)
                 description.replace(Emotes.LOADING.toRegex(), hasteUrl)
             } else {
                 loading.edit(
