@@ -54,7 +54,7 @@ class HastebinErrorHandler : ErrorHandler {
             )
 
             val error = collectErrorInformation(exception, context, thread, coroutineContext)
-            val url = HastebinUtil.postErrorToHastebin(error, context.bot.httpClient)
+            val url = HastebinUtil.postToHastebin(error, context.bot.httpClient)
 
             message.edit(
                 Embeds.error(
