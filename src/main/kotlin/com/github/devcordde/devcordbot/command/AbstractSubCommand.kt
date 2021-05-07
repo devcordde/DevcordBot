@@ -61,7 +61,7 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
         abstract suspend fun execute(context: Context)
 
         final override fun ApplicationCommandCreateBuilder.applyCommand() {
-            subCommand(this@Command.name, description) {
+            subCommand(this@Command.name, this@Command.description) {
                 applyOptions()
             }
         }

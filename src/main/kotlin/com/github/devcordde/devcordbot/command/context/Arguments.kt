@@ -61,7 +61,7 @@ data class Arguments(
     /**
      * Retrieves the an optional [Int] option by [name].
      */
-    fun optionalInt(name: String): Int? = optionalLong(name)?.toInt()
+    fun optionalInt(name: String): Int? = optionalTypedArgument<Int>(name)?.value
 
     /**
      * Retrieves the an optional [Long] option by [name].
