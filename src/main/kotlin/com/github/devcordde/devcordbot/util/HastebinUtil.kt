@@ -33,13 +33,15 @@ object HastebinUtil {
      * @return a [CompletableFuture] containing the haste-url
      */
     suspend fun postToHastebin(text: String, client: HttpClient): String {
-        return hasteKeyToLink(client.post<HastebinResponse>(Constants.hastebinUrl) {
-            url {
-                path("documents")
-            }
+        return hasteKeyToLink(
+            client.post<HastebinResponse>(Constants.hastebinUrl) {
+                url {
+                    path("documents")
+                }
 
-            body = text
-        }.key)
+                body = text
+            }.key
+        )
     }
 
     /**
