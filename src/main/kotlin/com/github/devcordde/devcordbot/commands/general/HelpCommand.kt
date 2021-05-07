@@ -86,7 +86,7 @@ class HelpCommand : AbstractSingleCommand() {
             Embeds.info(
                 "Befehls-Hilfe",
                 """Dies ist eine Liste aller Befehle, die du benutzen kannst,
-            | um mehr über einen Befehl zu erfahren, kannst du `sudo help [command]` ausführen.
+            | um mehr über einen Befehl zu erfahren, kannst du `/help [command]` ausführen.
         """.trimMargin()
             ) {
                 val commands = context.commandClient.registeredCommands.filter {
