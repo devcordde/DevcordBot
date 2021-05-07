@@ -111,6 +111,8 @@ internal class DevCordBotImpl(
             dispatcher = coroutineContext
         }
 
+        dispatcher = coroutineContext
+
         kordContext {
             kordEventSource(kord)
             filter {
