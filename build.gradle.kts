@@ -67,6 +67,7 @@ dependencies {
     implementation("io.github.cdimascio", "java-dotenv", "5.2.2")
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.2.1")
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20200917-1.31.0")
+    implementation("net.sf.trove4j", "trove4j", "3.0.3")
 
     // Http
     implementation(platform("io.ktor:ktor-bom:1.5.3"))
