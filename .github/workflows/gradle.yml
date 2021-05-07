@@ -25,9 +25,9 @@ jobs:
       with:
         java-version: 15
     - name: Test with Gradle
-      run: ./gradlew test ktlintCheck
+      run: gradlew test ktlintCheck
     - name: Build with Gradle
-      run: ./gradlew installDist
+      run: gradlew installDist
     - name: Docker Publish
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
       uses: manusa/actions-publish-docker@v1.0.1
