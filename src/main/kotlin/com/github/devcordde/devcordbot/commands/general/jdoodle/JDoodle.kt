@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.commands.general.jdoodle
 
 import com.github.devcordde.devcordbot.core.DevCordBot
 import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.serialization.Serializable
 
 /**
@@ -35,6 +36,7 @@ object JDoodle {
         val config = bot.config.jdoodle
         val httpClient = bot.httpClient
         return httpClient.post("https://api.jdoodle.com/v1/execute") {
+            contentType(ContentType.Application.Json)
             body = JDoodleRequest(
                 config.clientId,
                 config.clientSecret,
