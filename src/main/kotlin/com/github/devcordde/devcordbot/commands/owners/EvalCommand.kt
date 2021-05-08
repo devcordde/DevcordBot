@@ -42,7 +42,7 @@ class EvalCommand : AbstractSingleCommand() {
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override fun ApplicationCommandCreateBuilder.applyOptions() {
-        string("code", "Der auszuführende Code"){
+        string("code", "Der auszuführende Code") {
             required = true
         }
     }
