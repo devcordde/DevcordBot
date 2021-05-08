@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.commands.general.jdoodle
 
-import com.github.devcordde.devcordbot.command.AbstractRootCommand
+import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace

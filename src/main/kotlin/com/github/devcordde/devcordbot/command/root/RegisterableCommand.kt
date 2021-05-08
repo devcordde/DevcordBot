@@ -14,14 +14,14 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.command
+package com.github.devcordde.devcordbot.command.root
 
 import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
 
 /**
  * A command which can be registered (root commands).
  */
-interface RegisterableCommand {
+sealed interface RegisterableCommand {
     /**
      * Registers the command to this [ApplicationCommandsCreateBuilder].
      */

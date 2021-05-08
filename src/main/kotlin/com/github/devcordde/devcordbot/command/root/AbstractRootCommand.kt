@@ -14,8 +14,11 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.command
+package com.github.devcordde.devcordbot.command.root
 
+import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.AbstractSubCommand
+import com.github.devcordde.devcordbot.command.CommandRegistry
 import com.github.devcordde.devcordbot.command.permission.Permission
 import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
 
