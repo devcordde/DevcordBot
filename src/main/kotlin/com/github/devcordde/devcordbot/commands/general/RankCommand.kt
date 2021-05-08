@@ -16,12 +16,12 @@
 
 package com.github.devcordde.devcordbot.commands.general
 
-import com.github.devcordde.devcordbot.command.AbstractRootCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users

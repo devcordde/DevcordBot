@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.commands.`fun`
 import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 

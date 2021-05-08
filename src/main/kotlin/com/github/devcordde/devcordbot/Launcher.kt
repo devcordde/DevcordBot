@@ -60,7 +60,12 @@ suspend fun main(args: Array<String>) {
     if (debugMode) {
         Sentry.init("") // Initilizing sentry with empty dsn does mute sentry
     } else {
-        Sentry.init("${config.sentry.dsn}?stacktrace.app.packages=com.github.devcordde.devcordbot")
+        Sentry.init { options ->
+            options.apply {
+                dsn = "${config.sentry.dsn}?stacktrace.app.packages=com.github.devcordde.devcordbot"
+                sampleRate = 1.0
+            }
+        }
     }
 
     val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
