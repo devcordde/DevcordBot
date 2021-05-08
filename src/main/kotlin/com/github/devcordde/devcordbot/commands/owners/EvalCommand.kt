@@ -16,11 +16,11 @@
 
 package com.github.devcordde.devcordbot.commands.owners
 
-import com.github.devcordde.devcordbot.command.AbstractSingleCommand
 import com.github.devcordde.devcordbot.command.CommandCategory
 import com.github.devcordde.devcordbot.command.CommandPlace
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.constants.TEXT_MAX_LENGTH
@@ -42,7 +42,9 @@ class EvalCommand : AbstractSingleCommand() {
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
     override fun ApplicationCommandCreateBuilder.applyOptions() {
-        string("code", "Der auszuführende Code")
+        string("code", "Der auszuführende Code") {
+            required = true
+        }
     }
 
     override suspend fun execute(context: Context) {

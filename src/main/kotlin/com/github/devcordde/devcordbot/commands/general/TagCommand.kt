@@ -19,6 +19,8 @@ package com.github.devcordde.devcordbot.commands.general
 import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
+import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.*
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed

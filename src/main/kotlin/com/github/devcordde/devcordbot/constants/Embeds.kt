@@ -17,7 +17,7 @@
 package com.github.devcordde.devcordbot.constants
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
-import com.github.devcordde.devcordbot.command.AbstractRootCommand
+import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
 import com.github.devcordde.devcordbot.dsl.EmbedCreator
 import dev.kord.rest.builder.message.EmbedBuilder
 

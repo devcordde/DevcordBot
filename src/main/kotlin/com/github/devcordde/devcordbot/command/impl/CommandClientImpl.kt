@@ -21,6 +21,9 @@ import com.github.devcordde.devcordbot.command.context.Arguments
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
+import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
+import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
+import com.github.devcordde.devcordbot.command.root.RegisterableCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser

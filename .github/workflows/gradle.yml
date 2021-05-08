@@ -11,29 +11,44 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Check if running on develop
-      if: endsWith(github.ref, '/develop')
-      run: |
-        echo "::set-env name=TAG::dev"
-    - name: Check if running on master
-      if: endsWith(github.ref, '/main')
-      run: |
-        echo "::set-env name=TAG::latest"
-    - name: Set up JDK 15
-      uses: actions/setup-java@v1
-      with:
-        java-version: 15
-    - name: Test with Gradle
-      run: ./gradlew test ktlintCheck
-    - name: Build with Gradle
-      run: ./gradlew installDist
-    - name: Docker Publish
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-      uses: manusa/actions-publish-docker@v1.0.1
-      with:
-        name: devcord/devcordbot
-        tag: ${{ env.TAG }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_SECRET }}
-        include pull requests: false
+      - uses: actions/checkout@v2
+      - name: Check if running on develop
+        if: endsWith(github.ref, '/develop')
+        run: |
+          echo "::set-env name=TAG::dev"
+      - name: Check if running on master
+        if: endsWith(github.ref, '/main')
+        run: |
+          echo "::set-env name=TAG::latest"
+      - name: Set up JDK 15
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+      - name: Test with Gradle
+        run: ./gradlew test ktlintCheck
+      - name: Build with Gradle
+        run: ./gradlew installDist
+      - name: Docker Publish
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+        uses: manusa/actions-publish-docker@v1.0.1
+        with:
+          name: devcord/devcordbot
+          tag: ${{ env.TAG }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_SECRET }}
+          include pull requests: false
+      - name: Create Sentry Release
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          # Install Sentry CLI
+          curl -sL https://sentry.io/get-cli/ | bash
+
+          # Create new Sentry release
+          export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+          sentry-cli releases new $SENTRY_RELEASE -p $SENTRY_PROJECT
+          sentry-cli releases set-commits --auto $SENTRY_RELEASE
+          sentry-cli releases finalize $SENTRY_RELEASE

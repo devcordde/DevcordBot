@@ -17,9 +17,12 @@
 package com.github.devcordde.devcordbot.commands.general.jdoodle
 
 import com.github.devcordde.devcordbot.core.DevCordBot
+import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 /**
  * JDoodle Api wrapper
@@ -32,11 +35,18 @@ object JDoodle {
      * @param language the script's language
      * @param script the script
      */
+    @OptIn(ExperimentalTime::class)
     suspend fun execute(bot: DevCordBot, language: Language, script: String): JDoodleResponse {
         val config = bot.config.jdoodle
         val httpClient = bot.httpClient
         return httpClient.post("https://api.jdoodle.com/v1/execute") {
             contentType(ContentType.Application.Json)
+
+            timeout {
+                requestTimeoutMillis = Duration.minutes(2).inWholeMilliseconds
+                socketTimeoutMillis = Duration.minutes(2).inWholeMilliseconds
+            }
+
             body = JDoodleRequest(
                 config.clientId,
                 config.clientSecret,
