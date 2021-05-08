@@ -405,7 +405,7 @@ class TagCommand : AbstractRootCommand() {
                 MarkdownSanitizer.escape(tag.content).replace("\\```", "\\`\\`\\`") // Discords markdown renderer suxx
             if (content.length > MAX_CONTENT_LENGTH) {
                 val message = context.respond(Emotes.LOADING)
-                val code = HastebinUtil.postToHastebin(content, context.bot.httpClient)
+                val code = HastebinUtil.postToHastebin(tag.content, context.bot.httpClient)
                 message.edit { this.content = code }
                 return
             }
@@ -431,23 +431,6 @@ class TagCommand : AbstractRootCommand() {
         return false
     }
 
-    private suspend fun parseTag(
-        context: Context,
-        tagParam: String = "name",
-        contentParam: String = "content"
-    ): Pair<String, String>? {
-        val args = context.args
-        val name = args.string(tagParam)
-        val content = args.string(contentParam)
-        if (name.isBlank() or content.isBlank()) {
-            context.sendHelp()
-            return null
-        }
-        if (checkNameLength(name, context) or checkReservedName(name, context)) return null
-
-        return name to content
-    }
-
     private suspend fun checkTagExists(name: String, context: Context): Boolean {
         val tag = Tag.findByName(name)
         if (tag != null) {
@@ -462,6 +445,9 @@ class TagCommand : AbstractRootCommand() {
     }
 
     private suspend fun checkNotTagExists(name: String, context: Context): Tag? {
+        if (checkNameLength(name, context)) return null
+        if (checkReservedName(name, context)) return null
+
         val foundTag = Tag.findByName(name)
         return if (foundTag != null) foundTag else {
             val similarTag =
