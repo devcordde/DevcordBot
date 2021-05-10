@@ -48,6 +48,7 @@ import dev.schlaubi.forp.analyze.client.RemoteStackTraceAnalyzer
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.engine.okhttp.*
+import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import kotlinx.coroutines.Dispatchers
@@ -89,6 +90,7 @@ internal class DevCordBotImpl(
         install(JsonFeature) {
             serializer = KotlinxSerializer(json)
         }
+        install(HttpTimeout)
     }
     override val github: GithubUtil = GithubUtil(httpClient)
     override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
