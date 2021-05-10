@@ -41,7 +41,8 @@ class RolePermissionHandler(
         isSlashCommand: Boolean
     ): PermissionState {
         executor ?: return PermissionState.DECLINED
-        if (isSlashCommand) return PermissionState.ACCEPTED // Slash commands have discord perm handling
+        // TODO: Uncomment the following line after fixing Discords slash command permission handling
+        // if (isSlashCommand) return PermissionState.ACCEPTED // Slash commands have discord perm handling
         if (executor.id in botOwners) return PermissionState.ACCEPTED
         if (acknowledgeBlacklist && requireNotNull(devCordUser) { "Devcorduser must not be null if blacklist ist acknowledged" }.blacklisted) return PermissionState.IGNORED
         return when (permission) {
