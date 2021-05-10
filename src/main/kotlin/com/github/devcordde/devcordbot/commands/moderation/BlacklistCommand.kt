@@ -36,7 +36,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class BlacklistCommand : AbstractRootCommand() {
     override val name: String = "blacklist"
     override val description: String = "Hindert einen Nutzer daran, Befehle auszuführen."
-    override val permission: Permission = Permission.ADMIN
+    override val permission: Permission = Permission.MODERATOR
     override val category: CommandCategory = CommandCategory.MODERATION
     override val commandPlace: CommandPlace = CommandPlace.ALL
 

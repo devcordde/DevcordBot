@@ -81,7 +81,7 @@ internal class DevCordBotImpl(
     private lateinit var dataSource: HikariDataSource
 
     override val commandClient: CommandClient =
-        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(emptyList()))
+        CommandClientImpl(this, Constants.prefix, RolePermissionHandler(config.permissions.botOwners))
     override val json: Json = Json {
         ignoreUnknownKeys = true
     }
