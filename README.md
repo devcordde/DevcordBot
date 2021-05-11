@@ -8,7 +8,7 @@
   - DATABASE_HOST="localhost"
   - DATABASE="postgres"
   - DATABASE_USERNAME="postgres"
-  - DATABASE_PASSWORD="DevcordRoxx2020"
+  - DATABASE_PASSWORD="DevcordRoxx2021"
 - enable `pg_trgm` for the database
   - enter `docker exec -it test-db bash` to access the docker image's bash shell
   - switch the user to postgres with `su postgres`
