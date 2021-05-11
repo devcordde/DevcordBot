@@ -21,9 +21,11 @@ import com.github.devcordde.devcordbot.constants.Colors
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.dsl.embed
+import com.github.devcordde.devcordbot.util.edit
 import dev.kord.common.Color
 import dev.kord.common.annotation.KordPreview
 import dev.kord.core.behavior.edit
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.ReactionEmoji
 import dev.kord.core.entity.User
@@ -60,7 +62,7 @@ import kotlin.math.min
 suspend fun Paginator(
     items: List<CharSequence>,
     user: User,
-    context: Context,
+    context: Context<PublicInteractionResponseBehavior>,
     title: String,
     timeoutMillis: Long = TimeUnit.SECONDS.toMillis(15),
     firstPage: Int = 1,
@@ -74,7 +76,7 @@ suspend fun Paginator(
     val pages = ceil(items.size.toDouble() / itemsPerPage).toInt()
     require(firstPage <= pages) { "First page must exist" }
 
-    val message = context.respond(Embeds.loading(loadingTitle, loadingDescription))
+    val message = context.acknowledgement.edit(Embeds.loading(loadingTitle, loadingDescription))
     if (pages > 1) {
         Paginator.addReactions(message)
     }

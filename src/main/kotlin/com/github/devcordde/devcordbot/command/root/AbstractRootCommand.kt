@@ -25,7 +25,8 @@ import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
 /**
  * Abstract implementation of a slash command with subcommands.
  */
-abstract class AbstractRootCommand : AbstractCommand(), CommandRegistry<AbstractSubCommand>, RegisterableCommand {
+abstract class AbstractRootCommand : AbstractCommand(),
+    CommandRegistry<AbstractSubCommand>, RegisterableCommand {
 
     override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
 

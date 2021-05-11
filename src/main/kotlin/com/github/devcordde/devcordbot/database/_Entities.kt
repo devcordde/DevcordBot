@@ -22,8 +22,6 @@ import dev.kord.common.entity.Snowflake
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.select
 import java.time.Instant
 import java.util.*
 
@@ -100,13 +98,8 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
         /**
          * Searches for a [Tag] by an [identifier] (name or alias).
          */
-        fun findByIdentifier(identifier: String): Tag? = Tags.innerJoin(TagAliases)
-            .slice(Tags.columns)
-            .select {
-                val uppercase = identifier.uppercase(Locale.getDefault())
-                (upper(Tags.name) eq uppercase) or (upper(TagAliases.name) eq uppercase)
-            }
-            .firstOrNull()?.let { Tag.wrapRow(it) }
+        fun findByIdentifier(identifier: String): Tag? =
+            findByName(identifier) ?: TagAlias.findByNameId(identifier)?.tag
 
         /**
          * Maximum length of a tag name.
