@@ -415,8 +415,6 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private fun Tag.Companion.findByName(name: String) = findByNameId(name) ?: TagAlias.findById(name)?.tag
-
     private suspend fun checkPermission(
         tag: Tag,
         context: Context
@@ -450,7 +448,7 @@ class TagCommand : AbstractRootCommand() {
         if (checkNameLength(name, context)) return null
         if (checkReservedName(name, context)) return null
 
-        val foundTag = Tag.findByName(name)
+        val foundTag = Tag.findByIdentifier(name)
         return if (foundTag != null) foundTag else {
             val similarTag =
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).firstOrNull()
