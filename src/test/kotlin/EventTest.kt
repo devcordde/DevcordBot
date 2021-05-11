@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
+ * Copyright 2021 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import net.dv8tion.jda.api.hooks.SubscribeEvent
 import org.junit.jupiter.api.Test
 
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister
+ * Copyright 2021 Daniel Scherf & Michael Rittmeister
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
