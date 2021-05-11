@@ -22,19 +22,25 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import io.ktor.client.request.*
 
 /**
  * RedeployCommand.
  */
-class RedeployCommand(private val host: String, private val token: String) : AbstractSingleCommand() {
+class RedeployCommand(private val host: String, private val token: String) :
+    AbstractSingleCommand<InteractionResponseBehavior>() {
     override val name: String = "redeploy"
     override val description: String = "Updatet den Bot und startet ihn neu."
     override val permission: Permission = Permission.BOT_OWNER
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    override suspend fun execute(context: Context) {
+    override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+        interaction.acknowledgeEphemeral()
+
+    override suspend fun execute(context: Context<InteractionResponseBehavior>) {
         val response = context.bot.httpClient.get<String>(host) {
             header("Redeploy-Token", token)
         }

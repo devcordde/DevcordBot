@@ -25,8 +25,9 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.constants.TEXT_MAX_LENGTH
 import com.github.devcordde.devcordbot.util.HastebinUtil
-import com.github.devcordde.devcordbot.util.edit
 import com.github.devcordde.devcordbot.util.limit
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 import org.intellij.lang.annotations.Language
 import javax.script.ScriptEngineManager
@@ -35,7 +36,7 @@ import javax.script.ScriptException
 /**
  * Eval command for bot owners.
  */
-class EvalCommand : AbstractSingleCommand() {
+class EvalCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     override val name: String = "ev"
     override val description: String = "Führt Kotlin-Code über den Bot aus."
     override val permission: Permission = Permission.BOT_OWNER
@@ -48,7 +49,10 @@ class EvalCommand : AbstractSingleCommand() {
         }
     }
 
-    override suspend fun execute(context: Context) {
+    override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+        interaction.ackowledgePublic()
+
+    override suspend fun execute(context: Context<InteractionResponseBehavior>) {
         val message = context.respond(
             Embeds.loading(
                 "Code wird kompiliert und ausgeführt",
@@ -110,6 +114,6 @@ class EvalCommand : AbstractSingleCommand() {
             )
             result
         }
-        context.acknowledgement.edit(result)
+        context.respond(result)
     }
 }

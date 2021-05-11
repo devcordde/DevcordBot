@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Daniel Scherf & Michael Rittmeister & Julian König
+ * Copyright 2021 Daniel Scherf & Michael Rittmeister & Julian König
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,23 +14,14 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.command
+package com.github.devcordde.devcordbot
 
 import com.github.devcordde.devcordbot.command.context.Context
-import kotlin.coroutines.CoroutineContext
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
 
-/**
- * Interface for handling errors during command execution
- */
-interface ErrorHandler {
+interface ExecutableCommand<T : InteractionResponseBehavior> {
+    suspend fun InteractionCreateEvent.acknowledge(): T
 
-    /**
-     * Handles the [exception] in [context].
-     */
-    fun handleException(
-        exception: Throwable,
-        context: Context<*>,
-        thread: Thread,
-        coroutineContext: CoroutineContext? = null
-    )
+    suspend fun execute(context: Context<T>)
 }

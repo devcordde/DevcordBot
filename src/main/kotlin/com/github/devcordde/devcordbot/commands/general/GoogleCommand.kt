@@ -23,12 +23,14 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.menu.Paginator
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 
 /**
  * Google command.
  */
-class GoogleCommand : AbstractSingleCommand() {
+class GoogleCommand : AbstractSingleCommand<PublicInteractionResponseBehavior>() {
 
     override val name: String = "google"
     override val description: String =
@@ -43,7 +45,10 @@ class GoogleCommand : AbstractSingleCommand() {
         }
     }
 
-    override suspend fun execute(context: Context) {
+    override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
+        interaction.ackowledgePublic()
+
+    override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
         val query = context.args.string("query")
 
         if (query.isBlank()) return run { context.sendHelp() }
