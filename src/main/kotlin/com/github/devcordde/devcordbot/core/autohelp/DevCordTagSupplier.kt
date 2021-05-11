@@ -42,7 +42,7 @@ object DevCordTagSupplier : TagSupplier {
         } ?: return null
 
         return transaction {
-            Tag.findByNameId(tag)?.content
+            Tag.findByIdentifier(tag)?.content
         }
     }
 }
