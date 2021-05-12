@@ -49,4 +49,6 @@ object Constants {
         .ofLocalizedDateTime(FormatStyle.SHORT)
         .withLocale(Locale.GERMAN)
         .withZone(ZoneId.of("Europe/Berlin")) // To lazy to set server timezone :P
+
+    val DATABASE_TAG_CONTENT_LENGTH = 3000
 }
