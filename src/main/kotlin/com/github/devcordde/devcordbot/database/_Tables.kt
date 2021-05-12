@@ -18,7 +18,7 @@
 
 package com.github.devcordde.devcordbot.database
 
-import com.github.devcordde.devcordbot.constants.DATABASE_TAG_CONTENT_LENGTH
+import com.github.devcordde.devcordbot.constants.Constants.DATABASE_TAG_CONTENT_LENGTH
 import com.github.devcordde.devcordbot.database.TagAliases.name
 import com.github.devcordde.devcordbot.database.TagAliases.tag
 import com.github.devcordde.devcordbot.database.Tags.author
