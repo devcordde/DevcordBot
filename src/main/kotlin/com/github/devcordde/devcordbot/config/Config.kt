@@ -33,7 +33,7 @@ class Config internal constructor(private val config: Konfig) {
      * Default: Empty
      * Key: `XP_WHITELIST`
      */
-    val xpWhitelist: List<Snowflake> by config.property(ConfigSpec.xpWhitelist)
+    val xpWhitelist: List<Snowflake> by config.property(ConfigSpec.General.xpWhitelist)
 
     /**
      * The URL to the hastebin server the bot should use
@@ -41,7 +41,7 @@ class Config internal constructor(private val config: Konfig) {
      * Default: haste.devcord.xyz
      * Key: `HASTE_HOST`
      */
-    val hasteHost: Url by config.property(ConfigSpec.hasteHost)
+    val hasteHost: Url by config.property(ConfigSpec.General.hasteHost)
 
     /**
      * Discord related configuration.

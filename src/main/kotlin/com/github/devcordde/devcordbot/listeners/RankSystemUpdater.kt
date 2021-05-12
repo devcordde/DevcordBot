@@ -80,7 +80,7 @@ class DatabaseUpdater(private val bot: DevCordBot) {
 
         val author = message.author ?: return@on
 
-        val user = DatabaseDevCordUser.findOrCreateById(author.id.value)
+        val user = transaction { DatabaseDevCordUser.findOrCreateById(author.id.value) }
 
         if (user.blacklisted) {
             return@on
