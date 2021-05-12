@@ -18,7 +18,7 @@
 
 package com.github.devcordde.devcordbot.database
 
-import com.github.devcordde.devcordbot.constants.MAX_CONTENT_LENGTH
+import com.github.devcordde.devcordbot.constants.Constants.DATABASE_TAG_CONTENT_LENGTH
 import com.github.devcordde.devcordbot.database.TagAliases.name
 import com.github.devcordde.devcordbot.database.TagAliases.tag
 import com.github.devcordde.devcordbot.database.Tags.author
@@ -73,7 +73,7 @@ object Tags : IdTable<String>() {
     val name: Column<EntityID<String>> = text("name").entityId()
     val usages: Column<Int> = integer("usages").default(0)
     val author: Column<Snowflake> = snowflake("author")
-    val content: Column<String> = varchar("content", MAX_CONTENT_LENGTH)
+    val content: Column<String> = varchar("content", DATABASE_TAG_CONTENT_LENGTH)
     val createdAt: Column<Instant> = timestamp("created_at").clientDefault { Instant.now() }
 
     override val primaryKey: PrimaryKey = PrimaryKey(id)
