@@ -24,4 +24,4 @@ const val TEXT_MAX_LENGTH: Int = 2048
 /**
  * The maximum amount of characters sendable in one message.
  */
-const val MAX_CONTENT_LENGTH: Int = 1048
+const val MAX_CONTENT_LENGTH: Int = 2000
