@@ -47,7 +47,7 @@ class GithubUtil(private val client: HttpClient) {
  * Representation of a Bot contributor on github.
  *
  * @property name the GitHub username of the contributer
- * @property url the url to the contributors GitHub profile
+ * @property htmlUrl the url to the contributors GitHub profile
  */
 @Serializable
-data class GitHubContributor(@SerialName("login") val name: String, val url: String)
+data class GitHubContributor(@SerialName("login") val name: String, @SerialName("html_url") val htmlUrl: String)
