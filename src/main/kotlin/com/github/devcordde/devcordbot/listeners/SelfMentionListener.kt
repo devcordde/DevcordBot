@@ -59,7 +59,7 @@ class SelfMentionListener(private val bot: DevCordBot) {
         suspend fun fetchContributors(devCordBot: DevCordBot): String {
             val contributors = devCordBot.github.retrieveContributors()
             return contributors.joinToString(", ") {
-                "[${it.name}](${it.url})"
+                "[${it.name}](${it.htmlUrl})"
             }
         }
 
