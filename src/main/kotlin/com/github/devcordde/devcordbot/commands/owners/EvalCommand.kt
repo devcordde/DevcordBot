@@ -28,6 +28,7 @@ import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.edit
 import com.github.devcordde.devcordbot.util.limit
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import org.intellij.lang.annotations.Language
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
@@ -67,11 +68,18 @@ class EvalCommand : AbstractSingleCommand() {
                     import com.github.devcordde.devcordbot.command.context.*
                     import org.jetbrains.exposed.sql.transactions.*
                     import dev.kord.common.entity.*
+                    import kotlinx.coroutines.runBlocking
             """.trimIndent()
         )
         scriptEngine.put("context", context)
         val result = try {
-            val evaluation = scriptEngine.eval(script)?.toString() ?: "null"
+            @Language("kotlin")
+            val suspendingScript = """
+                runBlocking {
+                    $script
+                }
+            """.trimIndent()
+            val evaluation = scriptEngine.eval(suspendingScript)?.toString() ?: "null"
             if (evaluation.length > TEXT_MAX_LENGTH - "Ausgabe: ``````".length) {
                 val result = Embeds.info(
                     "Erfolgreich ausgeführt!",

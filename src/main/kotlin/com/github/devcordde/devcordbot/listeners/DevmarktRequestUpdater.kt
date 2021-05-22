@@ -29,7 +29,7 @@ import dev.kord.core.on
 import dev.kord.rest.Image
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
-import java.time.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Sends an event to the Devmarkt bot on emote action.
@@ -157,7 +157,7 @@ class DevmarktRequestUpdater(
             }
 
             color = requestColor
-            timestamp = Instant.now()
+            timestamp = Clock.System.now()
         }
 
         messageReason.addReaction(check)
