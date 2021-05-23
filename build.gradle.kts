@@ -57,9 +57,9 @@ dependencies {
     implementation("com.zaxxer", "HikariCP", "4.0.3")
 
     // Discord
-    implementation("dev.kord", "kord-core", "kotlin-1.5-20210505.195343-2") {
+    implementation("dev.kord", "kord-core", "kotlin-1.5-20210514.081043-5") {
         version {
-            strictly("kotlin-1.5-20210505.195343-2")
+            strictly("kotlin-1.5-20210514.081043-5")
         }
     }
 
