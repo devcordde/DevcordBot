@@ -16,8 +16,8 @@
 
 plugins {
     application
-    kotlin("jvm") version "1.5.0"
-    kotlin("plugin.serialization") version "1.5.0"
+    kotlin("jvm") version "1.5.10"
+    kotlin("plugin.serialization") version "1.5.10"
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
 }
 
@@ -39,20 +39,20 @@ dependencies {
     runtimeOnly(kotlin("scripting-jsr223"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.5.0-RC")
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.5.0")
 
     // Logging
-    implementation("io.github.microutils", "kotlin-logging", "1.12.5")
-    implementation("org.slf4j", "slf4j-api", "2.0.0alpha1")
+    implementation("io.github.microutils", "kotlin-logging", "1.0.6")
+    implementation("org.slf4j", "slf4j-api", "2.0.0-alpha1")
     implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
     implementation("io.sentry", "sentry", "4.3.0")
     implementation("io.sentry", "sentry-logback", "4.3.0")
 
     // Database
-    implementation("org.jetbrains.exposed", "exposed-core", "0.30.2")
-    implementation("org.jetbrains.exposed", "exposed-dao", "0.30.2")
-    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.30.2")
-    implementation("org.jetbrains.exposed", "exposed-java-time", "0.30.2")
+    implementation("org.jetbrains.exposed", "exposed-core", "0.31.1")
+    implementation("org.jetbrains.exposed", "exposed-dao", "0.31.1")
+    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.31.1")
+    implementation("org.jetbrains.exposed", "exposed-java-time", "0.31.1")
     implementation("org.postgresql", "postgresql", "42.2.19")
     implementation("com.zaxxer", "HikariCP", "4.0.3")
 
