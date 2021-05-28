@@ -16,7 +16,6 @@
 
 package com.github.devcordde.devcordbot.command.impl
 
-import com.github.devcordde.devcordbot.ExecutableCommand
 import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Arguments
 import com.github.devcordde.devcordbot.command.context.Context
@@ -59,6 +58,10 @@ class CommandClientImpl(
     override val permissionHandler: PermissionHandler,
     override val executor: CoroutineContext = Dispatchers.IO + SupervisorJob()
 ) : CommandClient {
+
+    init {
+        bot.kord.registerCommandKiller()
+    }
 
     private val logger = KotlinLogging.logger { }
 
@@ -219,7 +222,6 @@ class CommandClientImpl(
                 "Keine Berechtigung!",
                 "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"
             )
-
         }
     }
 }
