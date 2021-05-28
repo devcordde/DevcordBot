@@ -58,8 +58,8 @@ class SourceCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // All command classes are not anonymous or local
         val classUrl =
             "$GITHUB_BASE$GITHUB_FILE_APPENDIX${
-                parentCommand::class.qualifiedName!!.replace(".", "/")
-                    .replace(".", "/")
+            parentCommand::class.qualifiedName!!.replace(".", "/")
+                .replace(".", "/")
             }.kt#L$definitionLine"
         context.respond(
             Embeds.info(

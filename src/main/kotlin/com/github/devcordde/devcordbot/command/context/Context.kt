@@ -18,6 +18,9 @@ package com.github.devcordde.devcordbot.command.context
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.command.ExecutableCommand
+import com.github.devcordde.devcordbot.command.context.ResponseStrategy.EphemeralResponseStrategy
+import com.github.devcordde.devcordbot.command.context.ResponseStrategy.PublicResponseStrategy
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
@@ -53,7 +56,10 @@ import kotlin.contracts.ExperimentalContracts
  * it acts like a communication point between the bot and the interaction thread, all message sending should be
  * handles using this [respond] and [sendHelp] methods will also refer to this
  * @property devCordUser User storing database settings. See [DevCordUser]
+ * @property responseStrategy the [ResponseStrategy] used for [respond] methods
  * @property member the [Member] which executed the command
+ *
+ * @param T the type of [InteractionResponseBehavior] which acknowledged this invocation
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 data class Context<T : InteractionResponseBehavior>(
@@ -157,22 +163,64 @@ data class Context<T : InteractionResponseBehavior>(
         commandClient.permissionHandler.isCovered(permission, member, devCordUser) == PermissionState.ACCEPTED
 }
 
+/**
+ * Representation of a strateg to respond (publicly or ephemerally).
+ *
+ * @see PublicResponseStrategy
+ * @see EphemeralResponseStrategy
+ * @see ExecutableCommand.acknowledge
+ */
 @OptIn(ExperimentalContracts::class)
 sealed interface ResponseStrategy {
+    /**
+     * Builds a message using [messageBuilder] and sends the message.
+     */
     suspend fun respond(messageBuilder: MessageCreateBuilder): EditableResponse
+
+    /**
+     * Builds a message using [messageBuilder] and sends the message.
+     */
     suspend fun respond(messageBuilder: suspend MessageCreateBuilder.() -> Unit): EditableResponse =
         respond(MessageCreateBuilder().apply { messageBuilder() })
 
+    /**
+     * Uses [messageBuilder] to follow up in the command thread.
+     */
     suspend fun followUp(messageBuilder: MessageCreateBuilder): EditableResponse
+
+    /**
+     * Uses [embedBuilder] to follow up in the command thread.
+     */
     suspend fun followUp(embedBuilder: EmbedBuilder): EditableResponse = followUp { embed = embedBuilder }
+
+    /**
+     * Uses [messageBuilder] to follow up in the command thread.
+     */
     suspend fun followUp(messageBuilder: suspend MessageCreateBuilder.() -> Unit): EditableResponse =
         followUp(MessageCreateBuilder().apply { messageBuilder() })
 
+    /**
+     * Abstract sent response which can be editable.
+     */
     interface EditableResponse {
+        /**
+         * Edits the response to match the [messageEditBuilder].
+         */
         suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit)
+
+        /**
+         * Edits the response to match the [EmbedBuilder].
+         */
         suspend fun edit(embedBuilder: EmbedBuilder): Unit = edit { embed = embedBuilder }
+
+        /**
+         * Edits the response to match the [EmbedBuilder].
+         */
         suspend fun editEmbed(embedBuilder: EmbedBuilder.() -> Unit): Unit = edit { embed(embedBuilder) }
 
+        /**
+         * Implementation of [EditableResponse] which can't be edited. (Ephemerals)
+         */
         object NonEditableMessage : EditableResponse {
             override suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit) {
                 throw UnsupportedOperationException("Not supported by this type of response")
@@ -180,6 +228,9 @@ sealed interface ResponseStrategy {
         }
     }
 
+    /**
+     * Implementation of [ResponseStrategy] using an [PublicInteractionResponseBehavior].
+     */
     class PublicResponseStrategy(private val acknowledgement: PublicInteractionResponseBehavior) : ResponseStrategy {
         override suspend fun respond(messageBuilder: MessageCreateBuilder): EditableResponse {
             val response = acknowledgement.edit {
@@ -219,6 +270,9 @@ sealed interface ResponseStrategy {
         }
     }
 
+    /**
+     * Implementation of [ResponseStrategy] using [EphemeralInteractionResponseBehavior].
+     */
     class EphemeralResponseStrategy(private val acknowledgement: EphemeralInteractionResponseBehavior) :
         ResponseStrategy {
         override suspend fun respond(messageBuilder: MessageCreateBuilder): EditableResponse {

@@ -14,14 +14,31 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot
+package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.context.Context
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.entity.interaction.Interaction
 import dev.kord.core.event.interaction.InteractionCreateEvent
 
+/**
+ * Command that can be executed (non groups, sub commands, single commands)
+ *
+ * @param T the [InteractionResponseBehavior] produced by this commands acknowledgement (See [acknowledge])
+ */
 interface ExecutableCommand<T : InteractionResponseBehavior> {
+    /**
+     * Function acknowledging the [InteractionCreateEvent].
+     *
+     * @see Interaction.ackowledgePublic
+     * @see Interaction.acknowledgeEphemeral
+     */
     suspend fun InteractionCreateEvent.acknowledge(): T
 
+    /**
+     * Executes the command logic.
+     *
+     * @see Context
+     */
     suspend fun execute(context: Context<T>)
 }

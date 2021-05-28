@@ -16,8 +16,8 @@
 
 package com.github.devcordde.devcordbot.command.root
 
-import com.github.devcordde.devcordbot.ExecutableCommand
 import com.github.devcordde.devcordbot.command.AbstractCommand
+import com.github.devcordde.devcordbot.command.ExecutableCommand
 import com.github.devcordde.devcordbot.command.context.Context
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
@@ -26,7 +26,9 @@ import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
 /**
  * Abstract single command (without sub commands).
  */
-abstract class AbstractSingleCommand<T : InteractionResponseBehavior> : AbstractCommand(), RegisterableCommand,
+abstract class AbstractSingleCommand<T : InteractionResponseBehavior> :
+    AbstractCommand(),
+    RegisterableCommand,
     ExecutableCommand<T> {
 
     /**

@@ -16,7 +16,6 @@
 
 package com.github.devcordde.devcordbot.command
 
-import com.github.devcordde.devcordbot.ExecutableCommand
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
@@ -48,7 +47,8 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
     /**
      * Abstract implementation of a slash sub-command.
      */
-    abstract class Command<T : InteractionResponseBehavior>(parent: AbstractCommand) : AbstractSubCommand(parent),
+    abstract class Command<T : InteractionResponseBehavior>(parent: AbstractCommand) :
+        AbstractSubCommand(parent),
         ExecutableCommand<T> {
 
         /**
