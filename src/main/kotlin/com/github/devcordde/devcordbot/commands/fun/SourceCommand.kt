@@ -21,12 +21,14 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 
 /**
  * Source command.
  */
-class SourceCommand : AbstractSingleCommand() {
+class SourceCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     override val name: String = "source"
     override val description: String = "Zeigt den Quellcode des Bots an."
     override val permission: Permission = Permission.ANY
@@ -37,7 +39,10 @@ class SourceCommand : AbstractSingleCommand() {
         string("command", "Der Name des Befehls, für den der Quellcode angezeigt werden soll")
     }
 
-    override suspend fun execute(context: Context) {
+    override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+        interaction.ackowledgePublic()
+
+    override suspend fun execute(context: Context<InteractionResponseBehavior>) {
         val commandName = context.args.optionalString("command")
         val command = commandName?.let { findCommand(it, context) } ?: return run {
             context.respond(
@@ -64,7 +69,7 @@ class SourceCommand : AbstractSingleCommand() {
         )
     }
 
-    private fun findCommand(argument: String, context: Context): AbstractCommand? {
+    private fun findCommand(argument: String, context: Context<InteractionResponseBehavior>): AbstractCommand? {
         tailrec fun find(
             args: List<String>,
             index: Int,

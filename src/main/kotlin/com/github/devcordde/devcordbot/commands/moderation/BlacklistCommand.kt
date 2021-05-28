@@ -26,6 +26,8 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.effictiveName
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -45,7 +47,7 @@ class BlacklistCommand : AbstractRootCommand() {
         registerCommands(BlacklistToggleCommand())
     }
 
-    private inner class BlacklistToggleCommand : AbstractSubCommand.Command(this) {
+    private inner class BlacklistToggleCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "toggle"
         override val description: String = "Ändert den Blacklist-Status eines Nutzers."
 
@@ -55,7 +57,10 @@ class BlacklistCommand : AbstractRootCommand() {
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgeEphemeral()
+
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val user = context.args.user("target")
 
             val blacklisted = transaction {
@@ -69,11 +74,14 @@ class BlacklistCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class BlacklistListCommand : AbstractSubCommand.Command(this) {
+    private inner class BlacklistListCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "list"
         override val description: String = "Listet geblacklistete Nutzer auf."
 
-        override suspend fun execute(context: Context) {
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgeEphemeral()
+
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val userNames = newSuspendedTransaction {
                 DatabaseDevCordUser.find {
                     Users.blacklisted eq true

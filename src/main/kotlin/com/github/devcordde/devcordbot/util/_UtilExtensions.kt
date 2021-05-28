@@ -23,11 +23,9 @@ import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
 import dev.kord.core.behavior.interaction.edit
-import dev.kord.core.behavior.interaction.followUp
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.User
-import dev.kord.core.entity.interaction.PublicFollowupMessage
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.EmbedBuilder
 
@@ -65,12 +63,6 @@ suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder): Me
  */
 suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder): Message =
     edit { embeds = mutableListOf(embedBuilder) }
-
-/**
- * Follows up in the interaction thread with [embedBuilder].
- */
-suspend fun PublicInteractionResponseBehavior.followUp(embedBuilder: EmbedBuilder): PublicFollowupMessage =
-    followUp { embeds = mutableListOf(embedBuilder.toRequest()) }
 
 /**
  * Edits this message to contain [embedBuilder].

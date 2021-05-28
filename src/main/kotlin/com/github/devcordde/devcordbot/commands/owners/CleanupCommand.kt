@@ -25,14 +25,16 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Tag
 import dev.kord.common.entity.Snowflake
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.entity.Guild
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 /**
  * Cleanup Command
  */
-class CleanupCommand : AbstractSingleCommand() {
+class CleanupCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     override val name: String = "cleanup"
     override val description: String = "Entfernt die Level von ungültigen Membern."
     override val category: CommandCategory = CommandCategory.BOT_OWNER
@@ -41,7 +43,10 @@ class CleanupCommand : AbstractSingleCommand() {
 
     private val logger = KotlinLogging.logger {}
 
-    override suspend fun execute(context: Context) {
+    override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+        interaction.acknowledgeEphemeral()
+
+    override suspend fun execute(context: Context<InteractionResponseBehavior>) {
         val guild = context.bot.guild
         val cleanedUsers = cleanupRanks(guild)
         val cleanedTags = cleanupTags(guild, context.bot.kord.selfId)
