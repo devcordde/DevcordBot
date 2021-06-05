@@ -71,14 +71,14 @@ dependencies {
         implementation("net.sf.trove4j", "trove4j", "3.0.3")
 
         // Http
-        implementation(platform("io.ktor:ktor-bom:1.5.3"))
+        implementation(platform("io.ktor:ktor-bom:1.6.0"))
         implementation("io.ktor", "ktor-client")
         implementation("io.ktor", "ktor-client-okhttp")
         implementation("io.ktor", "ktor-client-serialization-jvm")
         implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.2.1")
 
         // Config
-        implementation("com.github.uchuhimo.konf", "konf", "master-SNAPSHOT")
+        implementation("com.uchuhimo", "konf", "1.1.2")
         implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.12.+")
 
         // Autohelp
