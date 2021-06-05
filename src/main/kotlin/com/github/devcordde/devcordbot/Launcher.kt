@@ -20,6 +20,8 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
+import dev.kord.cache.map.MapLikeCollection
+import dev.kord.cache.map.internal.MapEntryCache
 import dev.kord.core.Kord
 import dev.kord.gateway.Intent
 import dev.kord.gateway.Intents
@@ -76,6 +78,11 @@ suspend fun main(args: Array<String>) {
     val kord = Kord(config.discord.token) {
         httpClient = HttpClient(CIO)
         intents = Intents.nonPrivileged + Intent.GuildMembers
+        cache {
+            guilds { cache, description ->
+                MapEntryCache(cache, description, MapLikeCollection.concurrentHashMap())
+            }
+        }
     }
     val guild = kord.getGuild(config.discord.guildId) ?: error("Could not find dev guild")
 
