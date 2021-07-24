@@ -106,8 +106,8 @@ class TagCommand : AbstractRootCommand() {
             if (newSuspendedTransaction { checkTagExists(name, context) }) return
             val status = context.respond(
                 Embeds.info(
-                    "Bitte gebe den Inhalt an!",
-                    "Bitte gebe den Inhalt des Tags in einer neuen Nachricht an."
+                    "Bitte gib den Inhalt an!",
+                    "Bitte gib den Inhalt des Tags in einer neuen Nachricht an."
                 )
             )
 
@@ -181,8 +181,8 @@ class TagCommand : AbstractRootCommand() {
 
             val status = context.respond(
                 Embeds.info(
-                    "Bitte gebe den Inhalt an!",
-                    "Bitte gebe den Inhalt des Tags in einer neuen Nachricht an."
+                    "Bitte gib den Inhalt an!",
+                    "Bitte gib den Inhalt des Tags in einer neuen Nachricht an."
                 )
             )
 
