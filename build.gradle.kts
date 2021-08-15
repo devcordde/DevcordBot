@@ -97,7 +97,7 @@ tasks {
         kotlinOptions {
             jvmTarget = "16"
             freeCompilerArgs =
-                freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn" + "-Xopt-in=dev.kord.common.annotation.KordPreview" + "-Xopt-in=dev.kord.common.annotation.KordExperimental"
+                freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn" + "-Xopt-in=dev.kord.common.annotation.KordPreview" + "-Xopt-in=dev.kord.common.annotation.KordExperimental" + "-Xopt-in=kotlin.time.ExperimentalTime"
         }
     }
 

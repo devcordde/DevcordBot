@@ -24,6 +24,7 @@ import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.menu.Paginator
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import kotlin.time.Duration
 
 /**
  * Google command.
@@ -65,7 +66,7 @@ class GoogleCommand : AbstractSingleCommand() {
         }
         Paginator(
             items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
-            context = context, user = context.author.asUser(), timeoutMillis = 25L * 1000
+            context = context, user = context.author.asUser(), timeout = Duration.seconds(25)
         )
     }
 }
