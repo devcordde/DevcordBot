@@ -135,7 +135,7 @@ class CommandClientImpl(
         )
 
         val arguments = Arguments(interaction.command.options)
-        val acknowledgement = interaction.ackowledgePublic()
+        val acknowledgement = interaction.acknowledgePublic()
 
         when (permissionState) {
             PermissionState.IGNORED -> return

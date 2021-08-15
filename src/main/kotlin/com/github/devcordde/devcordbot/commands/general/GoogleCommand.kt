@@ -65,7 +65,7 @@ class GoogleCommand : AbstractSingleCommand() {
         }
         Paginator(
             items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
-            context = context, user = context.author.asUser(), timeoutMillis = 25 * 1000
+            context = context, user = context.author.asUser(), timeoutMillis = 25L * 1000
         )
     }
 }

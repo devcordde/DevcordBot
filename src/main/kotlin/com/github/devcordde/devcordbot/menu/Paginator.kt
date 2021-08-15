@@ -31,14 +31,11 @@ import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.live.LiveMessage
 import dev.kord.core.live.live
 import dev.kord.core.live.onReactionAdd
-import dev.kord.core.live.onShutDown
+import dev.kord.core.live.onShutdown
 import dev.kord.x.emoji.DiscordEmoji
 import dev.kord.x.emoji.Emojis
 import dev.kord.x.emoji.addReaction
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.min
@@ -122,7 +119,7 @@ class Paginator internal constructor(
         } else {
             rescheduleTimeout()
 
-            message.onShutDown {
+            message.coroutineContext.job.invokeOnCompletion {
                 canceller.cancel()
             }
 
@@ -139,7 +136,7 @@ class Paginator internal constructor(
         val start: Int = (destinationPage - 1) * itemsPerPage
         val end = min(items.size, destinationPage * itemsPerPage)
         val rows = items.subList(start, end)
-        message.message.edit { embed = renderEmbed(rows) }
+        message.message.edit { embeds = mutableListOf(renderEmbed(rows)) }
     }
 
     private fun renderEmbed(rows: List<CharSequence>) = embed {

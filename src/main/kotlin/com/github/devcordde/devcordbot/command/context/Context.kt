@@ -38,6 +38,7 @@ import dev.kord.core.entity.Message
 import dev.kord.core.entity.interaction.GuildInteraction
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.message.EmbedBuilder
+import dev.kord.rest.builder.message.modify.allowedMentions
 
 /**
  * Representation of a context of a command execution.

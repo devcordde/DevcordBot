@@ -24,6 +24,9 @@ import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.edit
 import dev.kord.core.behavior.channel.GuildChannelBehavior
 import dev.kord.core.entity.channel.GuildChannel
+import dev.kord.core.entity.channel.GuildMessageChannel
+import dev.kord.core.entity.channel.TextChannel
+import dev.kord.core.entity.channel.TopGuildChannel
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import java.time.LocalDateTime
@@ -85,7 +88,7 @@ private suspend fun collectErrorInformation(
     information.append("Permissions: ").appendLine(selfMember.getPermissions())
 
     if (context.channel is GuildChannelBehavior) {
-        val guildChannel = context.channel.asChannel() as GuildChannel
+        val guildChannel = context.channel.asChannel() as TopGuildChannel
         information.append("Channel permissions: ")
             .appendLine(guildChannel.getEffectivePermissions(selfMember.id))
     }

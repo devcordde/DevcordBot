@@ -103,12 +103,12 @@ class SelfMentionListener(private val bot: DevCordBot) {
             val contributors = devCordBot.async { fetchContributors(devCordBot) }
 
             val message = textChannel.createMessage {
-                embed = makeEmbed(devCordBot)
+                embeds.add(makeEmbed(devCordBot))
             }
             val contributorList = contributors.await()
 
             message.edit {
-                embed = makeEmbed(devCordBot, contributorList)
+                embeds = mutableListOf(makeEmbed(devCordBot, contributorList))
             }
         }
     }

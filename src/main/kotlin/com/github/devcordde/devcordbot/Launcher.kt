@@ -48,11 +48,11 @@ suspend fun main(args: Array<String>) {
         description = "Disables HastebinErrorHandler and Sentry"
     ).default(false)
     val logLevelRaw by cliParser.option(
-        ArgType.Choice(SLF4JLevel.values().map { it.toString() }),
+        ArgType.Choice(SLF4JLevel.values().toList(), { SLF4JLevel.valueOf(it) }),
         shortName = "ll",
         fullName = "log-level",
         description = "Sets the Logging level of the bot"
-    ).default("INFO")
+    ).default(SLF4JLevel.INFO)
     cliParser.parse(args)
 
     val config = Config()
@@ -69,7 +69,7 @@ suspend fun main(args: Array<String>) {
     }
 
     val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
-    rootLogger.level = Level.valueOf(logLevelRaw)
+    rootLogger.level = Level.toLevel(logLevelRaw.toInt())
 
     Constants.hastebinUrl = config.hasteHost
 
