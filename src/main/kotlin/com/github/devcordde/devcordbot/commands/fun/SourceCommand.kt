@@ -40,7 +40,7 @@ class SourceCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     }
 
     override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-        interaction.ackowledgePublic()
+        interaction.acknowledgePublic()
 
     override suspend fun execute(context: Context<InteractionResponseBehavior>) {
         val commandName = context.args.optionalString("command")

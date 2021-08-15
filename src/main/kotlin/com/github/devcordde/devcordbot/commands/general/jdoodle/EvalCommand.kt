@@ -53,7 +53,7 @@ class EvalCommand : AbstractRootCommand() {
         override val description: String = "Führt den angegebenen Code aus."
 
         override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         override fun SubCommandBuilder.applyOptions() {
             int("language", "Die Sprache, in der das Codesnippet ist") {
@@ -120,7 +120,7 @@ class EvalCommand : AbstractRootCommand() {
         override val description: String = "Listet die verfügbaren Programmiersprachen auf."
 
         override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             context.respond(

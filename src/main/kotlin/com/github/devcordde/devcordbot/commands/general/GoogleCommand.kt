@@ -47,7 +47,7 @@ class GoogleCommand : AbstractSingleCommand<PublicInteractionResponseBehavior>()
     }
 
     override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
-        interaction.ackowledgePublic()
+        interaction.acknowledgePublic()
 
     override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
         val query = context.args.string("query")

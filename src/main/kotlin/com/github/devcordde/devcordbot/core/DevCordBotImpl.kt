@@ -35,6 +35,7 @@ import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
 import com.github.devcordde.devcordbot.listeners.DevmarktRequestUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.util.DiscordLogger
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import com.zaxxer.hikari.HikariDataSource
@@ -78,6 +79,7 @@ internal class DevCordBotImpl(
 ) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
+    override val discordLogger: DiscordLogger = DiscordLogger(this)
     private lateinit var dataSource: HikariDataSource
 
     override val commandClient: CommandClient =

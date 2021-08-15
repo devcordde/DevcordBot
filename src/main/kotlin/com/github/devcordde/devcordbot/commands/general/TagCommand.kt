@@ -81,7 +81,7 @@ class TagCommand : AbstractRootCommand() {
         override val commandPlace: CommandPlace = CommandPlace.ALL
 
         override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         override fun ApplicationCommandCreateBuilder.applyOptions() {
             string("tag", "Der Name des Tags, welcher angezeigt werden soll") {
@@ -104,7 +104,7 @@ class TagCommand : AbstractRootCommand() {
         override val description: String = "Erstellt einen neuen Tag."
 
         override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         override fun SubCommandBuilder.applyOptions() {
             string("name", "Der Name des zu erstellenden Tags") {
@@ -137,7 +137,6 @@ class TagCommand : AbstractRootCommand() {
                 context.bot.discordLogger.logEvent("TAG_CREATE", "$name -> $contentLink", context.author.asUser())
             }
 
-            context.acknowledgement.followUp(
             context.responseStrategy.followUp(
                 Embeds.success(
                     "Erfolgreich erstellt!",
@@ -201,7 +200,7 @@ class TagCommand : AbstractRootCommand() {
         }
 
         override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         @OptIn(ExperimentalTime::class)
         override suspend fun execute(context: Context<InteractionResponseBehavior>) {
@@ -360,7 +359,7 @@ class TagCommand : AbstractRootCommand() {
         }
 
         override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val args = context.args
@@ -398,7 +397,7 @@ class TagCommand : AbstractRootCommand() {
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
             val tags = transaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
@@ -420,7 +419,7 @@ class TagCommand : AbstractRootCommand() {
         }
 
         override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
             val user = context.args.optionalUser("author") ?: context.author
@@ -440,7 +439,7 @@ class TagCommand : AbstractRootCommand() {
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
         override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
-            interaction.ackowledgePublic()
+            interaction.acknowledgePublic()
 
         override fun SubCommandBuilder.applyOptions() {
             string("query", "Die Query, nach der gesucht werden soll") {

@@ -218,9 +218,11 @@ class CommandClientImpl(
 
     private suspend fun handleNoPermission(permission: Permission, responseStrategy: ResponseStrategy) {
         responseStrategy.respond {
-            embed = Embeds.error(
-                "Keine Berechtigung!",
-                "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"
+            embeds.add(
+                Embeds.error(
+                    "Keine Berechtigung!",
+                    "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"
+                )
             )
         }
     }

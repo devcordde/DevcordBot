@@ -58,7 +58,7 @@ import kotlin.time.Duration
 suspend fun Paginator(
     items: List<CharSequence>,
     user: User,
-    context: Context,
+    context: Context<*>,
     title: String,
     timeout: Duration = Duration.seconds(15),
     firstPage: Int = 1,
@@ -85,7 +85,7 @@ suspend fun Paginator(
         color,
         firstPage,
         pages,
-        message.live(),
+        message.live()
     )
 }
 

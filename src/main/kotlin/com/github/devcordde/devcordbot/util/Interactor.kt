@@ -35,7 +35,7 @@ import kotlin.time.ExperimentalTime
  * Updates a message to a timed out message.
  */
 suspend fun ResponseStrategy.EditableResponse.timeout(): Unit = edit {
-    embed = Embeds.error("Zeit abgelaufen!", "Du hast zu lange gebraucht.")
+    embeds = mutableListOf(Embeds.error("Zeit abgelaufen!", "Du hast zu lange gebraucht."))
 }
 
 /**

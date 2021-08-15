@@ -39,9 +39,15 @@ import dev.kord.core.entity.Member
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.interaction.GuildInteraction
 import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.core.live.LiveMessage
+import dev.kord.core.live.live
 import dev.kord.rest.builder.message.EmbedBuilder
-import dev.kord.rest.builder.message.MessageCreateBuilder
-import dev.kord.rest.builder.message.MessageModifyBuilder
+import dev.kord.rest.builder.message.create.MessageCreateBuilder
+import dev.kord.rest.builder.message.create.UserMessageCreateBuilder
+import dev.kord.rest.builder.message.create.allowedMentions
+import dev.kord.rest.builder.message.modify.MessageModifyBuilder
+import dev.kord.rest.builder.message.modify.UserMessageModifyBuilder
+import dev.kord.rest.builder.message.modify.embed
 import dev.kord.rest.json.request.InteractionResponseModifyRequest
 import kotlin.contracts.ExperimentalContracts
 
@@ -137,7 +143,7 @@ data class Context<T : InteractionResponseBehavior>(
      * @return the [Message] which was sent
      */
     suspend fun respond(embedBuilder: EmbedBuilder): ResponseStrategy.EditableResponse = responseStrategy.respond {
-        embed = embedBuilder
+        embeds.add(embedBuilder)
     }
 
     /**
@@ -181,7 +187,7 @@ sealed interface ResponseStrategy {
      * Builds a message using [messageBuilder] and sends the message.
      */
     suspend fun respond(messageBuilder: suspend MessageCreateBuilder.() -> Unit): EditableResponse =
-        respond(MessageCreateBuilder().apply { messageBuilder() })
+        respond(UserMessageCreateBuilder().apply { messageBuilder() })
 
     /**
      * Uses [messageBuilder] to follow up in the command thread.
@@ -191,18 +197,24 @@ sealed interface ResponseStrategy {
     /**
      * Uses [embedBuilder] to follow up in the command thread.
      */
-    suspend fun followUp(embedBuilder: EmbedBuilder): EditableResponse = followUp { embed = embedBuilder }
+    suspend fun followUp(embedBuilder: EmbedBuilder): EditableResponse = followUp { embeds.add(embedBuilder) }
 
     /**
      * Uses [messageBuilder] to follow up in the command thread.
      */
     suspend fun followUp(messageBuilder: suspend MessageCreateBuilder.() -> Unit): EditableResponse =
-        followUp(MessageCreateBuilder().apply { messageBuilder() })
+        followUp(UserMessageCreateBuilder().apply { messageBuilder() })
 
     /**
      * Abstract sent response which can be editable.
      */
     interface EditableResponse {
+
+        /**
+         * Turns this into a [LiveMessage].
+         */
+        suspend fun live(): LiveMessage
+
         /**
          * Edits the response to match the [messageEditBuilder].
          */
@@ -211,7 +223,7 @@ sealed interface ResponseStrategy {
         /**
          * Edits the response to match the [EmbedBuilder].
          */
-        suspend fun edit(embedBuilder: EmbedBuilder): Unit = edit { embed = embedBuilder }
+        suspend fun edit(embedBuilder: EmbedBuilder): Unit = edit { embeds = mutableListOf(embedBuilder) }
 
         /**
          * Edits the response to match the [EmbedBuilder].
@@ -222,6 +234,10 @@ sealed interface ResponseStrategy {
          * Implementation of [EditableResponse] which can't be edited. (Ephemerals)
          */
         object NonEditableMessage : EditableResponse {
+            override suspend fun live(): LiveMessage {
+                throw UnsupportedOperationException("Not supported by this type of response")
+            }
+
             override suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit) {
                 throw UnsupportedOperationException("Not supported by this type of response")
             }
@@ -235,7 +251,7 @@ sealed interface ResponseStrategy {
         override suspend fun respond(messageBuilder: MessageCreateBuilder): EditableResponse {
             val response = acknowledgement.edit {
                 content = messageBuilder.content
-                embeds = messageBuilder.embed.asMutableListOrNull()
+                embeds = messageBuilder.embeds
                 allowedMentions = messageBuilder.allowedMentions
             }
 
@@ -245,26 +261,31 @@ sealed interface ResponseStrategy {
         override suspend fun followUp(messageBuilder: MessageCreateBuilder): EditableResponse {
             val response = acknowledgement.followUp {
                 content = messageBuilder.content
-                embeds = messageBuilder.embed?.toRequest().asMutableListOrNull()
-                allowedMentions = messageBuilder.allowedMentions?.build()
+                embeds.addAll(messageBuilder.embeds)
+                allowedMentions = messageBuilder.allowedMentions
             }
 
             return EditableFollowup(response)
         }
 
         private class EditableMessage(private val message: MessageBehavior) : EditableResponse {
+            override suspend fun live(): LiveMessage = message.asMessage().live()
+
             override suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit) {
                 message.edit(messageEditBuilder)
             }
         }
 
         private class EditableFollowup(private val message: PublicFollowupMessageBehavior) : EditableResponse {
+            override suspend fun live(): LiveMessage =
+                throw UnsupportedOperationException("Followups do not support live()")
+
             override suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit) {
-                val builder = MessageModifyBuilder().apply(messageEditBuilder)
+                val builder = UserMessageModifyBuilder().apply(messageEditBuilder)
                 message.edit {
                     allowedMentions = builder.allowedMentions
                     content = builder.content
-                    embeds = builder.embed.asMutableListOrNull()
+                    embeds = builder.embeds
                 }
             }
         }
@@ -279,7 +300,7 @@ sealed interface ResponseStrategy {
             val request = with(messageBuilder) {
                 InteractionResponseModifyRequest(
                     (content).nullableOptional(),
-                    (embed).nullableOptional().map { listOf(it.toRequest()) },
+                    embeds.map { it.toRequest() }.nullableOptional(),
                     (allowedMentions).nullableOptional().map { it.build() }
                 )
             }
@@ -299,8 +320,6 @@ sealed interface ResponseStrategy {
         }
     }
 }
-
-private fun <T> T?.asMutableListOrNull() = this?.let { mutableListOf<T>(it) } ?: mutableListOf()
 
 private fun <T> T?.nullableOptional(): Optional<T> = when (this) {
     null -> Optional.Missing()

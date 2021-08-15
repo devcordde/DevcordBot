@@ -50,7 +50,7 @@ class EvalCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     }
 
     override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-        interaction.ackowledgePublic()
+        interaction.acknowledgePublic()
 
     override suspend fun execute(context: Context<InteractionResponseBehavior>) {
         val message = context.respond(
