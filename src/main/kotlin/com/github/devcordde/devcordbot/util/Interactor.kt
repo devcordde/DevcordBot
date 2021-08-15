@@ -17,9 +17,8 @@
 package com.github.devcordde.devcordbot.util
 
 import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.context.ResponseStrategy
 import com.github.devcordde.devcordbot.constants.Embeds
-import dev.kord.core.behavior.MessageBehavior
-import dev.kord.core.behavior.edit
 import dev.kord.core.entity.Message
 import dev.kord.core.event.message.MessageCreateEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,15 +34,15 @@ import kotlin.time.ExperimentalTime
 /**
  * Updates a message to a timed out message.
  */
-suspend fun MessageBehavior.timeout(): Message = edit {
-    Embeds.error("Zeit abgelaufen!", "Du hast zu lange gebraucht.")
+suspend fun ResponseStrategy.EditableResponse.timeout(): Unit = edit {
+    embed = Embeds.error("Zeit abgelaufen!", "Du hast zu lange gebraucht.")
 }
 
 /**
  * Returns the next [Message] by the author in the invocation channel or `null` if [timeout] gets exceeded.
  */
 @OptIn(ExperimentalTime::class)
-suspend fun Context.readSafe(timeout: Duration = Duration.minutes(1)): Message? {
+suspend fun Context<*>.readSafe(timeout: Duration = Duration.minutes(1)): Message? {
     return try {
         read(timeout)
     } catch (e: TimeoutCancellationException) {
@@ -56,7 +55,7 @@ suspend fun Context.readSafe(timeout: Duration = Duration.minutes(1)): Message? 
  * Throws a [TimeoutCancellationException] after [timeout] in case there was no message
  */
 @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
-suspend fun Context.read(timeout: Duration = Duration.minutes(1)): Message {
+suspend fun Context<*>.read(timeout: Duration = Duration.minutes(1)): Message {
     return withTimeout(timeout) {
         bot.kord.events
             .filterIsInstance<MessageCreateEvent>()

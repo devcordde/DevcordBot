@@ -21,7 +21,6 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.util.HastebinUtil
-import com.github.devcordde.devcordbot.util.edit
 import dev.kord.core.behavior.channel.GuildChannelBehavior
 import dev.kord.core.entity.channel.GuildChannel
 import dev.kord.core.entity.channel.GuildMessageChannel
@@ -43,7 +42,7 @@ class HastebinErrorHandler : ErrorHandler {
      */
     override fun handleException(
         exception: Throwable,
-        context: Context,
+        context: Context<*>,
         thread: Thread,
         coroutineContext: CoroutineContext?
     ) {
@@ -71,7 +70,7 @@ class HastebinErrorHandler : ErrorHandler {
 
 private suspend fun collectErrorInformation(
     e: Throwable,
-    context: Context,
+    context: Context<*>,
     thread: Thread,
     coroutineContext: CoroutineContext?
 ): String {
