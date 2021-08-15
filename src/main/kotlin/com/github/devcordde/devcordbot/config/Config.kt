@@ -136,6 +136,14 @@ class Config internal constructor(private val config: Konfig) {
         val guildId: Snowflake by config.property(ConfigSpec.Discord.guildId)
 
         /**
+         * The channel id where log worthy events will be sent to.
+         *
+         * Default: **required**
+         * Key: `LOG_CHANNEL_ID`
+         */
+        val logChannel: Snowflake by config.property(ConfigSpec.Discord.logChannel)
+
+        /**
          * A list of strings shown in the game animator
          *
          * Default: Empty

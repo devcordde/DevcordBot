@@ -91,7 +91,9 @@ class DatabaseUpdater(private val bot: DevCordBot) {
         }
 
         val previousLevel = user.level
+        val previousXp = user.experience
         var newLevel = previousLevel
+        var newXp = previousXp
         transaction {
             // For some bizarre reasons using the DAO update performs a useless SELECT query before the update query
             Users.update(
@@ -103,14 +105,21 @@ class DatabaseUpdater(private val bot: DevCordBot) {
                 (it as UpdateBuilder<Users>)[lastUpgrade] = Instant.now()
                 val xpToLevelup = XPUtil.getXpToLevelup(user.level)
                 if (user.experience >= xpToLevelup) {
-                    it[experience] = user.experience + 5 - xpToLevelup
+                    newXp = user.experience + 5 - xpToLevelup
                     it[level] = user.level + 1
                     newLevel++
                 } else {
-                    it[experience] = user.experience + 5
+                    newXp = user.experience + 5
                 }
+
+                it[experience] = newXp
             }
         }
+
+        bot.discordLogger.logEvent(
+            "XP Increase", "Level: $previousLevel -> $newLevel;" +
+                    " XP: $previousXp -> $newXp", author
+        )
 
         if (previousLevel != newLevel) {
             updateLevel(newLevel)

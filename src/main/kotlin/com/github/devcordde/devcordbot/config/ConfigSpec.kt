@@ -33,6 +33,7 @@ internal object ConfigSpec : KonfigSpec("") {
         val token by required<String>("TOKEN")
 
         val guildId by required<Snowflake>("GUILD_ID")
+        val logChannel by required<Snowflake>("LOG_CHANNEL_ID")
         val games by required<List<GameAnimator.AnimatedGame>>("GAMES")
     }
 

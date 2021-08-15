@@ -29,6 +29,7 @@ import com.github.devcordde.devcordbot.util.*
 import dev.kord.core.behavior.edit
 import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.deleteWhere
@@ -119,6 +120,12 @@ class TagCommand : AbstractRootCommand() {
                     author = context.author.id
                 }
             }
+
+            context.bot.launch {
+                val contentLink = HastebinUtil.postToHastebin(tag.content, context.bot.httpClient)
+                context.bot.discordLogger.logEvent("TAG_CREATE", "$name -> $contentLink", context.author.asUser())
+            }
+
             context.acknowledgement.followUp(
                 Embeds.success(
                     "Erfolgreich erstellt!",
@@ -154,6 +161,11 @@ class TagCommand : AbstractRootCommand() {
                 }
                 alias.name to alias.tag.name
             }
+
+            context.bot.launch {
+                context.bot.discordLogger.logEvent("TAG_ALIAS", "$name -> $aliasName", context.author.asUser())
+            }
+
             context.respond(
                 Embeds.success(
                     "Alias erfolgreich erstellt",
@@ -188,8 +200,20 @@ class TagCommand : AbstractRootCommand() {
 
             val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
 
+            val oldContent = tag.content
+
             transaction {
                 tag.content = content
+            }
+
+            context.bot.launch {
+                val newContentLink = HastebinUtil.postToHastebin(content, context.bot.httpClient)
+                val oldContentLink = HastebinUtil.postToHastebin(oldContent, context.bot.httpClient)
+                context.bot.discordLogger.logEvent(
+                    "TAG_UPDATE",
+                    "$name ($oldContentLink)-> $newContentLink",
+                    context.author.asUser()
+                )
             }
 
             context.respond(
@@ -284,6 +308,10 @@ class TagCommand : AbstractRootCommand() {
                 tag.delete()
             }
 
+            context.bot.launch {
+                context.bot.discordLogger.logEvent("DELETE", name, context.author.asUser())
+            }
+
             context.respond(
                 Embeds.success(
                     "Tag erfolgreich gelöscht!",
@@ -318,6 +346,14 @@ class TagCommand : AbstractRootCommand() {
 
             transaction {
                 tag.author = user.id
+            }
+
+            context.bot.launch {
+                context.bot.discordLogger.logEvent(
+                    "TAG_TRANSFER",
+                    "$name -> ${user.tag} (${user.id})",
+                    context.author.asUser()
+                )
             }
 
             context.respond(
