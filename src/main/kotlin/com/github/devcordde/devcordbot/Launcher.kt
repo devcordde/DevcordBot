@@ -77,7 +77,6 @@ suspend fun main(args: Array<String>) {
         httpClient = HttpClient(CIO)
         intents = Intents.nonPrivileged + Intent.GuildMembers
     }
-    val guild = kord.getGuild(config.discord.guildId) ?: error("Could not find dev guild")
 
-    DevCordBot(config, debugMode, kord, guild).start()
+    DevCordBot(config, debugMode, kord).start()
 }

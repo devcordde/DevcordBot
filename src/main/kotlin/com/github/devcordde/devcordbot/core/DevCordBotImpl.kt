@@ -74,8 +74,7 @@ import com.github.devcordde.devcordbot.commands.owners.EvalCommand as BotOwnerEv
 internal class DevCordBotImpl(
     override val config: Config,
     override val debugMode: Boolean,
-    override val kord: Kord,
-    override val guild: Guild
+    override val kord: Kord
 ) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
@@ -98,6 +97,9 @@ internal class DevCordBotImpl(
     override val googler: Googler = Googler(this)
 
     override val gameAnimator = GameAnimator(this)
+
+    override val guild: Guild
+        get() = runBlocking { kord.getGuild(config.discord.guildId) } ?: error("Could not get Bot guild")
 
     override val autoHelp: AutoHelp = autoHelp {
         tagSupplier = DevCordTagSupplier
