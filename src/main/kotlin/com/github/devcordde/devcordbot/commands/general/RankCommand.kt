@@ -25,7 +25,9 @@ import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
+import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.util.XPUtil
+import com.github.devcordde.devcordbot.util.effectiveAvatarUrl
 import com.github.devcordde.devcordbot.util.effictiveName
 import dev.kord.core.entity.User
 import dev.kord.rest.builder.interaction.SubCommandBuilder
@@ -69,10 +71,11 @@ class RankCommand : AbstractRootCommand() {
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(
-            Embeds.info(
-                "Rang von ${user.tag}",
-                ""
-            ) {
+            Embeds.info("Rang von ${user.tag}") {
+                thumbnail {
+                    url = user.effectiveAvatarUrl
+                }
+
                 field {
                     name = "Level"
                     value = entry.level.toString()
