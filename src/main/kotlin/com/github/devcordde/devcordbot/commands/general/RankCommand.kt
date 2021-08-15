@@ -25,7 +25,6 @@ import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
-import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.util.XPUtil
 import com.github.devcordde.devcordbot.util.effectiveAvatarUrl
 import com.github.devcordde.devcordbot.util.effictiveName

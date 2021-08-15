@@ -22,9 +22,6 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.util.HastebinUtil
 import dev.kord.core.behavior.channel.GuildChannelBehavior
-import dev.kord.core.entity.channel.GuildChannel
-import dev.kord.core.entity.channel.GuildMessageChannel
-import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.entity.channel.TopGuildChannel
 import kotlinx.coroutines.launch
 import mu.KotlinLogging

@@ -117,8 +117,10 @@ class DatabaseUpdater(private val bot: DevCordBot) {
         }
 
         bot.discordLogger.logEvent(
-            "XP Increase", "Level: $previousLevel -> $newLevel;" +
-                    " XP: $previousXp -> $newXp", author
+            "XP Increase",
+            "Level: $previousLevel -> $newLevel;" +
+                " XP: $previousXp -> $newXp",
+            author
         )
 
         if (previousLevel != newLevel) {

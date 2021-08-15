@@ -16,9 +16,9 @@
 
 package com.github.devcordde.devcordbot.util
 
+import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
-import com.github.devcordde.devcordbot.config.Config
 import dev.kord.core.entity.User
 import dev.kord.core.entity.channel.MessageChannel
 
