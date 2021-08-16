@@ -55,10 +55,12 @@ private class DelegatedHtmlRenderer(private val renderer: PhasedHtmlNodeRenderer
             it.tagName in overwrittenNodes
         }
 
-        return (superList + HtmlNodeRendererHandler(
-            FlexmarkHtmlConverter.PRE_NODE,
-            Element::class.java,
-            FlexmarkUtils::processPre
-        )).toMutableSet()
+        return (
+            superList + HtmlNodeRendererHandler(
+                FlexmarkHtmlConverter.PRE_NODE,
+                Element::class.java,
+                FlexmarkUtils::processPre
+            )
+            ).toMutableSet()
     }
 }

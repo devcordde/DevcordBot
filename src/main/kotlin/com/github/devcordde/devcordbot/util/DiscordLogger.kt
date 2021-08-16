@@ -17,29 +17,37 @@
 package com.github.devcordde.devcordbot.util
 
 import com.github.devcordde.devcordbot.config.Config
-import com.github.devcordde.devcordbot.constants.Embeds
-import com.github.devcordde.devcordbot.core.DevCordBot
 import dev.kord.core.entity.User
-import dev.kord.core.entity.channel.MessageChannel
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+private val loggers: MutableMap<String, Logger> = mutableMapOf()
 
 /**
  * Utility to log discord events.
  */
-class DiscordLogger(private val bot: DevCordBot) {
+class DiscordLogger {
 
     /**
      * Logs an event for [user] into [Config.Discord.logChannel].
-     *
-     * Example description: `Schlaubi#0001 (416902379598774273)test123456789 -> https://haste.schlaubi.me/anizeluvav`
-     *
-     * @param title the title of the event
-     * @param description the description of the even
      */
-    suspend fun logEvent(title: String, description: String, user: User? = null) {
-        val channel =
-            bot.kord.getChannelOf<MessageChannel>(bot.config.discord.logChannel) ?: error("Log channel id is invalid")
-
+    fun logEvent(user: User? = null, title: String, message: () -> String) {
         val prefix = user?.let { user.tag + " (${user.id.asString}) " } ?: ""
-        channel.createMessage(Embeds.info(title, prefix + description))
+
+        logger(name(message)).info(marker, "$title: $prefix${message()}")
     }
+
+    private fun logger(name: String) =
+        loggers.computeIfAbsent(name) { LoggerFactory.getLogger(name) }
+}
+
+@Suppress("NOTHING_TO_INLINE")
+private inline fun name(noinline func: () -> String): String {
+    val name = func.javaClass.name
+    val slicedName = when {
+        name.contains("Kt$") -> name.substringBefore("Kt$")
+        name.contains("$") -> name.substringBefore("$")
+        else -> name
+    }
+    return slicedName
 }

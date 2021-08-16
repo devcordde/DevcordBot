@@ -30,7 +30,6 @@ import dev.kord.core.on
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import java.time.Duration
 import java.time.Instant
@@ -117,12 +116,10 @@ class DatabaseUpdater(private val bot: DevCordBot) {
             }
         }
 
-        bot.discordLogger.logEvent(
-            "XP Increase",
+        bot.discordLogger.logEvent(author, "XP_INCR") {
             "Level: $previousLevel -> $newLevel;" +
-                " XP: $previousXp -> $newXp",
-            author
-        )
+                    " XP: $previousXp -> $newXp"
+        }
 
         if (previousLevel != newLevel) {
             updateLevel(newLevel)

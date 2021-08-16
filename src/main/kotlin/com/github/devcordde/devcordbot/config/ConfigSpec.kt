@@ -25,6 +25,7 @@ import com.uchuhimo.konf.ConfigSpec as KonfigSpec
 internal object ConfigSpec : KonfigSpec("") {
 
     object General : KonfigSpec() {
+        val loggerConfig by optional("logback.xml", "LOGGER_CONFIG")
         val xpWhitelist by optional(SnowflakeList(), "XP_WHITELIST")
         val hasteHost by optional(Url("https://haste.devcord.xyz"), "HASTE_HOST")
     }
@@ -42,7 +43,7 @@ internal object ConfigSpec : KonfigSpec("") {
         val database by required<String>("NAME")
         val username by required<String>("USERNAME")
         val password by required<String>("PASSWORD")
-        val poolSize by optional(8, "PASSWORD")
+        val poolSize by optional(8, "POOL_SIZE")
     }
 
     object Jdoodle : KonfigSpec() {

@@ -40,7 +40,6 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -134,7 +133,7 @@ class TagCommand : AbstractRootCommand() {
 
             context.bot.launch {
                 val contentLink = HastebinUtil.postToHastebin(tag.content, context.bot.httpClient)
-                context.bot.discordLogger.logEvent("TAG_CREATE", "$name -> $contentLink", context.author.asUser())
+                context.bot.discordLogger.logEvent(context.author.asUser(), "TAG_CREATE") { "$name -> $contentLink" }
             }
 
             context.responseStrategy.followUp(
@@ -176,9 +175,7 @@ class TagCommand : AbstractRootCommand() {
                 alias.name to alias.tag.name
             }
 
-            context.bot.launch {
-                context.bot.discordLogger.logEvent("TAG_ALIAS", "$name -> $aliasName", context.author.asUser())
-            }
+            context.bot.discordLogger.logEvent(context.author.asUser(), "TAG_ALIAS") { "$name -> $aliasName" }
 
             context.respond(
                 Embeds.success(
@@ -227,10 +224,9 @@ class TagCommand : AbstractRootCommand() {
                 val newContentLink = HastebinUtil.postToHastebin(content, context.bot.httpClient)
                 val oldContentLink = HastebinUtil.postToHastebin(oldContent, context.bot.httpClient)
                 context.bot.discordLogger.logEvent(
-                    "TAG_UPDATE",
-                    "$name ($oldContentLink)-> $newContentLink",
-                    context.author.asUser()
-                )
+                    context.author.asUser(),
+                    "TAG_UPDATE"
+                ) { "$name ($oldContentLink)-> $newContentLink" }
             }
 
             context.respond(
@@ -331,9 +327,7 @@ class TagCommand : AbstractRootCommand() {
                 tag.delete()
             }
 
-            context.bot.launch {
-                context.bot.discordLogger.logEvent("DELETE", name, context.author.asUser())
-            }
+            context.bot.discordLogger.logEvent(context.author.asUser(), "TAG_DELETE") { name }
 
             context.respond(
                 Embeds.success(
@@ -374,12 +368,8 @@ class TagCommand : AbstractRootCommand() {
                 tag.author = user.id
             }
 
-            context.bot.launch {
-                context.bot.discordLogger.logEvent(
-                    "TAG_TRANSFER",
-                    "$name -> ${user.tag} (${user.id})",
-                    context.author.asUser()
-                )
+            context.bot.discordLogger.logEvent(context.author.asUser(), "TAG_TRANSFER") {
+                "$name -> ${user.tag} (${user.id})"
             }
 
             context.respond(

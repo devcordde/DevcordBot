@@ -16,6 +16,7 @@
 
 package com.github.devcordde.devcordbot
 
+import ch.qos.logback.classic.ClassicConstants
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.config.Config
@@ -30,16 +31,25 @@ import io.sentry.Sentry
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
+import mu.KotlinLogging
 import org.slf4j.LoggerFactory
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
+import kotlin.io.path.pathString
 import kotlin.time.ExperimentalTime
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
 import org.slf4j.event.Level as SLF4JLevel
+
+private val logger by lazy { KotlinLogging.logger {} }
 
 /**
  * DevCordBot entry point.
  */
 @OptIn(PrivilegedIntent::class, ExperimentalTime::class)
 suspend fun main(args: Array<String>) {
+    val config = Config()
+    initializeLogger(config)
     val cliParser = ArgParser("devcordbot")
     val debugMode by cliParser.option(
         ArgType.Boolean,
@@ -54,8 +64,6 @@ suspend fun main(args: Array<String>) {
         description = "Sets the Logging level of the bot"
     ).default(SLF4JLevel.INFO)
     cliParser.parse(args)
-
-    val config = Config()
 
     if (debugMode) {
         Sentry.init("") // Initilizing sentry with empty dsn does mute sentry
@@ -79,4 +87,14 @@ suspend fun main(args: Array<String>) {
     }
 
     DevCordBot(config, debugMode, kord).start()
+}
+
+private fun initializeLogger(config: Config) {
+    val customConfig = Path(config.loggerConfig)
+    if (!customConfig.exists()) {
+        logger.warn { "Could not find ${customConfig.pathString}. Discord logging will be disabled" }
+        return
+    }
+
+    System.setProperty(ClassicConstants.CONFIG_FILE_PROPERTY, customConfig.absolutePathString())
 }

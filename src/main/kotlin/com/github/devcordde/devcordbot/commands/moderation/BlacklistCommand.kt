@@ -70,7 +70,7 @@ class BlacklistCommand : AbstractRootCommand() {
                 devcordUser.blacklisted
             }
 
-            context.bot.discordLogger.logEvent("Blacklist updated", "Added: $blacklisted", user)
+            context.bot.discordLogger.logEvent(context.author.asUser(), "BLACKLIST_UPDATE") { "$name -> $blacklisted" }
 
             context.respond(Embeds.success(if (blacklisted) "Nutzer zur Blacklist hinzugefügt." else "Nutzer aus der Blacklist entfernt."))
         }

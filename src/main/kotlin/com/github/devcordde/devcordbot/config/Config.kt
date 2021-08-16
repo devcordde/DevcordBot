@@ -43,6 +43,8 @@ class Config internal constructor(private val config: Konfig) {
      */
     val hasteHost: Url by config.property(ConfigSpec.General.hasteHost)
 
+    val loggerConfig: String by config.property(ConfigSpec.General.loggerConfig)
+
     /**
      * Discord related configuration.
      *

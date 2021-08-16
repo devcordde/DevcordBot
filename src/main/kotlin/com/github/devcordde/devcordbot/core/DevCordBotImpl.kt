@@ -66,7 +66,6 @@ import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.ExperimentalTime
 import com.github.devcordde.devcordbot.commands.owners.EvalCommand as BotOwnerEvalCommand
@@ -81,7 +80,7 @@ internal class DevCordBotImpl(
 ) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
-    override val discordLogger: DiscordLogger = DiscordLogger(this)
+    override val discordLogger: DiscordLogger = DiscordLogger()
     private lateinit var dataSource: HikariDataSource
 
     override val commandClient: CommandClient =

@@ -34,7 +34,6 @@ import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Rank command.
