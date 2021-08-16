@@ -20,7 +20,6 @@ package com.github.devcordde.devcordbot.util
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.LoggingEvent
 import ch.qos.logback.classic.spi.ThrowableProxy
-import ch.qos.logback.core.AppenderBase
 import ch.qos.logback.core.UnsynchronizedAppenderBase
 import com.github.devcordde.devcordbot.constants.MAX_CONTENT_LENGTH
 import dev.kord.common.Color
@@ -89,9 +88,9 @@ class DiscordWebhookAppender : UnsynchronizedAppenderBase<LoggingEvent>(), Corou
                     footer {
                         val source = eventObject.callerData.first()
                         text = (
-                                source.fileName
-                                    ?: "<unknown file>"
-                                ) + "#" + source.methodName + ":" + source.lineNumber + "@" + eventObject.threadName
+                            source.fileName
+                                ?: "<unknown file>"
+                            ) + "#" + source.methodName + ":" + source.lineNumber + "@" + eventObject.threadName
                     }
                 }
 

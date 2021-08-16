@@ -16,9 +16,9 @@
 
 package com.github.devcordde.devcordbot.util
 
+import net.gcardone.junidecode.Junidecode
 import ru.homyakin.iuliia.Schemas
 import ru.homyakin.iuliia.Translator
-import net.gcardone.junidecode.Junidecode
 import java.text.Normalizer
 
 private val translator = Translator(Schemas.ICAO_DOC_9303)
@@ -39,4 +39,3 @@ private fun String.normalize(form: Normalizer.Form): String {
         .normalize(this, form)
         .replace("\\p{M}".toRegex(), "")
 }
-
