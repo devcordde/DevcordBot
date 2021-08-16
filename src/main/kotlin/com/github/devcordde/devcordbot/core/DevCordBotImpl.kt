@@ -35,6 +35,7 @@ import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
 import com.github.devcordde.devcordbot.listeners.DevmarktRequestUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.listeners.addNameWatcher
 import com.github.devcordde.devcordbot.util.DiscordLogger
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
@@ -136,13 +137,13 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
-        logger.info { "Registering commands..." }
         kord.listeners()
     }
 
     suspend fun start() {
         logger.info { "Establishing connection to the database..." }
         connectToDatabase()
+        logger.info { "Registering commands..." }
         registerCommands()
 
         kord.login()
@@ -152,6 +153,7 @@ internal class DevCordBotImpl(
         whenReady()
         whenDisconnected()
         whenResumed()
+        kord.addNameWatcher(this@DevCordBotImpl)
 
         val ratProtector = RatProtector(this@DevCordBotImpl)
         with(ratProtector) {

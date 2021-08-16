@@ -64,6 +64,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.3")
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev86-1.25.0")
     implementation("net.sf.trove4j", "trove4j", "3.0.3")
+    implementation("ru.homyakin", "iuliia-java", "1.7")
+    implementation("net.gcardone.junidecode", "junidecode", "0.4.1")
 
     // Http
     implementation(platform("io.ktor:ktor-bom:1.6.2"))
