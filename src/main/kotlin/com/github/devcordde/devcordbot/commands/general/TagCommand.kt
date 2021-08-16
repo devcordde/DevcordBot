@@ -93,7 +93,7 @@ class TagCommand : AbstractRootCommand() {
             val tagName = context.args.string("tag")
             val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
             context.respond(tag.content)
-            transaction {
+            newSuspendedTransaction {
                 tag.usages++
             }
         }
@@ -125,7 +125,7 @@ class TagCommand : AbstractRootCommand() {
 
             val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
 
-            val tag = transaction {
+            val tag = newSuspendedTransaction {
                 Tag.new(name) {
                     this.content = content
                     author = context.author.id
@@ -169,7 +169,7 @@ class TagCommand : AbstractRootCommand() {
             val tagName = args.string("tag")
             val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
             if (newSuspendedTransaction { checkTagExists(aliasName, context) }) return
-            val (newAliasName, newTagName) = transaction {
+            val (newAliasName, newTagName) = newSuspendedTransaction {
                 val alias = TagAlias.new(aliasName) {
                     this.tag = tag
                 }
@@ -219,7 +219,7 @@ class TagCommand : AbstractRootCommand() {
 
             val oldContent = tag.content
 
-            transaction {
+            newSuspendedTransaction {
                 tag.content = content
             }
 
@@ -259,7 +259,7 @@ class TagCommand : AbstractRootCommand() {
             val args = context.args
             val name = args.string("tag")
             val tag = newSuspendedTransaction { checkNotTagExists(name, context) } ?: return
-            val rank = transaction {
+            val rank = newSuspendedTransaction {
                 Tags.select { (Tags.usages greaterEq tag.usages) }.count()
             }
             val author = context.kord.getUser(tag.author)
@@ -290,7 +290,7 @@ class TagCommand : AbstractRootCommand() {
                         this.name = "Erstellt"
                         value = Constants.DATE_FORMAT.format(tag.createdAt)
                     }
-                    transaction {
+                    newSuspendedTransaction {
                         val aliases = TagAlias.find { TagAliases.tag eq tag.name }
                         if (!aliases.empty()) {
                             field {
@@ -326,7 +326,7 @@ class TagCommand : AbstractRootCommand() {
             val tag = newSuspendedTransaction { checkNotTagExists(context.args.string("tag"), context) } ?: return
             if (checkPermission(tag, context)) return
 
-            transaction {
+            newSuspendedTransaction {
                 TagAliases.deleteWhere { TagAliases.tag.eq(tag.name) }
                 tag.delete()
             }
@@ -370,7 +370,7 @@ class TagCommand : AbstractRootCommand() {
 
             if (checkPermission(tag, context)) return
 
-            transaction {
+            newSuspendedTransaction {
                 tag.author = user.id
             }
 
@@ -400,7 +400,7 @@ class TagCommand : AbstractRootCommand() {
             interaction.acknowledgePublic()
 
         override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
-            val tags = transaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
+            val tags = newSuspendedTransaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
             if (tags.isEmpty()) {
                 context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags."))
                 return
@@ -423,7 +423,7 @@ class TagCommand : AbstractRootCommand() {
 
         override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
             val user = context.args.optionalUser("author") ?: context.author
-            val tags = transaction { Tag.find { Tags.author eq user.id }.map(Tag::name) }
+            val tags = newSuspendedTransaction { Tag.find { Tags.author eq user.id }.map(Tag::name) }
             if (tags.isEmpty()) {
                 context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Nutzer."))
                 return
@@ -449,7 +449,7 @@ class TagCommand : AbstractRootCommand() {
 
         override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
             val name = context.args.string("query")
-            val tags = transaction {
+            val tags = newSuspendedTransaction {
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).limit(25)
                     .map(Tag::name)
             }

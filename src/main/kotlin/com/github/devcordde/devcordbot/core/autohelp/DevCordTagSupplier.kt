@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.core.autohelp
 import com.github.devcordde.devcordbot.database.Tag
 import dev.schlaubi.forp.parser.stacktrace.StackTrace
 import me.schlaubi.autohelp.tags.TagSupplier
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 

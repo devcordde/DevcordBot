@@ -38,6 +38,7 @@ import com.github.devcordde.devcordbot.listeners.SelfMentionListener
 import com.github.devcordde.devcordbot.util.DiscordLogger
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
+import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
@@ -64,6 +65,7 @@ import me.schlaubi.autohelp.kord.useKordMessageRenderer
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.ExperimentalTime
@@ -135,14 +137,13 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
-        logger.info { "Establishing connection to the database..." }
-        connectToDatabase()
-
         logger.info { "Registering commands..." }
         kord.listeners()
     }
 
     suspend fun start() {
+        logger.info { "Establishing connection to the database..." }
+        connectToDatabase()
         registerCommands()
 
         kord.login()
@@ -210,15 +211,19 @@ internal class DevCordBotImpl(
         gameAnimator.start()
     }
 
-    private fun connectToDatabase() {
+    private suspend fun connectToDatabase() {
         val databaseConfig = config.database
-        dataSource = HikariDataSource().apply {
+        val config = HikariConfig().apply {
             jdbcUrl = "jdbc:postgresql://${databaseConfig.host}/${databaseConfig.database}"
             username = databaseConfig.username
             password = databaseConfig.password
+
+            maximumPoolSize = databaseConfig.maximumPoolSize
         }
+        dataSource = HikariDataSource(config)
         Database.connect(dataSource)
-        transaction {
+
+        newSuspendedTransaction {
             SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases)
             //language=PostgreSQL
             exec("SELECT * FROM pg_extension WHERE extname = 'pg_trgm'") { rs ->

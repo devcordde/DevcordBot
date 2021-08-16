@@ -75,7 +75,7 @@ class RankCommand : AbstractRootCommand() {
         default: Boolean = false
     ) {
         val entry =
-            if (default) context.devCordUser else transaction { DatabaseDevCordUser.findOrCreateById(user.id.value) }
+            if (default) context.devCordUser else newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(user.id.value) }
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(
@@ -122,7 +122,7 @@ class RankCommand : AbstractRootCommand() {
             var maxOffset = 0
             if (offset < 0) offset = 0
             if (offset != 0) {
-                transaction {
+                newSuspendedTransaction {
                     maxOffset = DatabaseDevCordUser.all().count().toInt()
                     if (maxOffset <= offset) {
                         invalidOffset = true

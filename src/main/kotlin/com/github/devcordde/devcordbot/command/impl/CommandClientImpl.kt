@@ -44,6 +44,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
 import mu.KotlinLogging
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.coroutines.CoroutineContext
 
@@ -122,7 +123,7 @@ class CommandClientImpl(
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
         val member = interaction.member.asMember()
 
-        val user = transaction { DatabaseDevCordUser.findOrCreateById(interaction.user.id.value) }
+        val user = newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(interaction.user.id.value) }
 
         val permissionState = permissionHandler.isCovered(
             command.permission,

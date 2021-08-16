@@ -42,6 +42,7 @@ internal object ConfigSpec : KonfigSpec("") {
         val database by required<String>("NAME")
         val username by required<String>("USERNAME")
         val password by required<String>("PASSWORD")
+        val poolSize by optional(8, "PASSWORD")
     }
 
     object Jdoodle : KonfigSpec() {

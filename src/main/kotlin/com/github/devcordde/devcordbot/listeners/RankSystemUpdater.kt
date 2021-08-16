@@ -29,6 +29,7 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import java.time.Duration
@@ -49,19 +50,19 @@ class DatabaseUpdater(private val bot: DevCordBot) {
     }
 
     private fun Kord.onMemberJoin() = on<MemberJoinEvent> {
-        transaction { DatabaseDevCordUser.findOrCreateById(member.id.value) }
+        newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(member.id.value) }
     }
 
     private fun Kord.onMemberLeave() = on<MemberLeaveEvent> {
         val id = user.id
 
-        transaction {
+        newSuspendedTransaction {
             Tags.update({ Tags.author eq id }) {
                 it[author] = kord.selfId
             }
         }
 
-        transaction {
+        newSuspendedTransaction {
             Users.deleteWhere { Users.id eq id }
         }
     }
@@ -80,7 +81,7 @@ class DatabaseUpdater(private val bot: DevCordBot) {
 
         val author = message.author ?: return@on
 
-        val user = transaction { DatabaseDevCordUser.findOrCreateById(author.id.value) }
+        val user = newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(author.id.value) }
 
         if (user.blacklisted) {
             return@on
@@ -94,7 +95,7 @@ class DatabaseUpdater(private val bot: DevCordBot) {
         val previousXp = user.experience
         var newLevel = previousLevel
         var newXp = previousXp
-        transaction {
+        newSuspendedTransaction {
             // For some bizarre reasons using the DAO update performs a useless SELECT query before the update query
             Users.update(
                 {

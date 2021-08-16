@@ -190,6 +190,14 @@ class Config internal constructor(private val config: Konfig) {
          * Key: `DATABASE_USERNAME`
          */
         val password: String by config.property(ConfigSpec.Database.password)
+
+        /**
+         * The maximum pool size.
+         *
+         * Default: `8`
+         * Key: `DATABASE_POOL_SIZE`
+         */
+        val maximumPoolSize: Int by config.property(ConfigSpec.Database.poolSize)
     }
 
     /**
