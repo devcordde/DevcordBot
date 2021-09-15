@@ -29,6 +29,7 @@ import com.github.devcordde.devcordbot.util.effictiveName
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import dev.kord.rest.builder.interaction.user
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 

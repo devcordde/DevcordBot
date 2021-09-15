@@ -32,6 +32,8 @@ import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.entity.User
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import dev.kord.rest.builder.interaction.int
+import dev.kord.rest.builder.interaction.user
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 

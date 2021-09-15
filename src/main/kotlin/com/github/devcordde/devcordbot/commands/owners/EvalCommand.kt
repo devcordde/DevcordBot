@@ -28,7 +28,8 @@ import com.github.devcordde.devcordbot.util.HastebinUtil
 import com.github.devcordde.devcordbot.util.limit
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
+import dev.kord.rest.builder.interaction.string
 import org.intellij.lang.annotations.Language
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
@@ -43,7 +44,7 @@ class EvalCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     override val category: CommandCategory = CommandCategory.BOT_OWNER
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    override fun ApplicationCommandCreateBuilder.applyOptions() {
+    override fun ChatInputCreateBuilder.applyOptions() {
         string("code", "Der auszuführende Code") {
             required = true
         }

@@ -20,8 +20,8 @@ import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.ExecutableCommand
 import com.github.devcordde.devcordbot.command.context.Context
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
-import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
+import dev.kord.rest.builder.interaction.MultiApplicationCommandBuilder
 
 /**
  * Abstract single command (without sub commands).
@@ -40,10 +40,10 @@ abstract class AbstractSingleCommand<T : InteractionResponseBehavior> :
     /**
      * Function called in [applyCommand] to add options.
      */
-    open fun ApplicationCommandCreateBuilder.applyOptions(): Unit = Unit
+    open fun ChatInputCreateBuilder.applyOptions(): Unit = Unit
 
-    final override fun ApplicationCommandsCreateBuilder.applyCommand() {
-        command(name, description) {
+    final override fun MultiApplicationCommandBuilder.applyCommand() {
+        input(name, description) {
             applyOptions()
         }
     }

@@ -26,7 +26,8 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import dev.kord.core.behavior.interaction.EphemeralInteractionResponseBehavior
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
+import dev.kord.rest.builder.interaction.string
 import java.util.*
 
 /**
@@ -42,7 +43,7 @@ class HelpCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     override suspend fun InteractionCreateEvent.acknowledge(): EphemeralInteractionResponseBehavior =
         interaction.acknowledgeEphemeral()
 
-    override fun ApplicationCommandCreateBuilder.applyOptions() {
+    override fun ChatInputCreateBuilder.applyOptions() {
         string("command", "Der Name eines Befehls, für den Hilfe angezeigt werden soll")
     }
 

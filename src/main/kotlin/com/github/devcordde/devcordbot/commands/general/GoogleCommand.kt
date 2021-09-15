@@ -25,7 +25,8 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.menu.Paginator
 import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
+import dev.kord.rest.builder.interaction.string
 import kotlin.time.Duration
 
 /**
@@ -40,7 +41,7 @@ class GoogleCommand : AbstractSingleCommand<PublicInteractionResponseBehavior>()
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
-    override fun ApplicationCommandCreateBuilder.applyOptions() {
+    override fun ChatInputCreateBuilder.applyOptions() {
         string("query", "Die Query, nach der gesucht werden soll") {
             required = true
         }

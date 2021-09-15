@@ -16,8 +16,9 @@
 
 package com.github.devcordde.devcordbot.command
 
-import dev.kord.core.entity.interaction.DmInteraction
-import dev.kord.core.entity.interaction.GuildInteraction
+import dev.kord.core.entity.channel.DmChannel
+import dev.kord.core.entity.channel.GuildChannel
+import dev.kord.core.entity.interaction.ChatInputCommandInteraction
 import dev.kord.core.event.interaction.InteractionCreateEvent
 
 /**
@@ -45,8 +46,8 @@ enum class CommandPlace {
     fun matches(event: InteractionCreateEvent): Boolean {
         return when (this) {
             ALL -> true
-            PRIVATE_MESSAGE -> event.interaction is DmInteraction
-            GUILD_MESSAGE -> event.interaction is GuildInteraction
+            PRIVATE_MESSAGE -> (event.interaction as? ChatInputCommandInteraction)?.channel is DmChannel
+            GUILD_MESSAGE -> (event.interaction as? ChatInputCommandInteraction)?.channel is GuildChannel
         }
     }
 }

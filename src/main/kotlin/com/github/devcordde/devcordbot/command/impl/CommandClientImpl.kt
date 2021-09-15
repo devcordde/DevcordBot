@@ -72,9 +72,8 @@ class CommandClientImpl(
      * Updates the slash commands definitions.
      */
     suspend fun updateCommands() {
-        val slashCommands = bot.kord.slashCommands
         val guildId = bot.guild.id
-        val commandUpdate = slashCommands.createGuildApplicationCommands(guildId) {
+        val commandUpdate = bot.kord.createGuildApplicationCommands(guildId) {
             commandAssociations.values.distinct().forEach {
                 when (it) {
                     is RegisterableCommand -> with(it) { applyCommand() }
@@ -96,11 +95,18 @@ class CommandClientImpl(
             }
         }.toList()
 
-        slashCommands.service.bulkEditApplicationCommandPermissions(
-            slashCommands.applicationId,
-            guildId,
-            permissions
-        )
+        bot.kord.bulkEditApplicationCommandPermissions(
+            bot.kord.resources.applicationId,
+            guildId
+        ) {
+            permissions.forEach {
+                command(it.id) {
+                    it.permissions.forEach { permission ->
+                        this.permissions.add(permission)
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -115,7 +121,7 @@ class CommandClientImpl(
     }
 
     private suspend fun parseCommand(event: InteractionCreateEvent) {
-        val interaction = event.interaction as? GuildInteraction ?: return
+        val interaction = event.interaction as? GuildChatInputCommandInteraction ?: return
         val command = resolveCommand(interaction.command) ?: return // No command found
         val executableCommand = command as? ExecutableCommand<*> ?: error("$command is not executable")
 

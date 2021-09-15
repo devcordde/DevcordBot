@@ -19,9 +19,10 @@ package com.github.devcordde.devcordbot.command
 import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
-import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import dev.kord.rest.builder.interaction.group
+import dev.kord.rest.builder.interaction.subCommand
 
 /**
  * Skeleton of a sub command.
@@ -42,7 +43,7 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
     /**
      * Adds this command to the [ApplicationCommandsCreateBuilder].
      */
-    abstract fun ApplicationCommandCreateBuilder.applyCommand()
+    abstract fun ChatInputCreateBuilder.applyCommand()
 
     /**
      * Abstract implementation of a slash sub-command.
@@ -63,7 +64,7 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
          */
         abstract override suspend fun execute(context: Context<T>)
 
-        final override fun ApplicationCommandCreateBuilder.applyCommand() {
+        final override fun ChatInputCreateBuilder.applyCommand() {
             subCommand(this@Command.name, this@Command.description) {
                 applyOptions()
             }
@@ -76,7 +77,7 @@ sealed class AbstractSubCommand(val parent: AbstractCommand) : AbstractCommand()
     abstract class Group(parent: AbstractCommand) :
         AbstractSubCommand(parent),
         CommandRegistry<Command<*>> {
-        override fun ApplicationCommandCreateBuilder.applyCommand() {
+        override fun ChatInputCreateBuilder.applyCommand() {
             group(name, description) {
                 commandAssociations.values
                     .forEach {

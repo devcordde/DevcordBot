@@ -37,7 +37,7 @@ import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.interaction.*
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.Message
-import dev.kord.core.entity.interaction.GuildInteraction
+import dev.kord.core.entity.interaction.GuildChatInputCommandInteraction
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.core.live.LiveMessage
 import dev.kord.core.live.live
@@ -108,7 +108,7 @@ data class Context<T : InteractionResponseBehavior>(
      * The guild of the [channel].
      */
     val guild: GuildBehavior
-        get() = (event.interaction as? GuildInteraction)?.guild ?: bot.guild
+        get() = (event.interaction as? GuildChatInputCommandInteraction)?.guildBehavior ?: bot.guild
 
     /**
      * The [self member][MemberBehavior] of the bot.

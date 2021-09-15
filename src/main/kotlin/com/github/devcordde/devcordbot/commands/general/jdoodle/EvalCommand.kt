@@ -31,6 +31,7 @@ import com.github.devcordde.devcordbot.util.timeout
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import dev.kord.rest.builder.interaction.int
 import java.util.*
 
 /**

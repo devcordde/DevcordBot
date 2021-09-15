@@ -23,7 +23,8 @@ import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
+import dev.kord.rest.builder.interaction.string
 
 /**
  * Source command.
@@ -35,7 +36,7 @@ class SourceCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     override val category: CommandCategory = CommandCategory.FUN
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    override fun ApplicationCommandCreateBuilder.applyOptions() {
+    override fun ChatInputCreateBuilder.applyOptions() {
         string("command", "Der Name des Befehls, für den der Quellcode angezeigt werden soll")
     }
 

@@ -32,8 +32,10 @@ import com.github.devcordde.devcordbot.util.timeout
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import dev.kord.rest.builder.interaction.string
+import dev.kord.rest.builder.interaction.user
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
@@ -82,7 +84,7 @@ class TagCommand : AbstractRootCommand() {
         override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
             interaction.acknowledgePublic()
 
-        override fun ApplicationCommandCreateBuilder.applyOptions() {
+        override fun ChatInputCreateBuilder.applyOptions() {
             string("tag", "Der Name des Tags, welcher angezeigt werden soll") {
                 required = true
             }
