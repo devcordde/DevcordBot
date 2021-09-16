@@ -22,24 +22,24 @@ import com.github.devcordde.devcordbot.command.context.Context
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
-import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import kotlinx.coroutines.async
 
 /**
  * InfoCommand.
  */
-class InfoCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
+class InfoCommand : AbstractSingleCommand<PublicInteractionResponseBehavior>() {
     override val name: String = "info"
     override val description: String = "Zeigt Infos über den Bot an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
-        interaction.acknowledgeEphemeral()
+    override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
+        interaction.acknowledgePublic()
 
-    override suspend fun execute(context: Context<InteractionResponseBehavior>) {
+    override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
         val devCordBot = context.bot
         val contributors = devCordBot.async { SelfMentionListener.fetchContributors(devCordBot) }
 
