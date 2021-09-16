@@ -26,12 +26,16 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.XPUtil
+import com.github.devcordde.devcordbot.util.effectiveAvatarUrl
 import com.github.devcordde.devcordbot.util.effictiveName
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.entity.User
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import dev.kord.rest.builder.interaction.int
+import dev.kord.rest.builder.interaction.user
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Rank command.
@@ -48,31 +52,39 @@ class RankCommand : AbstractRootCommand() {
         registerCommands(TopCommand())
     }
 
-    private inner class StatsCommand : AbstractSubCommand.Command(this) {
+    private inner class StatsCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "stats"
         override val description: String = "Zeigt den Rang eines Nutzers an."
+
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgeEphemeral()
 
         override fun SubCommandBuilder.applyOptions() {
             user("target", "Der Nutzer, von dem der Rang angezeigt werden soll")
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val user = context.args.optionalUser("target")
                 ?: return sendRankInformation(context.author.asUser(), context, true)
             sendRankInformation(user, context)
         }
     }
 
-    private suspend fun sendRankInformation(user: User, context: Context, default: Boolean = false) {
+    private suspend fun sendRankInformation(
+        user: User,
+        context: Context<InteractionResponseBehavior>,
+        default: Boolean = false
+    ) {
         val entry =
-            if (default) context.devCordUser else transaction { DatabaseDevCordUser.findOrCreateById(user.id.value) }
+            if (default) context.devCordUser else newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(user.id.value) }
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(
-            Embeds.info(
-                "Rang von ${user.tag}",
-                ""
-            ) {
+            Embeds.info("Rang von ${user.tag}") {
+                thumbnail {
+                    url = user.effectiveAvatarUrl
+                }
+
                 field {
                     name = "Level"
                     value = entry.level.toString()
@@ -94,21 +106,24 @@ class RankCommand : AbstractRootCommand() {
         return stringBuilder.toString()
     }
 
-    private inner class TopCommand : AbstractSubCommand.Command(this) {
+    private inner class TopCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "top"
         override val description: String = "Zeigt die 10 User mit dem höchsten Rang an."
+
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgeEphemeral()
 
         override fun SubCommandBuilder.applyOptions() {
             int("offset", "Der Index, um den die Liste verschoben werden soll")
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             var offset = context.args.optionalInt("offset") ?: 0
             var invalidOffset = false
             var maxOffset = 0
             if (offset < 0) offset = 0
             if (offset != 0) {
-                transaction {
+                newSuspendedTransaction {
                     maxOffset = DatabaseDevCordUser.all().count().toInt()
                     if (maxOffset <= offset) {
                         invalidOffset = true

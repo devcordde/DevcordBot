@@ -17,6 +17,8 @@
 package com.github.devcordde.devcordbot.dsl
 
 import dev.kord.rest.builder.message.EmbedBuilder
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 /**
  * Lambda that applies onto an [EmbedBuilder].
@@ -28,4 +30,10 @@ typealias EmbedCreator = EmbedBuilder.() -> Unit
 /**
  * Creates a new [EmbedBuilder].
  */
-fun embed(creator: EmbedCreator): EmbedBuilder = EmbedBuilder().apply(creator)
+inline fun embed(creator: EmbedCreator): EmbedBuilder {
+    contract {
+        callsInPlace(creator, InvocationKind.EXACTLY_ONCE)
+    }
+
+    return EmbedBuilder().apply(creator)
+}

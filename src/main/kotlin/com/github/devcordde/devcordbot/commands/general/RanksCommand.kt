@@ -23,19 +23,24 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.listeners.Level
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import kotlinx.coroutines.flow.toList
 
 /**
  * RanksCommand.
  */
-class RanksCommand : AbstractSingleCommand() {
+class RanksCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     override val name: String = "ranks"
     override val description: String = "Zeigt die verfügbaren Ränge an."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    override suspend fun execute(context: Context) {
+    override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+        interaction.acknowledgeEphemeral()
+
+    override suspend fun execute(context: Context<InteractionResponseBehavior>) {
         val roles = context.guild.roles.toList().associateBy { it.id }
         context.respond(
             Embeds.info("Rollen") {

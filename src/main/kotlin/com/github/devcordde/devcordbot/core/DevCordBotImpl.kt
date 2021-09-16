@@ -35,8 +35,11 @@ import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.listeners.DatabaseUpdater
 import com.github.devcordde.devcordbot.listeners.DevmarktRequestUpdater
 import com.github.devcordde.devcordbot.listeners.SelfMentionListener
+import com.github.devcordde.devcordbot.listeners.addNameWatcher
+import com.github.devcordde.devcordbot.util.DiscordLogger
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
+import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.kord.core.Kord
 import dev.kord.core.entity.Guild
@@ -63,7 +66,7 @@ import me.schlaubi.autohelp.kord.useKordMessageRenderer
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.ExperimentalTime
 import com.github.devcordde.devcordbot.commands.owners.EvalCommand as BotOwnerEvalCommand
@@ -74,11 +77,11 @@ import com.github.devcordde.devcordbot.commands.owners.EvalCommand as BotOwnerEv
 internal class DevCordBotImpl(
     override val config: Config,
     override val debugMode: Boolean,
-    override val kord: Kord,
-    override val guild: Guild
+    override val kord: Kord
 ) : DevCordBot {
 
     private val logger = KotlinLogging.logger { }
+    override val discordLogger: DiscordLogger = DiscordLogger()
     private lateinit var dataSource: HikariDataSource
 
     override val commandClient: CommandClient =
@@ -98,6 +101,9 @@ internal class DevCordBotImpl(
     override val googler: Googler = Googler(this)
 
     override val gameAnimator = GameAnimator(this)
+
+    override val guild: Guild
+        get() = runBlocking { kord.getGuild(config.discord.guildId) } ?: error("Could not get Bot guild")
 
     override val autoHelp: AutoHelp = autoHelp {
         tagSupplier = DevCordTagSupplier
@@ -131,14 +137,13 @@ internal class DevCordBotImpl(
 
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this::shutdown))
-        logger.info { "Establishing connection to the database..." }
-        connectToDatabase()
-
-        logger.info { "Registering commands..." }
         kord.listeners()
     }
 
     suspend fun start() {
+        logger.info { "Establishing connection to the database..." }
+        connectToDatabase()
+        logger.info { "Registering commands..." }
         registerCommands()
 
         kord.login()
@@ -148,6 +153,7 @@ internal class DevCordBotImpl(
         whenReady()
         whenDisconnected()
         whenResumed()
+        kord.addNameWatcher(this@DevCordBotImpl)
 
         val ratProtector = RatProtector(this@DevCordBotImpl)
         with(ratProtector) {
@@ -206,15 +212,19 @@ internal class DevCordBotImpl(
         gameAnimator.start()
     }
 
-    private fun connectToDatabase() {
+    private suspend fun connectToDatabase() {
         val databaseConfig = config.database
-        dataSource = HikariDataSource().apply {
+        val config = HikariConfig().apply {
             jdbcUrl = "jdbc:postgresql://${databaseConfig.host}/${databaseConfig.database}"
             username = databaseConfig.username
             password = databaseConfig.password
+
+            maximumPoolSize = databaseConfig.maximumPoolSize
         }
+        dataSource = HikariDataSource(config)
         Database.connect(dataSource)
-        transaction {
+
+        newSuspendedTransaction {
             SchemaUtils.createMissingTablesAndColumns(Users, Tags, TagAliases)
             //language=PostgreSQL
             exec("SELECT * FROM pg_extension WHERE extname = 'pg_trgm'") { rs ->

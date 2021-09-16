@@ -20,20 +20,23 @@ import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.AbstractSubCommand
 import com.github.devcordde.devcordbot.command.CommandRegistry
 import com.github.devcordde.devcordbot.command.permission.Permission
-import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
+import dev.kord.rest.builder.interaction.MultiApplicationCommandBuilder
 
 /**
  * Abstract implementation of a slash command with subcommands.
  */
-abstract class AbstractRootCommand : AbstractCommand(), CommandRegistry<AbstractSubCommand>, RegisterableCommand {
+abstract class AbstractRootCommand :
+    AbstractCommand(),
+    CommandRegistry<AbstractSubCommand>,
+    RegisterableCommand {
 
     override val commandAssociations: MutableMap<String, AbstractSubCommand> = mutableMapOf()
 
     /**
      * Adds this command to the [ApplicationCommandsCreateBuilder].
      */
-    final override fun ApplicationCommandsCreateBuilder.applyCommand() {
-        command(name, description) {
+    final override fun MultiApplicationCommandBuilder.applyCommand() {
+        input(name, description) {
             defaultPermission = permission == Permission.ANY
 
             commandAssociations.values

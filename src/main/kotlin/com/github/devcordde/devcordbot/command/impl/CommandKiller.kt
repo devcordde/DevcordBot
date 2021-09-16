@@ -14,11 +14,17 @@
  *    limitations under the License.
  */
 
-package com.github.devcordde.devcordbot.config.helpers
+package com.github.devcordde.devcordbot.command.impl
 
-import com.github.devcordde.devcordbot.core.GameAnimator
+import dev.kord.core.Kord
+import dev.kord.core.event.message.ReactionAddEvent
+import dev.kord.core.on
+import dev.kord.x.emoji.Emojis
 
-/**
- * Wrapper class for Lists of [GameAnimator.AnimatedGame] to avoid type erasure.
- */
-class AnimatedGameList : ArrayList<GameAnimator.AnimatedGame>()
+internal fun Kord.registerCommandKiller() = on<ReactionAddEvent> {
+    if (emoji.name != Emojis.wastebasket.unicode) return@on
+    val message = getMessage()
+    val interaction = message.interaction ?: return@on
+    if (user.id != interaction.data.user) return@on
+    message.delete()
+}

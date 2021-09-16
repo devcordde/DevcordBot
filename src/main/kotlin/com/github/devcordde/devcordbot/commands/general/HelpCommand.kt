@@ -23,24 +23,31 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.core.behavior.interaction.EphemeralInteractionResponseBehavior
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
+import dev.kord.rest.builder.interaction.string
 import java.util.*
 
 /**
  * Help command.
  */
-class HelpCommand : AbstractSingleCommand() {
+class HelpCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
     override val name: String = "help"
     override val description: String = "Zeigt eine Liste aller Befehle."
     override val permission: Permission = Permission.ANY
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.ALL
 
-    override fun ApplicationCommandCreateBuilder.applyOptions() {
+    override suspend fun InteractionCreateEvent.acknowledge(): EphemeralInteractionResponseBehavior =
+        interaction.acknowledgeEphemeral()
+
+    override fun ChatInputCreateBuilder.applyOptions() {
         string("command", "Der Name eines Befehls, für den Hilfe angezeigt werden soll")
     }
 
-    override suspend fun execute(context: Context) {
+    override suspend fun execute(context: Context<InteractionResponseBehavior>) {
         val commandName = context.args.optionalString("command")
         if (commandName == null) {
             sendCommandList(context)
@@ -49,7 +56,10 @@ class HelpCommand : AbstractSingleCommand() {
         }
     }
 
-    private suspend fun sendCommandHelpMessage(context: Context, commandName: String) {
+    private suspend fun sendCommandHelpMessage(
+        context: Context<InteractionResponseBehavior>,
+        commandName: String
+    ) {
         val command = context.commandClient.commandAssociations[commandName.lowercase(Locale.getDefault())]
 
         if (command == null || context.commandClient.permissionHandler.isCovered(
@@ -81,7 +91,7 @@ class HelpCommand : AbstractSingleCommand() {
         context.respond(Embeds.command(command))
     }
 
-    private suspend fun sendCommandList(context: Context) {
+    private suspend fun sendCommandList(context: Context<InteractionResponseBehavior>) {
         context.respond(
             Embeds.info(
                 "Befehls-Hilfe",

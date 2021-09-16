@@ -19,6 +19,7 @@ package com.github.devcordde.devcordbot.command.impl
 import com.github.devcordde.devcordbot.command.*
 import com.github.devcordde.devcordbot.command.context.Arguments
 import com.github.devcordde.devcordbot.command.context.Context
+import com.github.devcordde.devcordbot.command.context.ResponseStrategy
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
@@ -27,28 +28,23 @@ import com.github.devcordde.devcordbot.command.root.RegisterableCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
-import com.github.devcordde.devcordbot.util.DefaultThreadFactory
+import com.github.devcordde.devcordbot.database.DevCordUser
 import com.github.devcordde.devcordbot.util.createMessage
-import com.github.devcordde.devcordbot.util.edit
 import dev.kord.common.entity.PartialDiscordGuildApplicationCommandPermissions
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.interaction.EphemeralInteractionResponseBehavior
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
-import dev.kord.core.entity.interaction.GroupCommand
-import dev.kord.core.entity.interaction.GuildInteraction
-import dev.kord.core.entity.interaction.InteractionCommand
-import dev.kord.core.entity.interaction.SubCommand
+import dev.kord.core.entity.Member
+import dev.kord.core.entity.interaction.*
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.core.on
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.concurrent.Executors
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -60,12 +56,12 @@ class CommandClientImpl(
     private val bot: DevCordBot,
     private val prefix: Regex,
     override val permissionHandler: PermissionHandler,
-    override val executor: CoroutineContext =
-        Executors.newFixedThreadPool(
-            5,
-            DefaultThreadFactory("CommandExecution")
-        ).asCoroutineDispatcher()
+    override val executor: CoroutineContext = Dispatchers.IO + SupervisorJob()
 ) : CommandClient {
+
+    init {
+        bot.kord.registerCommandKiller()
+    }
 
     private val logger = KotlinLogging.logger { }
 
@@ -76,9 +72,8 @@ class CommandClientImpl(
      * Updates the slash commands definitions.
      */
     suspend fun updateCommands() {
-        val slashCommands = bot.kord.slashCommands
         val guildId = bot.guild.id
-        val commandUpdate = slashCommands.createGuildApplicationCommands(guildId) {
+        val commandUpdate = bot.kord.createGuildApplicationCommands(guildId) {
             commandAssociations.values.distinct().forEach {
                 when (it) {
                     is RegisterableCommand -> with(it) { applyCommand() }
@@ -100,11 +95,18 @@ class CommandClientImpl(
             }
         }.toList()
 
-        slashCommands.service.bulkEditApplicationCommandPermissions(
-            slashCommands.applicationId,
-            guildId,
-            permissions
-        )
+        bot.kord.bulkEditApplicationCommandPermissions(
+            bot.kord.resources.applicationId,
+            guildId
+        ) {
+            permissions.forEach {
+                command(it.id) {
+                    it.permissions.forEach { permission ->
+                        this.permissions.add(permission)
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -119,13 +121,14 @@ class CommandClientImpl(
     }
 
     private suspend fun parseCommand(event: InteractionCreateEvent) {
-        val interaction = event.interaction as? GuildInteraction ?: return
+        val interaction = event.interaction as? GuildChatInputCommandInteraction ?: return
         val command = resolveCommand(interaction.command) ?: return // No command found
+        val executableCommand = command as? ExecutableCommand<*> ?: error("$command is not executable")
 
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
         val member = interaction.member.asMember()
 
-        val user = transaction { DatabaseDevCordUser.findOrCreateById(interaction.user.id.value) }
+        val user = newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(interaction.user.id.value) }
 
         val permissionState = permissionHandler.isCovered(
             command.permission,
@@ -135,28 +138,60 @@ class CommandClientImpl(
         )
 
         val arguments = Arguments(interaction.command.options)
-        val acknowledgement = interaction.ackowledgePublic()
+
+        executableCommand.run(event, permissionState, command, interaction, arguments, user, member)
+    }
+
+    private suspend fun <T : InteractionResponseBehavior> ExecutableCommand<T>.run(
+        event: InteractionCreateEvent,
+        permissionState: PermissionState,
+        command: AbstractCommand,
+        interaction: Interaction,
+        arguments: Arguments,
+        user: DevCordUser,
+        member: Member
+    ) {
+        val acknowledgement = event.acknowledge()
+        val responseStrategy = when (acknowledgement) {
+            is PublicInteractionResponseBehavior -> ResponseStrategy.PublicResponseStrategy(acknowledgement)
+            is EphemeralInteractionResponseBehavior -> ResponseStrategy.EphemeralResponseStrategy(acknowledgement)
+            else -> error("Unexpected type of acknowledgement: $acknowledgement")
+        }
 
         when (permissionState) {
             PermissionState.IGNORED -> return
-            PermissionState.DECLINED -> return handleNoPermission(command.permission, acknowledgement)
+            PermissionState.DECLINED -> return handleNoPermission(command.permission, responseStrategy)
             PermissionState.ACCEPTED -> {
                 if (!command.commandPlace.matches(event)) return handleWrongContext(interaction.channel.asChannel())
-                val context = Context(bot, command, arguments, event, this, user, acknowledgement, member)
-                processCommand(command, context)
+                val context =
+                    Context(
+                        bot,
+                        command,
+                        arguments,
+                        event,
+                        this@CommandClientImpl,
+                        user,
+                        acknowledgement,
+                        responseStrategy,
+                        member
+                    )
+                process(command, context)
             }
         }
     }
 
-    private fun processCommand(command: AbstractCommand, context: Context) {
+    private fun <T : InteractionResponseBehavior> ExecutableCommand<T>.process(
+        command: AbstractCommand,
+        context: Context<T>
+    ) {
         val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
             errorHandler.handleException(throwable, context, Thread.currentThread(), coroutineContext)
         }
         bot.launch(executor + exceptionHandler) {
             logger.info { "Command $command was executed by ${context.member}" }
             when (command) {
-                is AbstractSingleCommand -> command.execute(context)
-                is AbstractSubCommand.Command -> command.execute(context)
+                is AbstractSingleCommand<*> -> execute(context)
+                is AbstractSubCommand.Command<*> -> execute(context)
             }
         }
     }
@@ -164,7 +199,7 @@ class CommandClientImpl(
     private fun resolveCommand(rootInteractionCommand: InteractionCommand): AbstractCommand? {
         val rootCommandName = rootInteractionCommand.rootName
         val rootCommand = commandAssociations[rootCommandName] ?: return null
-        if (rootCommand is AbstractSingleCommand) return rootCommand
+        if (rootCommand is AbstractSingleCommand<*>) return rootCommand
         val command = rootCommand as AbstractRootCommand
         val base = if (rootInteractionCommand is GroupCommand) {
             (command.commandAssociations[rootInteractionCommand.name] as AbstractSubCommand.Group).commandAssociations
@@ -187,12 +222,14 @@ class CommandClientImpl(
         )
     }
 
-    private suspend fun handleNoPermission(permission: Permission, acknowledgement: PublicInteractionResponseBehavior) {
-        acknowledgement.edit(
-            Embeds.error(
-                "Keine Berechtigung!",
-                "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"
+    private suspend fun handleNoPermission(permission: Permission, responseStrategy: ResponseStrategy) {
+        responseStrategy.respond {
+            embeds.add(
+                Embeds.error(
+                    "Keine Berechtigung!",
+                    "Du benötigst mindestens die $permission Berechtigung um diesen Befehl zu benutzen"
+                )
             )
-        )
+        }
     }
 }

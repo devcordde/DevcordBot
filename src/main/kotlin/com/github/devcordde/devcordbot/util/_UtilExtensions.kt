@@ -58,7 +58,7 @@ fun String.limit(amount: Int, contraction: String = "..."): String =
  * Creates a new message in this channel containing [embedBuilder].
  */
 suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder): Message =
-    createMessage { embed = embedBuilder }
+    createMessage { embeds.add(embedBuilder) }
 
 /**
  * Edits this [public slash command acknowledgement][PublicInteractionResponseBehavior] to contain [embedBuilder].
@@ -70,12 +70,12 @@ suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder): 
  * Follows up in the interaction thread with [embedBuilder].
  */
 suspend fun PublicInteractionResponseBehavior.followUp(embedBuilder: EmbedBuilder): PublicFollowupMessage =
-    followUp { embeds = mutableListOf(embedBuilder.toRequest()) }
+    followUp { embeds.add(embedBuilder) }
 
 /**
  * Edits this message to contain [embedBuilder].
  */
-suspend fun MessageBehavior.edit(embedBuilder: EmbedBuilder): Message = edit { embed = embedBuilder }
+suspend fun MessageBehavior.edit(embedBuilder: EmbedBuilder): Message = edit { embeds = mutableListOf(embedBuilder) }
 
 /**
  * This uses [User.Avatar.defaultUrl] if [User.Avatar.isCustom] is `false` otherwhise it uses [User.Avatar.getUrl]

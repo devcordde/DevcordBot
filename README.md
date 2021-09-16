@@ -51,3 +51,11 @@ redeploy.sh:
 #!/bin/sh
 docker-compose pull && docker-compose up -d
 ```
+
+# Discord logger
+Some events can be logged to a Discord webhook. To do this add the following into a `logback.xml`  or point the `LOGGER_CONFIG` to another file:
+```xml
+    <appender name="Discord" class="com.github.devcordde.devcordbot.util.DiscordWebhookAppender">
+        <webhookUrl><!-- <the url> --></webhookUrl>
+    </appender>
+```

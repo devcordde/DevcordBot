@@ -17,6 +17,8 @@
 package com.github.devcordde.devcordbot.command
 
 import com.github.devcordde.devcordbot.command.permission.Permission
+import com.github.devcordde.devcordbot.command.root.AbstractRootCommand
+import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import dev.kord.common.entity.DiscordGuildApplicationCommandPermission
 import dev.kord.common.entity.Snowflake
 

@@ -26,10 +26,12 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.constants.Emotes
 import com.github.devcordde.devcordbot.constants.TEXT_MAX_LENGTH
 import com.github.devcordde.devcordbot.util.HastebinUtil
-import com.github.devcordde.devcordbot.util.edit
 import com.github.devcordde.devcordbot.util.readSafe
 import com.github.devcordde.devcordbot.util.timeout
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import dev.kord.rest.builder.interaction.int
 import java.util.*
 
 /**
@@ -47,9 +49,12 @@ class EvalCommand : AbstractRootCommand() {
         registerCommands(ListCommand())
     }
 
-    private inner class ExecuteCommand : AbstractSubCommand.Command(this) {
+    private inner class ExecuteCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "execute"
         override val description: String = "Führt den angegebenen Code aus."
+
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgePublic()
 
         override fun SubCommandBuilder.applyOptions() {
             int("language", "Die Sprache, in der das Codesnippet ist") {
@@ -60,7 +65,7 @@ class EvalCommand : AbstractRootCommand() {
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val origin = context.respond(
                 Embeds.info(
                     "Bitte gebe Code an",
@@ -78,7 +83,7 @@ class EvalCommand : AbstractRootCommand() {
                 )
             )
 
-            val loading = context.acknowledgement.edit(
+            origin.edit(
                 Embeds.loading(
                     "Code wird ausgeführt.",
                     "Bitte warten..."
@@ -93,12 +98,12 @@ class EvalCommand : AbstractRootCommand() {
                     "Ausgabe: ${Emotes.LOADING}"
                 )
 
-                loading.edit(result)
+                origin.edit(result)
 
                 val hasteUrl = HastebinUtil.postToHastebin(output, context.bot.httpClient)
                 description.replace(Emotes.LOADING.toRegex(), hasteUrl)
             } else {
-                loading.edit(
+                origin.edit(
                     Embeds.info("Erfolgreich ausgeführt!", "Ausgabe: ```$output```")
                 )
             }
@@ -111,11 +116,14 @@ class EvalCommand : AbstractRootCommand() {
         postfix = "`"
     ) { it.name.lowercase(Locale.getDefault()) }
 
-    private inner class ListCommand : AbstractSubCommand.Command(this) {
+    private inner class ListCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "list"
         override val description: String = "Listet die verfügbaren Programmiersprachen auf."
 
-        override suspend fun execute(context: Context) {
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgePublic()
+
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             context.respond(
                 Embeds.info(
                     "Verfügbare Sprachen",

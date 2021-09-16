@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.core
 
 import com.github.devcordde.devcordbot.command.CommandClient
 import com.github.devcordde.devcordbot.config.Config
+import com.github.devcordde.devcordbot.util.DiscordLogger
 import com.github.devcordde.devcordbot.util.GithubUtil
 import com.github.devcordde.devcordbot.util.Googler
 import dev.kord.core.Kord
@@ -92,4 +93,6 @@ interface DevCordBot : CoroutineScope {
      * The autohelp instance of the bot.
      */
     val autoHelp: AutoHelp
+
+    val discordLogger: DiscordLogger
 }

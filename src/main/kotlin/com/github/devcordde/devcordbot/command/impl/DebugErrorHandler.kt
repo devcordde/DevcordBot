@@ -31,7 +31,7 @@ class DebugErrorHandler : ErrorHandler {
 
     override fun handleException(
         exception: Throwable,
-        context: Context,
+        context: Context<*>,
         thread: Thread,
         coroutineContext: CoroutineContext?
     ) {

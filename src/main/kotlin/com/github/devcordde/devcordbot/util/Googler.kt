@@ -18,9 +18,12 @@ package com.github.devcordde.devcordbot.util
 
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.customsearch.v1.CustomSearchAPI
 import com.google.api.services.customsearch.v1.model.Result
+import com.google.api.services.customsearch.v1.model.Search
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Utility to google things.
@@ -28,19 +31,28 @@ import com.google.api.services.customsearch.v1.model.Result
 class Googler(private val bot: DevCordBot) {
 
     private val search =
-        CustomSearchAPI.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory(), null)
+        CustomSearchAPI.Builder(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory(), null)
             .setApplicationName("DevcordBot")
             .build()
 
     /**
      * Googles the [query].
      */
-    fun google(query: String): List<Result> {
-        return with(search.cse().list().apply { q = query }) {
+    suspend fun google(query: String): List<Result> {
+        val api = search.cse().list()
+        val request = with(api.apply { q = query }) {
             key = bot.config.cse.key ?: error("Missing CSE key")
             cx = bot.config.cse.id ?: error("Missing CSE id")
             safe = "active"
-            execute()
-        }.items ?: emptyList()
+            buildHttpRequest()
+        }
+
+        val response = withContext(Dispatchers.IO) {
+            request.execute()
+        }
+
+        val list = response.parseAs(Search::class.java)
+
+        return list?.items ?: emptyList()
     }
 }
