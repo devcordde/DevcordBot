@@ -85,7 +85,21 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
         /**
          * Finds the first [Tag] by its [name].
          */
-        fun findByNameId(name: String): Tag? = find { upper(Tags.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()
+        @Deprecated("Name misleading as it actually doesn't search for the id", ReplaceWith("Tag.findByName(name)"))
+        fun findByNameId(name: String): Tag? =
+            find { upper(Tags.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()
+
+        /**
+         * Searches for a [Tag] by it's [name].
+         */
+        fun findByName(name: String): Tag? =
+            find { upper(Tags.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()
+
+        /**
+         * Searches for a [Tag] by an [identifier] (name or alias).
+         */
+        fun findByIdentifier(identifier: String): Tag? =
+            findByName(identifier) ?: TagAlias.findByNameId(identifier)?.tag
 
         /**
          * Maximum length of a tag name.
@@ -111,7 +125,8 @@ class TagAlias(alias: EntityID<String>) : Entity<String>(alias) {
         /**
          * Finds the first [TagAlias] by its [name].
          */
-        fun findByNameId(name: String): TagAlias? = find { upper(TagAliases.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()
+        fun findByNameId(name: String): TagAlias? =
+            find { upper(TagAliases.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()
     }
 
     val name: String

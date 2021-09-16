@@ -16,7 +16,7 @@
 
 package com.github.devcordde.devcordbot.command.root
 
-import dev.kord.rest.builder.interaction.ApplicationCommandsCreateBuilder
+import dev.kord.rest.builder.interaction.MultiApplicationCommandBuilder
 
 /**
  * A command which can be registered (root commands).
@@ -25,5 +25,5 @@ sealed interface RegisterableCommand {
     /**
      * Registers the command to this [ApplicationCommandsCreateBuilder].
      */
-    fun ApplicationCommandsCreateBuilder.applyCommand()
+    fun MultiApplicationCommandBuilder.applyCommand()
 }

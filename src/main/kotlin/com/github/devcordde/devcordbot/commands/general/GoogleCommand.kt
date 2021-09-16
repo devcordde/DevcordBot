@@ -23,12 +23,16 @@ import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.root.AbstractSingleCommand
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.menu.Paginator
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
+import dev.kord.rest.builder.interaction.string
+import kotlin.time.Duration
 
 /**
  * Google command.
  */
-class GoogleCommand : AbstractSingleCommand() {
+class GoogleCommand : AbstractSingleCommand<PublicInteractionResponseBehavior>() {
 
     override val name: String = "google"
     override val description: String =
@@ -37,13 +41,16 @@ class GoogleCommand : AbstractSingleCommand() {
     override val category: CommandCategory = CommandCategory.GENERAL
     override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
-    override fun ApplicationCommandCreateBuilder.applyOptions() {
+    override fun ChatInputCreateBuilder.applyOptions() {
         string("query", "Die Query, nach der gesucht werden soll") {
             required = true
         }
     }
 
-    override suspend fun execute(context: Context) {
+    override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
+        interaction.acknowledgePublic()
+
+    override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
         val query = context.args.string("query")
 
         if (query.isBlank()) return run { context.sendHelp() }
@@ -65,7 +72,7 @@ class GoogleCommand : AbstractSingleCommand() {
         }
         Paginator(
             items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
-            context = context, user = context.author.asUser(), timeoutMillis = 25 * 1000
+            context = context, user = context.author.asUser(), timeout = Duration.seconds(25)
         )
     }
 }

@@ -56,7 +56,7 @@ fun Config(): Config {
 
 private val validEnv = Regex("(\\w+)(.\\w+)*")
 
-fun envMap(map: Map<String, String>, nested: Boolean = true): Source {
+private fun envMap(map: Map<String, String>, nested: Boolean = true): Source {
     return FlatSource(
         map.mapKeys { (key, _) ->
             if (nested) key.replaceFirst('_', '.') else key

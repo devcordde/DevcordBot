@@ -43,6 +43,8 @@ class Config internal constructor(private val config: Konfig) {
      */
     val hasteHost: Url by config.property(ConfigSpec.General.hasteHost)
 
+    val loggerConfig: String by config.property(ConfigSpec.General.loggerConfig)
+
     /**
      * Discord related configuration.
      *
@@ -136,6 +138,14 @@ class Config internal constructor(private val config: Konfig) {
         val guildId: Snowflake by config.property(ConfigSpec.Discord.guildId)
 
         /**
+         * The channel id where log worthy events will be sent to.
+         *
+         * Default: **required**
+         * Key: `LOG_CHANNEL_ID`
+         */
+        val logChannel: Snowflake by config.property(ConfigSpec.Discord.logChannel)
+
+        /**
          * A list of strings shown in the game animator
          *
          * Default: Empty
@@ -182,6 +192,14 @@ class Config internal constructor(private val config: Konfig) {
          * Key: `DATABASE_USERNAME`
          */
         val password: String by config.property(ConfigSpec.Database.password)
+
+        /**
+         * The maximum pool size.
+         *
+         * Default: `8`
+         * Key: `DATABASE_POOL_SIZE`
+         */
+        val maximumPoolSize: Int by config.property(ConfigSpec.Database.poolSize)
     }
 
     /**

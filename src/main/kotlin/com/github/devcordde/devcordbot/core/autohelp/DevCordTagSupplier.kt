@@ -27,12 +27,13 @@ import java.util.*
  */
 object DevCordTagSupplier : TagSupplier {
     override fun findTagForException(exception: StackTrace): String? {
-        val exceptionName = (exception.exception.innerClassName ?: exception.exception.className).lowercase(Locale.getDefault())
+        val exceptionName =
+            (exception.exception.innerClassName ?: exception.exception.className).lowercase(Locale.getDefault())
         val message = exception.message
         val tag = when {
             exceptionName == "nullpointerexception" -> "nullpointerexception"
             exceptionName == "unsupportedclassversionerror" -> "class-version"
-            exceptionName == "ClassCastException" -> "casting"
+            exceptionName == "classcastexception" -> "casting"
             message == "Plugin already initialized!" -> "plugin-already-initialized"
             exceptionName == "invaliddescriptionexception" -> "plugin.yml"
             exceptionName == "invalidpluginexception" && message?.lowercase(Locale.getDefault())
@@ -42,7 +43,7 @@ object DevCordTagSupplier : TagSupplier {
         } ?: return null
 
         return transaction {
-            Tag.findByNameId(tag)?.content
+            Tag.findByIdentifier(tag)?.content
         }
     }
 }

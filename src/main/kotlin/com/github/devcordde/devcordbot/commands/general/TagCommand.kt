@@ -25,16 +25,23 @@ import com.github.devcordde.devcordbot.constants.*
 import com.github.devcordde.devcordbot.database.*
 import com.github.devcordde.devcordbot.dsl.embed
 import com.github.devcordde.devcordbot.menu.Paginator
-import com.github.devcordde.devcordbot.util.*
-import dev.kord.core.behavior.edit
-import dev.kord.rest.builder.interaction.ApplicationCommandCreateBuilder
+import com.github.devcordde.devcordbot.util.HastebinUtil
+import com.github.devcordde.devcordbot.util.effectiveAvatarUrl
+import com.github.devcordde.devcordbot.util.readSafe
+import com.github.devcordde.devcordbot.util.timeout
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
+import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
 import dev.kord.rest.builder.interaction.SubCommandBuilder
+import dev.kord.rest.builder.interaction.string
+import dev.kord.rest.builder.interaction.user
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -67,32 +74,38 @@ class TagCommand : AbstractRootCommand() {
 
     internal fun registerReadCommand(commandClient: CommandClient) = commandClient.registerCommands(TagReadCommand())
 
-    private inner class TagReadCommand : AbstractSingleCommand() {
+    private inner class TagReadCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
         override val name: String = "t"
         override val description: String = "Zeigt einen Tag an."
         override val permission: Permission = Permission.ANY
         override val category: CommandCategory = CommandCategory.GENERAL
         override val commandPlace: CommandPlace = CommandPlace.ALL
 
-        override fun ApplicationCommandCreateBuilder.applyOptions() {
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgePublic()
+
+        override fun ChatInputCreateBuilder.applyOptions() {
             string("tag", "Der Name des Tags, welcher angezeigt werden soll") {
                 required = true
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val tagName = context.args.string("tag")
             val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
             context.respond(tag.content)
-            transaction {
+            newSuspendedTransaction {
                 tag.usages++
             }
         }
     }
 
-    private inner class CreateCommand : AbstractSubCommand.Command(this) {
+    private inner class CreateCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "create"
         override val description: String = "Erstellt einen neuen Tag."
+
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgePublic()
 
         override fun SubCommandBuilder.applyOptions() {
             string("name", "Der Name des zu erstellenden Tags") {
@@ -101,7 +114,7 @@ class TagCommand : AbstractRootCommand() {
         }
 
         @OptIn(ExperimentalTime::class)
-        override suspend fun execute(context: Context) {
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val name = context.args.string("name")
             if (newSuspendedTransaction { checkTagExists(name, context) }) return
             val status = context.respond(
@@ -113,13 +126,19 @@ class TagCommand : AbstractRootCommand() {
 
             val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
 
-            val tag = transaction {
+            val tag = newSuspendedTransaction {
                 Tag.new(name) {
                     this.content = content
                     author = context.author.id
                 }
             }
-            context.acknowledgement.followUp(
+
+            context.bot.launch {
+                val contentLink = HastebinUtil.postToHastebin(tag.content, context.bot.httpClient)
+                context.bot.discordLogger.logEvent(context.author.asUser(), "TAG_CREATE") { "$name -> $contentLink" }
+            }
+
+            context.responseStrategy.followUp(
                 Embeds.success(
                     "Erfolgreich erstellt!",
                     "Der Tag mit dem Namen `${tag.name}` wurde erfolgreich erstellt."
@@ -128,7 +147,7 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class AliasCommand : AbstractSubCommand.Command(this) {
+    private inner class AliasCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "alias"
         override val description: String = "Erstellt einen neuen Alias für einen Tag."
 
@@ -142,18 +161,24 @@ class TagCommand : AbstractRootCommand() {
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgeEphemeral()
+
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val args = context.args
             val aliasName = args.string("alias")
             val tagName = args.string("tag")
             val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
             if (newSuspendedTransaction { checkTagExists(aliasName, context) }) return
-            val (newAliasName, newTagName) = transaction {
+            val (newAliasName, newTagName) = newSuspendedTransaction {
                 val alias = TagAlias.new(aliasName) {
                     this.tag = tag
                 }
                 alias.name to alias.tag.name
             }
+
+            context.bot.discordLogger.logEvent(context.author.asUser(), "TAG_ALIAS") { "$name -> $aliasName" }
+
             context.respond(
                 Embeds.success(
                     "Alias erfolgreich erstellt",
@@ -163,7 +188,7 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class EditCommand : AbstractSubCommand.Command(this) {
+    private inner class EditCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "edit"
         override val description: String = "Bearbeitet einen existierenden Tag."
 
@@ -173,8 +198,11 @@ class TagCommand : AbstractRootCommand() {
             }
         }
 
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgePublic()
+
         @OptIn(ExperimentalTime::class)
-        override suspend fun execute(context: Context) {
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val name = context.args.string("name")
             val tag = newSuspendedTransaction { checkNotTagExists(name, context) } ?: return
             if (checkPermission(tag, context)) return
@@ -188,8 +216,19 @@ class TagCommand : AbstractRootCommand() {
 
             val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
 
-            transaction {
+            val oldContent = tag.content
+
+            newSuspendedTransaction {
                 tag.content = content
+            }
+
+            context.bot.launch {
+                val newContentLink = HastebinUtil.postToHastebin(content, context.bot.httpClient)
+                val oldContentLink = HastebinUtil.postToHastebin(oldContent, context.bot.httpClient)
+                context.bot.discordLogger.logEvent(
+                    context.author.asUser(),
+                    "TAG_UPDATE"
+                ) { "$name ($oldContentLink)-> $newContentLink" }
             }
 
             context.respond(
@@ -201,7 +240,7 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class InfoCommand : AbstractSubCommand.Command(this) {
+    private inner class InfoCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "info"
         override val description: String = "Zeigt Informationen zu einem Tag an."
 
@@ -211,11 +250,14 @@ class TagCommand : AbstractRootCommand() {
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgeEphemeral()
+
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val args = context.args
             val name = args.string("tag")
             val tag = newSuspendedTransaction { checkNotTagExists(name, context) } ?: return
-            val rank = transaction {
+            val rank = newSuspendedTransaction {
                 Tags.select { (Tags.usages greaterEq tag.usages) }.count()
             }
             val author = context.kord.getUser(tag.author)
@@ -246,7 +288,7 @@ class TagCommand : AbstractRootCommand() {
                         this.name = "Erstellt"
                         value = Constants.DATE_FORMAT.format(tag.createdAt)
                     }
-                    transaction {
+                    newSuspendedTransaction {
                         val aliases = TagAlias.find { TagAliases.tag eq tag.name }
                         if (!aliases.empty()) {
                             field {
@@ -265,7 +307,7 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class DeleteCommand : AbstractSubCommand.Command(this) {
+    private inner class DeleteCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "delete"
         override val description: String = "Löscht einen Tag."
 
@@ -275,14 +317,19 @@ class TagCommand : AbstractRootCommand() {
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgeEphemeral()
+
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val tag = newSuspendedTransaction { checkNotTagExists(context.args.string("tag"), context) } ?: return
             if (checkPermission(tag, context)) return
 
-            transaction {
+            newSuspendedTransaction {
                 TagAliases.deleteWhere { TagAliases.tag.eq(tag.name) }
                 tag.delete()
             }
+
+            context.bot.discordLogger.logEvent(context.author.asUser(), "TAG_DELETE") { name }
 
             context.respond(
                 Embeds.success(
@@ -293,7 +340,7 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class TransferCommand : AbstractSubCommand.Command(this) {
+    private inner class TransferCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "transfer"
         override val description: String = "Überschreibt einen Tag an einen anderen Benutzer."
 
@@ -307,7 +354,10 @@ class TagCommand : AbstractRootCommand() {
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgePublic()
+
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val args = context.args
             val user = args.user("target")
 
@@ -316,8 +366,12 @@ class TagCommand : AbstractRootCommand() {
 
             if (checkPermission(tag, context)) return
 
-            transaction {
+            newSuspendedTransaction {
                 tag.author = user.id
+            }
+
+            context.bot.discordLogger.logEvent(context.author.asUser(), "TAG_TRANSFER") {
+                "$name -> ${user.tag} (${user.id})"
             }
 
             context.respond(
@@ -329,13 +383,16 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class ListCommand : AbstractSubCommand.Command(this) {
+    private inner class ListCommand : AbstractSubCommand.Command<PublicInteractionResponseBehavior>(this) {
         override val name: String = "list"
         override val description: String = "Zeigt eine Liste aller Tags an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
 
-        override suspend fun execute(context: Context) {
-            val tags = transaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
+        override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
+            interaction.acknowledgePublic()
+
+        override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
+            val tags = newSuspendedTransaction { Tag.all().orderBy(Tags.usages to SortOrder.DESC).map(Tag::name) }
             if (tags.isEmpty()) {
                 context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags."))
                 return
@@ -344,7 +401,7 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class FromCommand : AbstractSubCommand.Command(this) {
+    private inner class FromCommand : AbstractSubCommand.Command<PublicInteractionResponseBehavior>(this) {
         override val name: String = "from"
         override val description: String = "Zeigt eine Liste aller Tags eines Nutzers an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
@@ -353,9 +410,12 @@ class TagCommand : AbstractRootCommand() {
             user("author", "Der Nutzer, dessen Tags angezeigt werden sollen")
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
+            interaction.acknowledgePublic()
+
+        override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
             val user = context.args.optionalUser("author") ?: context.author
-            val tags = transaction { Tag.find { Tags.author eq user.id }.map(Tag::name) }
+            val tags = newSuspendedTransaction { Tag.find { Tags.author eq user.id }.map(Tag::name) }
             if (tags.isEmpty()) {
                 context.respond(Embeds.error("Keine Tags gefunden!", "Es gibt keine Tags von diesem Nutzer."))
                 return
@@ -365,10 +425,13 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class SearchCommand : AbstractSubCommand.Command(this) {
+    private inner class SearchCommand : AbstractSubCommand.Command<PublicInteractionResponseBehavior>(this) {
         override val name: String = "search"
         override val description: String = "Zeigt die ersten 25 Tags mit dem angegebenen Namen an."
         override val commandPlace: CommandPlace = CommandPlace.GUILD_MESSAGE
+
+        override suspend fun InteractionCreateEvent.acknowledge(): PublicInteractionResponseBehavior =
+            interaction.acknowledgePublic()
 
         override fun SubCommandBuilder.applyOptions() {
             string("query", "Die Query, nach der gesucht werden soll") {
@@ -376,9 +439,9 @@ class TagCommand : AbstractRootCommand() {
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun execute(context: Context<PublicInteractionResponseBehavior>) {
             val name = context.args.string("query")
-            val tags = transaction {
+            val tags = newSuspendedTransaction {
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).limit(25)
                     .map(Tag::name)
             }
@@ -390,9 +453,12 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private inner class RawCommand : AbstractSubCommand.Command(this) {
+    private inner class RawCommand : AbstractSubCommand.Command<InteractionResponseBehavior>(this) {
         override val name: String = "raw"
         override val description: String = "Zeigt einen Tag ohne Markdown-Formatierung an."
+
+        override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
+            interaction.acknowledgeEphemeral()
 
         override fun SubCommandBuilder.applyOptions() {
             string("tag", "Der Name des Tags, der unformatiert angezeigt werden soll") {
@@ -400,7 +466,7 @@ class TagCommand : AbstractRootCommand() {
             }
         }
 
-        override suspend fun execute(context: Context) {
+        override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val tagName = context.args.string("tag")
             val tag = newSuspendedTransaction { checkNotTagExists(tagName, context) } ?: return
             val content =
@@ -415,11 +481,9 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private fun Tag.Companion.findByName(name: String) = findByNameId(name) ?: TagAlias.findById(name)?.tag
-
     private suspend fun checkPermission(
         tag: Tag,
-        context: Context
+        context: Context<InteractionResponseBehavior>
     ): Boolean {
         if (tag.author != context.author.id && !context.hasModerator()) {
             context.respond(
@@ -433,7 +497,7 @@ class TagCommand : AbstractRootCommand() {
         return false
     }
 
-    private suspend fun checkTagExists(name: String, context: Context): Boolean {
+    private suspend fun checkTagExists(name: String, context: Context<InteractionResponseBehavior>): Boolean {
         val tag = Tag.findByName(name)
         if (tag != null) {
             context.respond(
@@ -446,11 +510,11 @@ class TagCommand : AbstractRootCommand() {
         return false
     }
 
-    private suspend fun checkNotTagExists(name: String, context: Context): Tag? {
+    private suspend fun checkNotTagExists(name: String, context: Context<InteractionResponseBehavior>): Tag? {
         if (checkNameLength(name, context)) return null
         if (checkReservedName(name, context)) return null
 
-        val foundTag = Tag.findByName(name)
+        val foundTag = Tag.findByIdentifier(name)
         return if (foundTag != null) foundTag else {
             val similarTag =
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).firstOrNull()
@@ -465,7 +529,7 @@ class TagCommand : AbstractRootCommand() {
         }
     }
 
-    private suspend fun checkNameLength(name: String, context: Context): Boolean {
+    private suspend fun checkNameLength(name: String, context: Context<InteractionResponseBehavior>): Boolean {
         if (name.length > Tag.NAME_MAX_LENGTH) {
             context.respond(
                 Embeds.error(
@@ -478,7 +542,7 @@ class TagCommand : AbstractRootCommand() {
         return false
     }
 
-    private suspend fun checkReservedName(name: String, context: Context): Boolean {
+    private suspend fun checkReservedName(name: String, context: Context<InteractionResponseBehavior>): Boolean {
         if (name.split(' ').first() in reservedNames) {
             context.respond(
                 Embeds.error(

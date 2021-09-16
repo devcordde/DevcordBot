@@ -18,6 +18,9 @@ package com.github.devcordde.devcordbot.command.context
 
 import com.github.devcordde.devcordbot.command.AbstractCommand
 import com.github.devcordde.devcordbot.command.CommandClient
+import com.github.devcordde.devcordbot.command.ExecutableCommand
+import com.github.devcordde.devcordbot.command.context.ResponseStrategy.EphemeralResponseStrategy
+import com.github.devcordde.devcordbot.command.context.ResponseStrategy.PublicResponseStrategy
 import com.github.devcordde.devcordbot.command.permission.Permission
 import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
@@ -26,18 +29,27 @@ import com.github.devcordde.devcordbot.database.DevCordUser
 import dev.kord.common.annotation.KordUnsafe
 import dev.kord.common.entity.AllowedMentionType
 import dev.kord.common.entity.Snowflake
+import dev.kord.common.entity.optional.Optional
+import dev.kord.common.entity.optional.map
 import dev.kord.core.Kord
-import dev.kord.core.behavior.GuildBehavior
-import dev.kord.core.behavior.MemberBehavior
-import dev.kord.core.behavior.UserBehavior
+import dev.kord.core.behavior.*
 import dev.kord.core.behavior.channel.MessageChannelBehavior
-import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
-import dev.kord.core.behavior.interaction.edit
+import dev.kord.core.behavior.interaction.*
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.Message
-import dev.kord.core.entity.interaction.GuildInteraction
+import dev.kord.core.entity.interaction.GuildChatInputCommandInteraction
 import dev.kord.core.event.interaction.InteractionCreateEvent
+import dev.kord.core.live.LiveMessage
+import dev.kord.core.live.live
 import dev.kord.rest.builder.message.EmbedBuilder
+import dev.kord.rest.builder.message.create.MessageCreateBuilder
+import dev.kord.rest.builder.message.create.UserMessageCreateBuilder
+import dev.kord.rest.builder.message.create.allowedMentions
+import dev.kord.rest.builder.message.modify.MessageModifyBuilder
+import dev.kord.rest.builder.message.modify.UserMessageModifyBuilder
+import dev.kord.rest.builder.message.modify.embed
+import dev.kord.rest.json.request.InteractionResponseModifyRequest
+import kotlin.contracts.ExperimentalContracts
 
 /**
  * Representation of a context of a command execution.
@@ -50,17 +62,21 @@ import dev.kord.rest.builder.message.EmbedBuilder
  * it acts like a communication point between the bot and the interaction thread, all message sending should be
  * handles using this [respond] and [sendHelp] methods will also refer to this
  * @property devCordUser User storing database settings. See [DevCordUser]
+ * @property responseStrategy the [ResponseStrategy] used for [respond] methods
  * @property member the [Member] which executed the command
+ *
+ * @param T the type of [InteractionResponseBehavior] which acknowledged this invocation
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-data class Context(
+data class Context<T : InteractionResponseBehavior>(
     val bot: DevCordBot,
     val command: AbstractCommand,
     val args: Arguments,
     val event: InteractionCreateEvent,
     val commandClient: CommandClient,
     val devCordUser: DevCordUser,
-    var acknowledgement: PublicInteractionResponseBehavior,
+    val acknowledgement: T,
+    val responseStrategy: ResponseStrategy,
     val member: Member
 ) {
 
@@ -92,7 +108,7 @@ data class Context(
      * The guild of the [channel].
      */
     val guild: GuildBehavior
-        get() = (event.interaction as? GuildInteraction)?.guild ?: bot.guild
+        get() = (event.interaction as? GuildChatInputCommandInteraction)?.guildBehavior ?: bot.guild
 
     /**
      * The [self member][MemberBehavior] of the bot.
@@ -112,8 +128,8 @@ data class Context(
      * Sends [content] into [channel].
      * @return the [Message] which was sent
      */
-    suspend fun respond(content: String): Message {
-        return acknowledgement.edit {
+    suspend fun respond(content: String): ResponseStrategy.EditableResponse {
+        return responseStrategy.respond {
             allowedMentions {
                 +AllowedMentionType.UserMentions
                 +AllowedMentionType.RoleMentions
@@ -126,15 +142,15 @@ data class Context(
      * Sends [embedBuilder] into [channel].
      * @return the [Message] which was sent
      */
-    suspend fun respond(embedBuilder: EmbedBuilder): Message = acknowledgement.edit {
-        embeds = mutableListOf(embedBuilder)
+    suspend fun respond(embedBuilder: EmbedBuilder): ResponseStrategy.EditableResponse = responseStrategy.respond {
+        embeds.add(embedBuilder)
     }
 
     /**
      * Sends a help embed for [command].
      * @see Embeds.command
      */
-    suspend fun sendHelp(): Message = respond(Embeds.command(command))
+    suspend fun sendHelp(): ResponseStrategy.EditableResponse = respond(Embeds.command(command))
 
     /**
      * Checks whether the [member] has [Permission.ADMIN] or not.
@@ -151,4 +167,161 @@ data class Context(
      */
     suspend fun hasPermission(permission: Permission): Boolean =
         commandClient.permissionHandler.isCovered(permission, member, devCordUser) == PermissionState.ACCEPTED
+}
+
+/**
+ * Representation of a strateg to respond (publicly or ephemerally).
+ *
+ * @see PublicResponseStrategy
+ * @see EphemeralResponseStrategy
+ * @see ExecutableCommand.acknowledge
+ */
+@OptIn(ExperimentalContracts::class)
+sealed interface ResponseStrategy {
+    /**
+     * Builds a message using [messageBuilder] and sends the message.
+     */
+    suspend fun respond(messageBuilder: MessageCreateBuilder): EditableResponse
+
+    /**
+     * Builds a message using [messageBuilder] and sends the message.
+     */
+    suspend fun respond(messageBuilder: suspend MessageCreateBuilder.() -> Unit): EditableResponse =
+        respond(UserMessageCreateBuilder().apply { messageBuilder() })
+
+    /**
+     * Uses [messageBuilder] to follow up in the command thread.
+     */
+    suspend fun followUp(messageBuilder: MessageCreateBuilder): EditableResponse
+
+    /**
+     * Uses [embedBuilder] to follow up in the command thread.
+     */
+    suspend fun followUp(embedBuilder: EmbedBuilder): EditableResponse = followUp { embeds.add(embedBuilder) }
+
+    /**
+     * Uses [messageBuilder] to follow up in the command thread.
+     */
+    suspend fun followUp(messageBuilder: suspend MessageCreateBuilder.() -> Unit): EditableResponse =
+        followUp(UserMessageCreateBuilder().apply { messageBuilder() })
+
+    /**
+     * Abstract sent response which can be editable.
+     */
+    interface EditableResponse {
+
+        /**
+         * Turns this into a [LiveMessage].
+         */
+        suspend fun live(): LiveMessage
+
+        /**
+         * Edits the response to match the [messageEditBuilder].
+         */
+        suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit)
+
+        /**
+         * Edits the response to match the [EmbedBuilder].
+         */
+        suspend fun edit(embedBuilder: EmbedBuilder): Unit = edit { embeds = mutableListOf(embedBuilder) }
+
+        /**
+         * Edits the response to match the [EmbedBuilder].
+         */
+        suspend fun editEmbed(embedBuilder: EmbedBuilder.() -> Unit): Unit = edit { embed(embedBuilder) }
+
+        /**
+         * Implementation of [EditableResponse] which can't be edited. (Ephemerals)
+         */
+        object NonEditableMessage : EditableResponse {
+            override suspend fun live(): LiveMessage {
+                throw UnsupportedOperationException("Not supported by this type of response")
+            }
+
+            override suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit) {
+                throw UnsupportedOperationException("Not supported by this type of response")
+            }
+        }
+    }
+
+    /**
+     * Implementation of [ResponseStrategy] using an [PublicInteractionResponseBehavior].
+     */
+    class PublicResponseStrategy(private val acknowledgement: PublicInteractionResponseBehavior) : ResponseStrategy {
+        override suspend fun respond(messageBuilder: MessageCreateBuilder): EditableResponse {
+            val response = acknowledgement.edit {
+                content = messageBuilder.content
+                embeds = messageBuilder.embeds
+                allowedMentions = messageBuilder.allowedMentions
+            }
+
+            return EditableMessage(response)
+        }
+
+        override suspend fun followUp(messageBuilder: MessageCreateBuilder): EditableResponse {
+            val response = acknowledgement.followUp {
+                content = messageBuilder.content
+                embeds.addAll(messageBuilder.embeds)
+                allowedMentions = messageBuilder.allowedMentions
+            }
+
+            return EditableFollowup(response)
+        }
+
+        private class EditableMessage(private val message: MessageBehavior) : EditableResponse {
+            override suspend fun live(): LiveMessage = message.asMessage().live()
+
+            override suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit) {
+                message.edit(messageEditBuilder)
+            }
+        }
+
+        private class EditableFollowup(private val message: PublicFollowupMessageBehavior) : EditableResponse {
+            override suspend fun live(): LiveMessage =
+                throw UnsupportedOperationException("Followups do not support live()")
+
+            override suspend fun edit(messageEditBuilder: MessageModifyBuilder.() -> Unit) {
+                val builder = UserMessageModifyBuilder().apply(messageEditBuilder)
+                message.edit {
+                    allowedMentions = builder.allowedMentions
+                    content = builder.content
+                    embeds = builder.embeds
+                }
+            }
+        }
+    }
+
+    /**
+     * Implementation of [ResponseStrategy] using [EphemeralInteractionResponseBehavior].
+     */
+    class EphemeralResponseStrategy(private val acknowledgement: EphemeralInteractionResponseBehavior) :
+        ResponseStrategy {
+        override suspend fun respond(messageBuilder: MessageCreateBuilder): EditableResponse {
+            val request = with(messageBuilder) {
+                InteractionResponseModifyRequest(
+                    (content).nullableOptional(),
+                    embeds.map { it.toRequest() }.nullableOptional(),
+                    (allowedMentions).nullableOptional().map { it.build() }
+                )
+            }
+
+            acknowledgement.kord.rest.interaction.modifyInteractionResponse(
+                acknowledgement.applicationId,
+                acknowledgement.token,
+                request
+            )
+
+            return EditableResponse.NonEditableMessage
+        }
+
+        @OptIn(KordUnsafe::class)
+        override suspend fun followUp(messageBuilder: MessageCreateBuilder): EditableResponse {
+            throw UnsupportedOperationException("You cannot follow up on ephemerals")
+        }
+    }
+}
+
+private fun <T> T?.nullableOptional(): Optional<T> = when (this) {
+    null -> Optional.Missing()
+    else -> Optional.Value(this)
 }

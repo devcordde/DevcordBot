@@ -23,25 +23,23 @@ import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.dsl.embed
 import dev.kord.common.Color
 import dev.kord.common.annotation.KordPreview
+import dev.kord.common.entity.ButtonStyle
+import dev.kord.common.entity.DiscordPartialEmoji
+import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.edit
-import dev.kord.core.entity.Message
-import dev.kord.core.entity.ReactionEmoji
 import dev.kord.core.entity.User
-import dev.kord.core.event.message.ReactionAddEvent
+import dev.kord.core.entity.interaction.ComponentInteraction
+import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.core.live.LiveMessage
 import dev.kord.core.live.live
-import dev.kord.core.live.onReactionAdd
-import dev.kord.core.live.onShutDown
-import dev.kord.x.emoji.DiscordEmoji
+import dev.kord.core.on
+import dev.kord.rest.builder.component.ActionRowBuilder
+import dev.kord.rest.builder.message.modify.actionRow
 import dev.kord.x.emoji.Emojis
-import dev.kord.x.emoji.addReaction
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.*
 import kotlin.math.ceil
 import kotlin.math.min
+import kotlin.time.Duration
 
 /**
  * Creates a new [Paginator].
@@ -49,7 +47,7 @@ import kotlin.math.min
  * @param items the list of items to paginate
  * @param user the user that is allowed to paginate
  * @param context the context to send the paginatable list to
- * @param timeoutMillis amount of milliseconds after the paginator should timeout
+ * @param timeout [Duration] after the paginator should timeout
  * @param firstPage the first page that should be shown
  * @param itemsPerPage the amount of items per page
  * @param loadingTitle the title of the embed displayed while loading
@@ -60,9 +58,9 @@ import kotlin.math.min
 suspend fun Paginator(
     items: List<CharSequence>,
     user: User,
-    context: Context,
+    context: Context<*>,
     title: String,
-    timeoutMillis: Long = TimeUnit.SECONDS.toMillis(15),
+    timeout: Duration = Duration.seconds(15),
     firstPage: Int = 1,
     itemsPerPage: Int = 8,
     loadingTitle: String = "Bitte warten!",
@@ -75,21 +73,19 @@ suspend fun Paginator(
     require(firstPage <= pages) { "First page must exist" }
 
     val message = context.respond(Embeds.loading(loadingTitle, loadingDescription))
-    if (pages > 1) {
-        Paginator.addReactions(message)
-    }
 
     return Paginator(
         context.bot,
         items,
         user,
+        context.interactionId,
         title,
-        timeoutMillis,
+        timeout,
         itemsPerPage,
         color,
         firstPage,
         pages,
-        message.live(),
+        message.live()
     )
 }
 
@@ -102,8 +98,9 @@ class Paginator internal constructor(
     private val bot: DevCordBot,
     private val items: List<CharSequence>,
     private val user: User,
+    private val interactionId: Snowflake,
     private val title: String,
-    private val timeoutMillis: Long = TimeUnit.SECONDS.toMillis(15),
+    private val timeoutMillis: Duration,
     private val itemsPerPage: Int = 8,
     private val color: Color = Colors.BLUE,
     private var currentPage: Int,
@@ -115,6 +112,7 @@ class Paginator internal constructor(
         launch {
             paginate(currentPage)
         }
+
         if (pages == 1) {
             launch {
                 close()
@@ -122,13 +120,11 @@ class Paginator internal constructor(
         } else {
             rescheduleTimeout()
 
-            message.onShutDown {
+            message.coroutineContext.job.invokeOnCompletion {
                 canceller.cancel()
             }
 
-            message.onReactionAdd {
-                onReaction(it)
-            }
+            message.kord.on(consumer = ::onInteraction)
         }
     }
 
@@ -139,7 +135,16 @@ class Paginator internal constructor(
         val start: Int = (destinationPage - 1) * itemsPerPage
         val end = min(items.size, destinationPage * itemsPerPage)
         val rows = items.subList(start, end)
-        message.message.edit { embed = renderEmbed(rows) }
+        message.message.edit {
+            embeds = mutableListOf(renderEmbed(rows))
+            actionRow {
+                prepareButtons()
+            }
+
+            actionRow {
+                button(STOP, "stop")
+            }
+        }
     }
 
     private fun renderEmbed(rows: List<CharSequence>) = embed {
@@ -156,17 +161,19 @@ class Paginator internal constructor(
         }
     }
 
-    private suspend fun onReaction(event: ReactionAddEvent) {
-        val emoji = event.emoji as? ReactionEmoji.Unicode ?: return
-        if (event.user != user) return
-        if (event.user.id != event.kord.selfId) {
-            event.message.deleteReaction(event.userId, event.emoji)
-        } else return // Don't react to the bots reactions
-        val nextPage = when (emoji.name) {
-            BULK_LEFT.unicode -> 1
-            LEFT.unicode -> currentPage - 1
-            RIGHT.unicode -> currentPage + 1
-            BULK_RIGHT.unicode -> pages
+    private suspend fun onInteraction(event: InteractionCreateEvent) {
+        val componentInteraction = event.interaction as? ComponentInteraction ?: return
+        if (componentInteraction.message?.interaction?.id != interactionId) return
+        if (componentInteraction.user != user) return
+        val component = componentInteraction.component ?: return
+        val emoji = component.data.emoji.value?.name ?: return
+        componentInteraction.acknowledgePublicDeferredMessageUpdate()
+
+        val nextPage = when (emoji) {
+            BULK_LEFT -> 1
+            LEFT -> currentPage - 1
+            RIGHT -> currentPage + 1
+            BULK_RIGHT -> pages
             else -> -1
         }
 
@@ -195,19 +202,28 @@ class Paginator internal constructor(
     private suspend fun close(cancelJob: Boolean = true) {
         if (cancelJob) canceller.cancel()
         message.shutDown()
-        message.message.deleteAllReactions()
+        message.message.edit { components = mutableListOf() }
+    }
+
+    private fun ActionRowBuilder.button(emoji: String, name: String, condition: Boolean = true) =
+        interactionButton(ButtonStyle.Primary, name) {
+            this.emoji = DiscordPartialEmoji(name = emoji)
+            disabled = !condition
+        }
+
+    private fun ActionRowBuilder.prepareButtons() {
+        button(BULK_LEFT, "bulkleft", currentPage > 2)
+        button(LEFT, "left", currentPage > 1)
+
+        button(RIGHT, "right", currentPage < pages)
+        button(BULK_RIGHT, "bulkright", currentPage < pages - 1)
     }
 
     companion object {
-        private val BULK_LEFT: DiscordEmoji = Emojis.rewind
-        private val LEFT: DiscordEmoji = Emojis.arrowLeft
-        private val STOP: DiscordEmoji = Emojis.stopButton
-        private val RIGHT: DiscordEmoji = Emojis.arrowRight
-        private val BULK_RIGHT: DiscordEmoji = Emojis.fastForward
-
-        internal suspend fun addReactions(message: Message) =
-            listOf(BULK_LEFT, LEFT, STOP, RIGHT, BULK_RIGHT).forEach {
-                message.addReaction(it)
-            }
+        private val BULK_LEFT: String = Emojis.rewind.unicode
+        private val LEFT: String = Emojis.arrowLeft.unicode
+        private val STOP: String = Emojis.stopButton.unicode
+        private val RIGHT: String = Emojis.arrowRight.unicode
+        private val BULK_RIGHT: String = Emojis.fastForward.unicode
     }
 }

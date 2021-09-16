@@ -16,38 +16,29 @@
 
 package com.github.devcordde.devcordbot.command
 
-import dev.kord.core.entity.channel.DmChannel
-import dev.kord.core.entity.channel.GuildChannel
-import dev.kord.core.entity.interaction.ChatInputCommandInteraction
+import com.github.devcordde.devcordbot.command.context.Context
+import dev.kord.core.behavior.interaction.InteractionResponseBehavior
+import dev.kord.core.entity.interaction.Interaction
 import dev.kord.core.event.interaction.InteractionCreateEvent
 
 /**
- * CommandPlace defines the places where the command may be executed.
+ * Command that can be executed (non groups, sub commands, single commands)
+ *
+ * @param T the [InteractionResponseBehavior] produced by this commands acknowledgement (See [acknowledge])
  */
-enum class CommandPlace {
+interface ExecutableCommand<T : InteractionResponseBehavior> {
     /**
-     * Private Messages
+     * Function acknowledging the [InteractionCreateEvent].
+     *
+     * @see Interaction.ackowledgePublic
+     * @see Interaction.acknowledgeEphemeral
      */
-    PRIVATE_MESSAGE,
+    suspend fun InteractionCreateEvent.acknowledge(): T
 
     /**
-     * Guild Messages
+     * Executes the command logic.
+     *
+     * @see Context
      */
-    GUILD_MESSAGE,
-
-    /**
-     * Guild and Private Messages
-     */
-    ALL;
-
-    /**
-     * Check if the message matches the CommandPlace.
-     */
-    fun matches(event: InteractionCreateEvent): Boolean {
-        return when (this) {
-            ALL -> true
-            PRIVATE_MESSAGE -> (event.interaction as? ChatInputCommandInteraction)?.channel is DmChannel
-            GUILD_MESSAGE -> (event.interaction as? ChatInputCommandInteraction)?.channel is GuildChannel
-        }
-    }
+    suspend fun execute(context: Context<T>)
 }
