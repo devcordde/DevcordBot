@@ -16,9 +16,6 @@
 
 package com.github.devcordde.devcordbot.command
 
-import dev.kord.core.entity.channel.DmChannel
-import dev.kord.core.entity.channel.GuildChannel
-import dev.kord.core.entity.interaction.ChatInputCommandInteraction
 import dev.kord.core.event.interaction.InteractionCreateEvent
 
 /**
