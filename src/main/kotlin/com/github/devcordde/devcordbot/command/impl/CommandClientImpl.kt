@@ -29,15 +29,16 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
-import com.github.devcordde.devcordbot.util.createMessage
 import dev.kord.common.entity.PartialDiscordGuildApplicationCommandPermissions
 import dev.kord.core.Kord
-import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.interaction.EphemeralInteractionResponseBehavior
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
 import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
 import dev.kord.core.entity.Member
-import dev.kord.core.entity.interaction.*
+import dev.kord.core.entity.interaction.GroupCommand
+import dev.kord.core.entity.interaction.GuildChatInputCommandInteraction
+import dev.kord.core.entity.interaction.InteractionCommand
+import dev.kord.core.entity.interaction.SubCommand
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.core.on
 import kotlinx.coroutines.*
@@ -139,14 +140,13 @@ class CommandClientImpl(
 
         val arguments = Arguments(interaction.command.options)
 
-        executableCommand.run(event, permissionState, command, interaction, arguments, user, member)
+        executableCommand.run(event, permissionState, command, arguments, user, member)
     }
 
     private suspend fun <T : InteractionResponseBehavior> ExecutableCommand<T>.run(
         event: InteractionCreateEvent,
         permissionState: PermissionState,
         command: AbstractCommand,
-        interaction: Interaction,
         arguments: Arguments,
         user: DevCordUser,
         member: Member
@@ -162,7 +162,6 @@ class CommandClientImpl(
             PermissionState.IGNORED -> return
             PermissionState.DECLINED -> return handleNoPermission(command.permission, responseStrategy)
             PermissionState.ACCEPTED -> {
-                if (!command.commandPlace.matches(event)) return handleWrongContext(interaction.channel.asChannel())
                 val context =
                     Context(
                         bot,
@@ -175,6 +174,7 @@ class CommandClientImpl(
                         responseStrategy,
                         member
                     )
+                if (!command.commandPlace.matches(event)) return handleWrongContext(context)
                 process(command, context)
             }
         }
@@ -213,8 +213,8 @@ class CommandClientImpl(
         return rootCommand
     }
 
-    private suspend fun handleWrongContext(channel: MessageChannelBehavior) {
-        channel.createMessage(
+    private suspend fun handleWrongContext(context: Context<*>) {
+        context.respond(
             Embeds.error(
                 "Falscher Context!",
                 "Der Command ist in diesem Channel nicht ausführbar."
