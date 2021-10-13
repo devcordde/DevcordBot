@@ -46,8 +46,8 @@ enum class CommandPlace {
     fun matches(event: InteractionCreateEvent): Boolean {
         return when (this) {
             ALL -> true
-            PRIVATE_MESSAGE -> (event.interaction as? ChatInputCommandInteraction)?.channel is DmChannel
-            GUILD_MESSAGE -> (event.interaction as? ChatInputCommandInteraction)?.channel is GuildChannel
+            PRIVATE_MESSAGE -> event.interaction.data.guildId.value == null
+            GUILD_MESSAGE -> event.interaction.data.guildId.value != null
         }
     }
 }
