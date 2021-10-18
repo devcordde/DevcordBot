@@ -32,7 +32,7 @@ jobs:
           arguments: installDist
       - name: Docker Publish
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-        uses: manusa/actions-publish-docker@v1.0.1
+        uses: manusa/actions-publish-docker@v1.1.2
         with:
           name: devcord/devcordbot
           tag: ${{ env.TAG }}
