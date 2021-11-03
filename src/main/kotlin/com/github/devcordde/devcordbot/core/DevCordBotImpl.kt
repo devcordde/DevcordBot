@@ -47,6 +47,9 @@ import dev.kord.core.event.gateway.DisconnectEvent
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.gateway.ResumedEvent
 import dev.kord.core.on
+import dev.kord.gateway.Intent
+import dev.kord.gateway.Intents
+import dev.kord.gateway.PrivilegedIntent
 import dev.schlaubi.forp.analyze.client.RemoteStackTraceAnalyzer
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -140,13 +143,16 @@ internal class DevCordBotImpl(
         kord.listeners()
     }
 
+    @OptIn(PrivilegedIntent::class)
     suspend fun start() {
         logger.info { "Establishing connection to the database..." }
         connectToDatabase()
         logger.info { "Registering commands..." }
         registerCommands()
 
-        kord.login()
+        kord.login {
+            intents = Intents.nonPrivileged + Intent.GuildMembers
+        }
     }
 
     private fun Kord.listeners() {

@@ -97,7 +97,6 @@ class CommandClientImpl(
         }.toList()
 
         bot.kord.bulkEditApplicationCommandPermissions(
-            bot.kord.resources.applicationId,
             guildId
         ) {
             permissions.forEach {
@@ -129,7 +128,7 @@ class CommandClientImpl(
         @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
         val member = interaction.member.asMember()
 
-        val user = newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(interaction.user.id.value) }
+        val user = newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(interaction.user.id) }
 
         val permissionState = permissionHandler.isCovered(
             command.permission,

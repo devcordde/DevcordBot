@@ -22,8 +22,6 @@ import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
 import dev.kord.core.Kord
-import dev.kord.gateway.Intent
-import dev.kord.gateway.Intents
 import dev.kord.gateway.PrivilegedIntent
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -83,7 +81,6 @@ suspend fun main(args: Array<String>) {
 
     val kord = Kord(config.discord.token) {
         httpClient = HttpClient(CIO)
-        intents = Intents.nonPrivileged + Intent.GuildMembers
     }
 
     DevCordBot(config, debugMode, kord).start()
