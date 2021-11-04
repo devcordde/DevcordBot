@@ -26,6 +26,7 @@ import com.github.devcordde.devcordbot.command.permission.PermissionState
 import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DevCordUser
+import com.github.devcordde.devcordbot.util.workaroundEdit
 import dev.kord.common.annotation.KordUnsafe
 import dev.kord.common.entity.AllowedMentionType
 import dev.kord.common.entity.Snowflake
@@ -249,7 +250,7 @@ sealed interface ResponseStrategy {
      */
     class PublicResponseStrategy(private val acknowledgement: PublicInteractionResponseBehavior) : ResponseStrategy {
         override suspend fun respond(messageBuilder: MessageCreateBuilder): EditableResponse {
-            val response = acknowledgement.edit {
+            val response = acknowledgement.workaroundEdit {
                 content = messageBuilder.content
                 embeds = messageBuilder.embeds
                 allowedMentions = messageBuilder.allowedMentions

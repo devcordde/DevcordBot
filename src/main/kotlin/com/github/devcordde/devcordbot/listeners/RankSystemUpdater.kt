@@ -49,7 +49,7 @@ class DatabaseUpdater(private val bot: DevCordBot) {
     }
 
     private fun Kord.onMemberJoin() = on<MemberJoinEvent> {
-        newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(member.id.value) }
+        newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(member.id) }
     }
 
     private fun Kord.onMemberLeave() = on<MemberLeaveEvent> {
@@ -80,7 +80,7 @@ class DatabaseUpdater(private val bot: DevCordBot) {
 
         val author = message.author ?: return@on
 
-        val user = newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(author.id.value) }
+        val user = newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(author.id) }
 
         if (user.blacklisted) {
             return@on

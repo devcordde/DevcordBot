@@ -59,7 +59,7 @@ object SnowflakeColumnType : ColumnType() {
     override fun valueToDB(value: Any?): Any {
         require(value is Snowflake) { "Value has to be Snowflake" }
 
-        return value.value
+        return value.value.toLong()
     }
 
     override fun valueToString(value: Any?): String = value.toString()

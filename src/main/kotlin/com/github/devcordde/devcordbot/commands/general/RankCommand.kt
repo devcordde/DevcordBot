@@ -76,7 +76,7 @@ class RankCommand : AbstractRootCommand() {
         default: Boolean = false
     ) {
         val entry =
-            if (default) context.devCordUser else newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(user.id.value) }
+            if (default) context.devCordUser else newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(user.id) }
         val currentXP = entry.experience
         val nextLevelXP = XPUtil.getXpToLevelup(entry.level)
         context.respond(

@@ -22,7 +22,6 @@ import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
-import dev.kord.core.behavior.interaction.edit
 import dev.kord.core.behavior.interaction.followUp
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.Message
@@ -64,7 +63,7 @@ suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder): Me
  * Edits this [public slash command acknowledgement][PublicInteractionResponseBehavior] to contain [embedBuilder].
  */
 suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder): Message =
-    edit { embeds = mutableListOf(embedBuilder) }
+    workaroundEdit { embeds = mutableListOf(embedBuilder) }
 
 /**
  * Follows up in the interaction thread with [embedBuilder].
@@ -78,10 +77,16 @@ suspend fun PublicInteractionResponseBehavior.followUp(embedBuilder: EmbedBuilde
 suspend fun MessageBehavior.edit(embedBuilder: EmbedBuilder): Message = edit { embeds = mutableListOf(embedBuilder) }
 
 /**
- * This uses [User.Avatar.defaultUrl] if [User.Avatar.isCustom] is `false` otherwhise it uses [User.Avatar.getUrl]
+ * Returns the url of the users avatar
  */
 val User.effectiveAvatarUrl: String
-    get() = with(avatar) { if (isCustom) getUrl(Image.Size.Size64) else defaultUrl }
+    get() = avatar?.cdnUrl?.toUrl {
+        size = Image.Size.Size64
+    } ?: defaultAvatar.cdnUrl.toUrl {
+        size = Image.Size.Size64
+        // Default images are not available in webp
+        format = Image.Format.PNG
+    }
 
 /**
  * The users nick name if specified, otherwise the username, effectivly the name that is rendered in the Discord UI.
