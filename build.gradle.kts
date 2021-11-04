@@ -43,19 +43,19 @@ dependencies {
 
     // Logging
     implementation("io.github.microutils", "kotlin-logging", "2.0.11")
-    implementation("org.slf4j", "slf4j-api", "2.0.0alpha1")
+    implementation("org.slf4j", "slf4j-api", "2.0.0alpha5")
     implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
-    implementation(platform("io.sentry:sentry-bom:5.2.4"))
+    implementation(platform("io.sentry:sentry-bom:5.3.0"))
     implementation("io.sentry", "sentry")
     implementation("io.sentry", "sentry-logback")
 
     // Database
-    implementation(platform("org.jetbrains.exposed:exposed-bom:0.35.1"))
+    implementation(platform("org.jetbrains.exposed:exposed-bom:0.36.1"))
     implementation("org.jetbrains.exposed", "exposed-core")
     implementation("org.jetbrains.exposed", "exposed-dao")
     implementation("org.jetbrains.exposed", "exposed-jdbc")
     implementation("org.jetbrains.exposed", "exposed-java-time")
-    implementation("org.postgresql", "postgresql", "42.2.24")
+    implementation("org.postgresql", "postgresql", "42.3.1")
     implementation("com.zaxxer", "HikariCP", "5.0.0")
 
     // Discord
@@ -63,7 +63,7 @@ dependencies {
 
     // Util
     implementation("io.github.cdimascio", "dotenv-kotlin", "6.2.2")
-    implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.3.2")
+    implementation("org.jetbrains.kotlinx", "kotlinx-cli", "0.3.3")
     implementation("com.google.apis", "google-api-services-customsearch", "v1-rev20210918-1.32.1")
     implementation("net.sf.trove4j", "trove4j", "3.0.3")
     implementation("ru.homyakin", "iuliia-java", "1.7")
