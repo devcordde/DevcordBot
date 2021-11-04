@@ -81,7 +81,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.13.+")
 
     // Autohelp
-    implementation("me.schlaubi.autohelp", "kord", "1.3.1")
+    implementation("me.schlaubi.autohelp", "kord", "1.4.0")
     implementation("dev.schlaubi.forp", "forp-analyze-client", "1.1-SNAPSHOT")
     implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.62.2")
 
