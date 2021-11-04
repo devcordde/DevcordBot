@@ -60,7 +60,7 @@ class EvalCommand : AbstractRootCommand() {
             int("language", "Die Sprache, in der das Codesnippet ist") {
                 required = true
                 Language.values().forEach {
-                    choice(it.humanReadable, it.ordinal)
+                    choice(it.humanReadable, it.ordinal.toLong())
                 }
             }
         }

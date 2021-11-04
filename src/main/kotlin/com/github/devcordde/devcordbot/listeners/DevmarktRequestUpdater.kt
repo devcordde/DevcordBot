@@ -18,6 +18,7 @@ package com.github.devcordde.devcordbot.listeners
 
 import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.core.DevCordBot
+import com.github.devcordde.devcordbot.util.effectiveAvatarUrl
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.createEmbed
@@ -26,7 +27,6 @@ import dev.kord.core.entity.ReactionEmoji
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.on
-import dev.kord.rest.Image
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import kotlinx.datetime.Clock
@@ -153,7 +153,7 @@ class DevmarktRequestUpdater(
 
             footer {
                 text = user.tag
-                icon = user.avatar.run { if (isCustom) getUrl(Image.Size.Size64) else defaultUrl }
+                icon = user.effectiveAvatarUrl
             }
 
             color = requestColor
