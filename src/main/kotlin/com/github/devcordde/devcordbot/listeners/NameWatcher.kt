@@ -25,6 +25,7 @@ import dev.kord.core.entity.Member
 import dev.kord.core.event.guild.MemberJoinEvent
 import dev.kord.core.event.guild.MemberUpdateEvent
 import dev.kord.core.on
+import kotlin.math.min
 
 fun Kord.addNameWatcher(bot: DevCordBot) {
     on<MemberJoinEvent> {
@@ -38,7 +39,7 @@ fun Kord.addNameWatcher(bot: DevCordBot) {
 
 private suspend fun Member.sanitizeNameIfNeeded(bot: DevCordBot) {
     val sanitizedName = effictiveName.sanitize()
-    if (sanitizedName != effictiveName) {
+    if (sanitizedName.relevantChars() != effictiveName.relevantChars() && sanitizedName.isValidNickname()) {
         bot.discordLogger.logEvent(asUser(), "SANITIZE_NAME") { "$effictiveName -> $sanitizedName" }
 
         edit {
@@ -47,3 +48,6 @@ private suspend fun Member.sanitizeNameIfNeeded(bot: DevCordBot) {
         }
     }
 }
+
+private fun String.relevantChars() = substring(0, min(3, length))
+private fun String.isValidNickname() = matches("[a-z0-9äüö]{${min(3, length)}}.*".toRegex(RegexOption.IGNORE_CASE))
