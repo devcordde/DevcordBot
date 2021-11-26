@@ -50,5 +50,4 @@ private suspend fun Member.sanitizeNameIfNeeded(bot: DevCordBot) {
 }
 
 private fun String.relevantChars() = substring(0, min(3, length))
-
 private fun String.isValidNickname() = matches("[a-z0-9äüö]{${min(3, length)}}.*".toRegex(RegexOption.IGNORE_CASE))
