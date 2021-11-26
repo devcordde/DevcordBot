@@ -40,7 +40,7 @@ private val NAME_VALIDATION_REGEX = "[a-z0-9äüö]{3}.*".toRegex(RegexOption.IG
 
 private suspend fun Member.sanitizeNameIfNeeded(bot: DevCordBot) {
     val sanitizedName = effictiveName.sanitize()
-    if (sanitizedName.matches(NAME_VALIDATION_REGEX) && sanitizedName.relevantChars() != effictiveName.relevantChars()) {
+    if ((sanitizedName.length < 3 && sanitizedName != effictiveName) || sanitizedName.matches(NAME_VALIDATION_REGEX) && sanitizedName.relevantChars() != effictiveName.relevantChars()) {
         bot.discordLogger.logEvent(asUser(), "SANITIZE_NAME") { "$effictiveName -> $sanitizedName" }
 
         edit {
