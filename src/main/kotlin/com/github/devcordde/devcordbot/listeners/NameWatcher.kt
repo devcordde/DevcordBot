@@ -50,4 +50,4 @@ private suspend fun Member.sanitizeNameIfNeeded(bot: DevCordBot) {
     }
 }
 
-private fun String.relevantChars() = this.substring(0, 3)
+private fun String.relevantChars() = substring(0, 3)
