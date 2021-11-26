@@ -36,9 +36,11 @@ fun Kord.addNameWatcher(bot: DevCordBot) {
     }
 }
 
+private val NAME_VALIDATION_REGEX = "[a-z0-9äüö]{3}.*".toRegex(RegexOption.IGNORE_CASE)
+
 private suspend fun Member.sanitizeNameIfNeeded(bot: DevCordBot) {
     val sanitizedName = effictiveName.sanitize()
-    if (sanitizedName != effictiveName) {
+    if (sanitizedName.relevantChars() != effictiveName.relevantChars() && sanitizedName.matches(NAME_VALIDATION_REGEX)) {
         bot.discordLogger.logEvent(asUser(), "SANITIZE_NAME") { "$effictiveName -> $sanitizedName" }
 
         edit {
@@ -47,3 +49,5 @@ private suspend fun Member.sanitizeNameIfNeeded(bot: DevCordBot) {
         }
     }
 }
+
+private fun String.relevantChars() = this.substring(0, 3)
