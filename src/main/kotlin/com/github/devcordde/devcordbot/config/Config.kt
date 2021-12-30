@@ -27,13 +27,6 @@ import com.uchuhimo.konf.Config as Konfig
  * @see Config
  */
 class Config internal constructor(private val config: Konfig) {
-    /**
-     * A list of channel ids which give XP.
-     *
-     * Default: Empty
-     * Key: `XP_WHITELIST`
-     */
-    val xpWhitelist: List<Snowflake> by config.property(ConfigSpec.General.xpWhitelist)
 
     /**
      * The URL to the hastebin server the bot should use
