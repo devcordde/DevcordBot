@@ -23,6 +23,7 @@ import com.github.devcordde.devcordbot.database.Users
 import com.github.devcordde.devcordbot.util.XPUtil
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
+import dev.kord.core.event.channel.thread.ThreadChannelCreateEvent
 import dev.kord.core.event.guild.MemberJoinEvent
 import dev.kord.core.event.guild.MemberLeaveEvent
 import dev.kord.core.event.message.MessageCreateEvent
@@ -46,6 +47,7 @@ class DatabaseUpdater(private val bot: DevCordBot) {
         onMemberJoin()
         onMemberLeave()
         onMessageSent()
+        onThreadCreate()
     }
 
     private fun Kord.onMemberJoin() = on<MemberJoinEvent> {
@@ -71,10 +73,6 @@ class DatabaseUpdater(private val bot: DevCordBot) {
      */
     private fun Kord.onMessageSent() = on<MessageCreateEvent> {
         if (message.author == null || message.author?.isBot == true) {
-            return@on
-        }
-
-        if (message.channel.id !in bot.config.xpWhitelist) {
             return@on
         }
 
@@ -142,6 +140,13 @@ class DatabaseUpdater(private val bot: DevCordBot) {
         if (role != null && role.id !in user.roleIds) {
             user.addRole(role.id, "Rank system")
         }
+    }
+
+    /**
+     * Automatically joins threads so the bot can give XP
+     */
+    private fun Kord.onThreadCreate() = on<ThreadChannelCreateEvent> {
+        channel.join()
     }
 }
 
