@@ -26,7 +26,6 @@ internal object ConfigSpec : KonfigSpec("") {
 
     object General : KonfigSpec() {
         val loggerConfig by optional("logback.xml", "LOGGER_CONFIG")
-        val xpWhitelist by optional(SnowflakeList(), "XP_WHITELIST")
         val hasteHost by optional(Url("https://haste.devcord.xyz"), "HASTE_HOST")
     }
 
