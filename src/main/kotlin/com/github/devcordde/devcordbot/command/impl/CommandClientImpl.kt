@@ -82,31 +82,6 @@ class CommandClientImpl(
                 }
             }
         }
-
-        val permissions = commandUpdate.mapNotNull {
-            val command = commandAssociations[it.name]
-            if (command == null) {
-                null
-            } else {
-                val permissions = bot.config.permissions
-                PartialDiscordGuildApplicationCommandPermissions(
-                    it.id,
-                    command.generatePermissions(permissions.botOwners, permissions.modId, permissions.adminId)
-                )
-            }
-        }.toList()
-
-        bot.kord.bulkEditApplicationCommandPermissions(
-            guildId
-        ) {
-            permissions.forEach {
-                command(it.id) {
-                    it.permissions.forEach { permission ->
-                        this.permissions.add(permission)
-                    }
-                }
-            }
-        }
     }
 
     /**
