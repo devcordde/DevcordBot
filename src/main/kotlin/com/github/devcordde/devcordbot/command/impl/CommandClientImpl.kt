@@ -29,7 +29,6 @@ import com.github.devcordde.devcordbot.constants.Embeds
 import com.github.devcordde.devcordbot.core.DevCordBot
 import com.github.devcordde.devcordbot.database.DatabaseDevCordUser
 import com.github.devcordde.devcordbot.database.DevCordUser
-import dev.kord.common.entity.PartialDiscordGuildApplicationCommandPermissions
 import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.EphemeralInteractionResponseBehavior
 import dev.kord.core.behavior.interaction.InteractionResponseBehavior
@@ -42,8 +41,6 @@ import dev.kord.core.entity.interaction.SubCommand
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.core.on
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.toList
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import kotlin.coroutines.CoroutineContext
