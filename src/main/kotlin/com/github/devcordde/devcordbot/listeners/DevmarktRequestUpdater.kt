@@ -27,9 +27,10 @@ import dev.kord.core.entity.ReactionEmoji
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.on
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
 import kotlinx.datetime.Clock
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 /**
  * Sends an event to the Devmarkt bot on emote action.
@@ -203,20 +204,22 @@ class DevmarktRequestUpdater(
         reason: String? = null,
         action: String
     ) {
-        bot.httpClient.post<Unit>(config.baseUrl) {
-            url {
-                path("process.php")
-            }
 
-            formData {
-                append("moderator_id", userId.asString)
-                append("action", action)
-                append("access_token", config.accessToken)
-                append("req_id", requestId)
-                if (reason != null) {
-                    append("reason", reason)
-                }
-            }
-        }
+        val requestBody = FormBody.Builder()
+            .add("moderator_id", userId.asString)
+            .add("action", action)
+            .add("access_token", config.accessToken)
+            .add("req_id", requestId)
+
+        if (reason != null) requestBody.add("reason", reason)
+
+        OkHttpClient().newCall(
+            Request.Builder()
+                .method("POST", requestBody.build())
+                .url(config.baseUrl.toString().plus("process.php"))
+                .build()
+        ).execute();
+
     }
 }
+
