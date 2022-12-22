@@ -203,20 +203,24 @@ class DevmarktRequestUpdater(
         reason: String? = null,
         action: String
     ) {
+
         bot.httpClient.post<Unit>(config.baseUrl) {
             url {
                 path("process.php")
             }
 
-            formData {
-                append("moderator_id", userId.asString)
-                append("action", action)
-                append("access_token", config.accessToken)
-                append("req_id", requestId)
-                if (reason != null) {
-                    append("reason", reason)
-                }
-            }
+            body = MultiPartFormDataContent(
+                formData {
+                    append("moderator_id", userId.asString)
+                    append("action", action)
+                    append("access_token", config.accessToken)
+                    append("req_id", requestId)
+                    if (reason != null) {
+                        append("reason", reason)
+                    }
+                })
         }
+
     }
 }
+
