@@ -71,7 +71,7 @@ class CommandClientImpl(
      */
     suspend fun updateCommands() {
         val guildId = bot.guild.id
-        val commandUpdate = bot.kord.createGuildApplicationCommands(guildId) {
+        bot.kord.createGuildApplicationCommands(guildId) {
             commandAssociations.values.distinct().forEach {
                 when (it) {
                     is RegisterableCommand -> with(it) { applyCommand() }
