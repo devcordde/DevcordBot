@@ -218,9 +218,8 @@ class DevmarktRequestUpdater(
                     if (reason != null) {
                         append("reason", reason)
                     }
-                })
+                }
+            )
         }
-
     }
 }
-
