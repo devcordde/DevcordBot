@@ -24,10 +24,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 16
-      - uses: gradle/gradle-build-action@v1
+      - uses: gradle/gradle-build-action@v2.4.2
         with:
           arguments: test ktlintCheck
-      - uses: gradle/gradle-build-action@v1
+      - uses: gradle/gradle-build-action@v2.4.2
         with:
           arguments: installDist
       - name: Docker Publish
