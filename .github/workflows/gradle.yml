@@ -26,10 +26,10 @@ jobs:
           java-version: 16
       - uses: gradle/gradle-build-action@v2.4.2
         with:
-          arguments: test ktlintCheck
+          arguments: test ktlintCheck --no-daemon
       - uses: gradle/gradle-build-action@v2.4.2
         with:
-          arguments: installDist
+          arguments: installDist --no-daemon
       - name: Docker Publish
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         uses: manusa/actions-publish-docker@v1.1.2
