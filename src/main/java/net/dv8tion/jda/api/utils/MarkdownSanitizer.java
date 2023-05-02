@@ -147,7 +147,7 @@ public class MarkdownSanitizer
     }
 
     /**
-     * Escapes every markdown formatting found in the provided string.
+     * Escapes every Markdown formatting found in the provided string.
      *
      * @param  sequence
      *         The string to sanitize
@@ -166,7 +166,7 @@ public class MarkdownSanitizer
     }
 
     /**
-     * Escapes every markdown formatting found in the provided string.
+     * Escapes every Markdown formatting found in the provided string.
      * <br>Example: {@code escape("**Hello** ~~World~~!", MarkdownSanitizer.BOLD | MarkdownSanitizer.STRIKE)}
      *
      * @param  sequence

@@ -55,11 +55,6 @@ open class DatabaseDevCordUser(id: EntityID<Snowflake>) : SnowflakeEntity(id), D
         /**
          * Returns the [DevCordUser] corresponding to [id] and created one if needed.
          */
-        fun findOrCreateById(id: Long): DevCordUser = findOrCreateById(Snowflake(id))
-
-        /**
-         * Returns the [DevCordUser] corresponding to [id] and created one if needed.
-         */
         fun findOrCreateById(id: Snowflake): DevCordUser = findById(id) ?: new(id) { }
     }
 
@@ -90,7 +85,7 @@ class Tag(name: EntityID<String>) : Entity<String>(name) {
             find { upper(Tags.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()
 
         /**
-         * Searches for a [Tag] by it's [name].
+         * Searches for a [Tag] by its [name].
          */
         fun findByName(name: String): Tag? =
             find { upper(Tags.name) eq name.uppercase(Locale.getDefault()) }.firstOrNull()

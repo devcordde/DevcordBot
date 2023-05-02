@@ -21,7 +21,6 @@ import com.github.devcordde.devcordbot.command.context.ResponseStrategy
 import com.github.devcordde.devcordbot.constants.Embeds
 import dev.kord.core.entity.Message
 import dev.kord.core.event.message.MessageCreateEvent
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
@@ -42,7 +41,6 @@ suspend fun ResponseStrategy.EditableResponse.timeout(): Unit = edit {
 /**
  * Returns the next [Message] by the author in the invocation channel or `null` if [timeout] gets exceeded.
  */
-@OptIn(ExperimentalTime::class)
 suspend fun Context<*>.readSafe(timeout: Duration = 1.minutes): Message? {
     return try {
         read(timeout)
@@ -55,7 +53,7 @@ suspend fun Context<*>.readSafe(timeout: Duration = 1.minutes): Message? {
  * Returns the next [Message] by the author in the invocation channel.
  * Throws a [TimeoutCancellationException] after [timeout] in case there was no message
  */
-@OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalTime::class)
 suspend fun Context<*>.read(timeout: Duration = 1.minutes): Message {
     return withTimeout(timeout) {
         bot.kord.events

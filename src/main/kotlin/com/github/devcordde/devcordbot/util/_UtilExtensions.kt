@@ -18,15 +18,11 @@ package com.github.devcordde.devcordbot.util
 
 import dev.kord.core.behavior.MemberBehavior
 import dev.kord.core.behavior.MessageBehavior
-import dev.kord.core.behavior.channel.MessageChannelBehavior
-import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.behavior.edit
 import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
-import dev.kord.core.behavior.interaction.followUp
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.User
-import dev.kord.core.entity.interaction.PublicFollowupMessage
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.EmbedBuilder
 
@@ -54,22 +50,10 @@ fun String.limit(amount: Int, contraction: String = "..."): String =
     if (length < amount) this else "${substring(0, amount - contraction.length)}$contraction"
 
 /**
- * Creates a new message in this channel containing [embedBuilder].
- */
-suspend fun MessageChannelBehavior.createMessage(embedBuilder: EmbedBuilder): Message =
-    createMessage { embeds.add(embedBuilder) }
-
-/**
  * Edits this [public slash command acknowledgement][PublicInteractionResponseBehavior] to contain [embedBuilder].
  */
 suspend fun PublicInteractionResponseBehavior.edit(embedBuilder: EmbedBuilder): Message =
     workaroundEdit { embeds = mutableListOf(embedBuilder) }
-
-/**
- * Follows up in the interaction thread with [embedBuilder].
- */
-suspend fun PublicInteractionResponseBehavior.followUp(embedBuilder: EmbedBuilder): PublicFollowupMessage =
-    followUp { embeds.add(embedBuilder) }
 
 /**
  * Edits this message to contain [embedBuilder].
@@ -89,7 +73,7 @@ val User.effectiveAvatarUrl: String
     }
 
 /**
- * The users nick name if specified, otherwise the username, effectivly the name that is rendered in the Discord UI.
+ * The users nickname if specified, otherwise the username, effectivly the name that is rendered in the Discord UI.
  */
 val Member.effictiveName: String
     get() = nickname ?: username

@@ -22,7 +22,6 @@ import ch.qos.logback.classic.Logger
 import com.github.devcordde.devcordbot.config.Config
 import com.github.devcordde.devcordbot.constants.Constants
 import dev.kord.core.Kord
-import dev.kord.gateway.PrivilegedIntent
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.sentry.Sentry
@@ -35,7 +34,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
-import kotlin.time.ExperimentalTime
 import com.github.devcordde.devcordbot.core.DevCordBotImpl as DevCordBot
 import org.slf4j.event.Level as SLF4JLevel
 
@@ -44,7 +42,6 @@ private val logger by lazy { KotlinLogging.logger {} }
 /**
  * DevCordBot entry point.
  */
-@OptIn(PrivilegedIntent::class, ExperimentalTime::class)
 suspend fun main(args: Array<String>) {
     val config = Config()
     initializeLogger(config)
