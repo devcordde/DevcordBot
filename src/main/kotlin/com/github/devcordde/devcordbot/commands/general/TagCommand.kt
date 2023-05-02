@@ -42,7 +42,7 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 
 /**
@@ -124,7 +124,7 @@ class TagCommand : AbstractRootCommand() {
                 )
             )
 
-            val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
+            val content = context.readSafe(3.minutes)?.content ?: return run { status.timeout() }
 
             val tag = newSuspendedTransaction {
                 Tag.new(name) {
@@ -214,7 +214,7 @@ class TagCommand : AbstractRootCommand() {
                 )
             )
 
-            val content = context.readSafe(Duration.minutes(3))?.content ?: return run { status.timeout() }
+            val content = context.readSafe(3.minutes)?.content ?: return run { status.timeout() }
 
             val oldContent = tag.content
 

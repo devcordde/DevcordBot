@@ -27,7 +27,7 @@ import dev.kord.core.behavior.interaction.PublicInteractionResponseBehavior
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.rest.builder.interaction.ChatInputCreateBuilder
 import dev.kord.rest.builder.interaction.string
-import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Google command.
@@ -72,7 +72,7 @@ class GoogleCommand : AbstractSingleCommand<PublicInteractionResponseBehavior>()
         }
         Paginator(
             items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
-            context = context, user = context.author.asUser(), timeout = Duration.seconds(25)
+            context = context, user = context.author.asUser(), timeout = 25.seconds
         )
     }
 }

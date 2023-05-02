@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 
 /**
@@ -42,7 +43,7 @@ suspend fun ResponseStrategy.EditableResponse.timeout(): Unit = edit {
  * Returns the next [Message] by the author in the invocation channel or `null` if [timeout] gets exceeded.
  */
 @OptIn(ExperimentalTime::class)
-suspend fun Context<*>.readSafe(timeout: Duration = Duration.minutes(1)): Message? {
+suspend fun Context<*>.readSafe(timeout: Duration = 1.minutes): Message? {
     return try {
         read(timeout)
     } catch (e: TimeoutCancellationException) {
@@ -55,7 +56,7 @@ suspend fun Context<*>.readSafe(timeout: Duration = Duration.minutes(1)): Messag
  * Throws a [TimeoutCancellationException] after [timeout] in case there was no message
  */
 @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
-suspend fun Context<*>.read(timeout: Duration = Duration.minutes(1)): Message {
+suspend fun Context<*>.read(timeout: Duration = 1.minutes): Message {
     return withTimeout(timeout) {
         bot.kord.events
             .filterIsInstance<MessageCreateEvent>()

@@ -19,12 +19,12 @@ package com.github.devcordde.devcordbot.core
 import dev.kord.common.entity.ActivityType
 import dev.kord.core.Kord
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.Closeable
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Animates the bot's activity status.
@@ -34,8 +34,8 @@ class GameAnimator(private val bot: DevCordBot) : Closeable {
 
     private lateinit var job: Job
 
-    @OptIn(ExperimentalTime::class)
-    private val ticker = ticker(Duration.seconds(30).inWholeMilliseconds)
+    @OptIn(ObsoleteCoroutinesApi::class)
+    private val ticker = ticker(30.seconds.inWholeMilliseconds)
 
     /**
      * Starts the game animation.

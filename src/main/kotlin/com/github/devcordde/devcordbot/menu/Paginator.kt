@@ -31,7 +31,6 @@ import dev.kord.core.entity.User
 import dev.kord.core.entity.interaction.ComponentInteraction
 import dev.kord.core.event.interaction.InteractionCreateEvent
 import dev.kord.core.live.LiveMessage
-import dev.kord.core.live.live
 import dev.kord.core.on
 import dev.kord.rest.builder.component.ActionRowBuilder
 import dev.kord.rest.builder.message.modify.actionRow
@@ -40,6 +39,7 @@ import kotlinx.coroutines.*
 import kotlin.math.ceil
 import kotlin.math.min
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Creates a new [Paginator].
@@ -60,7 +60,7 @@ suspend fun Paginator(
     user: User,
     context: Context<*>,
     title: String,
-    timeout: Duration = Duration.seconds(15),
+    timeout: Duration = 15.seconds,
     firstPage: Int = 1,
     itemsPerPage: Int = 8,
     loadingTitle: String = "Bitte warten!",

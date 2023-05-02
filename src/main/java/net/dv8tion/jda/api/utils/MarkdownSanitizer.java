@@ -21,8 +21,8 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.regex.Pattern;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Implements and algorithm that can strip or replace markdown in any supplied string.

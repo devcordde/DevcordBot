@@ -21,7 +21,7 @@ import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
-import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 
 /**
@@ -43,8 +43,8 @@ object JDoodle {
             contentType(ContentType.Application.Json)
 
             timeout {
-                requestTimeoutMillis = Duration.minutes(2).inWholeMilliseconds
-                socketTimeoutMillis = Duration.minutes(2).inWholeMilliseconds
+                requestTimeoutMillis = 2.minutes.inWholeMilliseconds
+                socketTimeoutMillis = 2.minutes.inWholeMilliseconds
             }
 
             body = JDoodleRequest(
