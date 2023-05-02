@@ -17,7 +17,7 @@
 plugins {
     application
     kotlin("jvm") version "1.8.21"
-    kotlin("plugin.serialization") version "1.5.31"
+    kotlin("plugin.serialization") version "1.8.21"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
 }
 
@@ -46,6 +46,7 @@ dependencies {
     implementation("org.slf4j", "slf4j-api", "2.0.0alpha5")
     implementation("ch.qos.logback", "logback-classic", "1.4.7")
     implementation(platform("io.sentry:sentry-bom:5.3.0"))
+    implementation(platform("io.sentry:sentry-bom:6.18.1"))
     implementation("io.sentry", "sentry")
     implementation("io.sentry", "sentry-logback")
 
@@ -84,7 +85,7 @@ dependencies {
     // Testing
     testImplementation("org.mockito", "mockito-core", "4.0.0")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
-    testImplementation(platform("org.junit:junit-bom:5.8.1"))
+    testImplementation(platform("org.junit:junit-bom:5.9.3"))
     testImplementation("org.junit.jupiter", "junit-jupiter-api")
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine")
 }
