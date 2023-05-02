@@ -22,7 +22,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.ExperimentalTime
 
 /**
  * JDoodle Api wrapper
@@ -35,7 +34,6 @@ object JDoodle {
      * @param language the script's language
      * @param script the script
      */
-    @OptIn(ExperimentalTime::class)
     suspend fun execute(bot: DevCordBot, language: Language, script: String): JDoodleResponse {
         val config = bot.config.jdoodle
         val httpClient = bot.httpClient

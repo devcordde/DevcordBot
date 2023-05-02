@@ -23,7 +23,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Utility to interact with github gist api
+ * Utility to interact with GitHub Gist API
  */
 class GithubUtil(private val client: HttpClient) {
 
@@ -44,7 +44,7 @@ class GithubUtil(private val client: HttpClient) {
 }
 
 /**
- * Representation of a Bot contributor on github.
+ * Representation of a Bot contributor on GitHub.
  *
  * @property name the GitHub username of the contributer
  * @property htmlUrl the url to the contributors GitHub profile

@@ -44,7 +44,8 @@ dependencies {
     // Logging
     implementation("io.github.microutils", "kotlin-logging", "2.0.11")
     implementation("org.slf4j", "slf4j-api", "2.0.0alpha5")
-    implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
+    implementation("ch.qos.logback", "logback-classic", "1.4.7")
+    implementation(platform("io.sentry:sentry-bom:5.3.0"))
     implementation(platform("io.sentry:sentry-bom:6.18.1"))
     implementation("io.sentry", "sentry")
     implementation("io.sentry", "sentry-logback")
@@ -60,6 +61,7 @@ dependencies {
 
     // Discord
     implementation("dev.kord", "kord-core", "0.8.0-M7")
+    implementation("dev.kord.x", "emoji", "0.5.0")
 
     // Util
     implementation("io.github.cdimascio", "dotenv-kotlin", "6.2.2")
@@ -79,11 +81,6 @@ dependencies {
     // Config
     implementation("com.github.uchuhimo.konf", "konf", "master-SNAPSHOT")
     implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.13.+")
-
-    // Autohelp
-    implementation("me.schlaubi.autohelp", "kord", "1.4.0")
-    implementation("dev.schlaubi.forp", "forp-analyze-client", "1.1-SNAPSHOT")
-    implementation("com.vladsch.flexmark", "flexmark-html2md-converter", "0.62.2")
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "4.0.0")

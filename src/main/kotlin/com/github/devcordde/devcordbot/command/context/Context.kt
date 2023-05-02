@@ -48,9 +48,7 @@ import dev.kord.rest.builder.message.create.UserMessageCreateBuilder
 import dev.kord.rest.builder.message.create.allowedMentions
 import dev.kord.rest.builder.message.modify.MessageModifyBuilder
 import dev.kord.rest.builder.message.modify.UserMessageModifyBuilder
-import dev.kord.rest.builder.message.modify.embed
 import dev.kord.rest.json.request.InteractionResponseModifyRequest
-import kotlin.contracts.ExperimentalContracts
 
 /**
  * Representation of a context of a command execution.
@@ -177,7 +175,6 @@ data class Context<T : InteractionResponseBehavior>(
  * @see EphemeralResponseStrategy
  * @see ExecutableCommand.acknowledge
  */
-@OptIn(ExperimentalContracts::class)
 sealed interface ResponseStrategy {
     /**
      * Builds a message using [messageBuilder] and sends the message.
@@ -225,11 +222,6 @@ sealed interface ResponseStrategy {
          * Edits the response to match the [EmbedBuilder].
          */
         suspend fun edit(embedBuilder: EmbedBuilder): Unit = edit { embeds = mutableListOf(embedBuilder) }
-
-        /**
-         * Edits the response to match the [EmbedBuilder].
-         */
-        suspend fun editEmbed(embedBuilder: EmbedBuilder.() -> Unit): Unit = edit { embed(embedBuilder) }
 
         /**
          * Implementation of [EditableResponse] which can't be edited. (Ephemerals)
@@ -315,7 +307,6 @@ sealed interface ResponseStrategy {
             return EditableResponse.NonEditableMessage
         }
 
-        @OptIn(KordUnsafe::class)
         override suspend fun followUp(messageBuilder: MessageCreateBuilder): EditableResponse {
             throw UnsupportedOperationException("You cannot follow up on ephemerals")
         }

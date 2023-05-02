@@ -52,7 +52,6 @@ abstract class AbstractCommand {
      * @param modId the id of the role for [Permission.MODERATOR]
      * @param adminId the id of the role for [Permission.ADMIN]
      */
-    @OptIn(ExperimentalStdlibApi::class)
     fun generatePermissions(
         botOwners: List<Snowflake>,
         modId: Snowflake,
@@ -66,6 +65,7 @@ abstract class AbstractCommand {
                 true
             )
         }
+
         Permission.MODERATOR -> listOf(
             DiscordGuildApplicationCommandPermission(
                 modId,
@@ -73,6 +73,7 @@ abstract class AbstractCommand {
                 true
             )
         )
+
         Permission.ADMIN -> listOf(
             DiscordGuildApplicationCommandPermission(
                 modId,
