@@ -54,7 +54,7 @@ class SelfMentionListener(private val bot: DevCordBot) {
     companion object {
 
         /**
-         * Fetches the Github contributors to [devCordBot].
+         * Fetches the GitHub contributors to [devCordBot].
          */
         suspend fun fetchContributors(devCordBot: DevCordBot): String {
             val contributors = devCordBot.github.retrieveContributors()

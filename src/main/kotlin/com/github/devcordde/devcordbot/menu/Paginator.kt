@@ -47,7 +47,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param items the list of items to paginate
  * @param user the user that is allowed to paginate
  * @param context the context to send the paginatable list to
- * @param timeout [Duration] after the paginator should timeout
+ * @param timeout [Duration] after the paginator should time out
  * @param firstPage the first page that should be shown
  * @param itemsPerPage the amount of items per page
  * @param loadingTitle the title of the embed displayed while loading

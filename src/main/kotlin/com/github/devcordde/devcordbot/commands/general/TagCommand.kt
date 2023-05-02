@@ -43,7 +43,6 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.ExperimentalTime
 
 /**
  * Tag command.
@@ -113,7 +112,6 @@ class TagCommand : AbstractRootCommand() {
             }
         }
 
-        @OptIn(ExperimentalTime::class)
         override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val name = context.args.string("name")
             if (newSuspendedTransaction { checkTagExists(name, context) }) return
@@ -201,7 +199,6 @@ class TagCommand : AbstractRootCommand() {
         override suspend fun InteractionCreateEvent.acknowledge(): InteractionResponseBehavior =
             interaction.acknowledgePublic()
 
-        @OptIn(ExperimentalTime::class)
         override suspend fun execute(context: Context<InteractionResponseBehavior>) {
             val name = context.args.string("name")
             val tag = newSuspendedTransaction { checkNotTagExists(name, context) } ?: return

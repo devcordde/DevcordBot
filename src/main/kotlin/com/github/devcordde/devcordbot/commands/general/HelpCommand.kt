@@ -104,7 +104,7 @@ class HelpCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
                         it.permission,
                         context.member,
                         context.devCordUser,
-                        acknowledgeBlacklist = false // Ignore BL to save DB Query since BLed users cannot execute help anyways
+                        acknowledgeBlacklist = false // Ignore BL to save DB Query since BLed users cannot execute help anyway
                     ) == PermissionState.ACCEPTED && it.commandPlace.matches(context.event)
                 }
                 CommandCategory.values().forEach { category ->

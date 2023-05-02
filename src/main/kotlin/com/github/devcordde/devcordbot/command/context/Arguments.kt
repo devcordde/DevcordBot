@@ -51,7 +51,7 @@ data class Arguments(
     fun optionalString(name: String): String? = optionalTypedArgument<String>(name)?.value
 
     /**
-     * Retrieves the an optional option by [name].
+     * Retrieves the optional option by [name].
      */
     fun optionalArgument(name: String): OptionValue<*>? = options[name]
 
@@ -59,35 +59,35 @@ data class Arguments(
     private fun <T> optionalTypedArgument(name: String): OptionValue<T>? = optionalArgument(name) as OptionValue<T>?
 
     /**
-     * Retrieves the an optional [Int] option by [name].
+     * Retrieves the optional [Int] option by [name].
      */
     fun optionalInt(name: String): Int? = optionalTypedArgument<Int>(name)?.value
 
     /**
-     * Retrieves the an optional [Long] option by [name].
+     * Retrieves the optional [Long] option by [name].
      */
     fun optionalLong(name: String): Long? = optionalTypedArgument<Long>(name)?.value
 
     /**
-     * Retrieves the an optional [User] option by [name].
+     * Retrieves the optional [User] option by [name].
      */
     fun optionalUser(name: String): User? =
         optionalTypedArgument<User>(name)?.value
 
     /**
-     * Retrieves the an optional [Member] option by [name].
+     * Retrieves the optional [Member] option by [name].
      */
     fun optionalMember(name: String): Member? =
         optionalTypedArgument<Member>(name)?.value
 
     /**
-     * Retrieves the an optional [Role] option by [name].
+     * Retrieves the optional [Role] option by [name].
      */
     fun optionalRole(name: String): Role? =
         optionalTypedArgument<Role>(name)?.value
 
     /**
-     * Retrieves the an optional [MessageChannel] option by [name].
+     * Retrieves the optional [MessageChannel] option by [name].
      */
     fun optionalChannel(
         name: String
@@ -95,38 +95,38 @@ data class Arguments(
         optionalTypedArgument<MessageChannel>(name)?.value
 
     /**
-     * Retrieves the an required option by [name].
+     * Retrieves the required option by [name].
      */
     fun requiredArgument(name: String): OptionValue<*> =
         optionalArgument(name) ?: error("Could not find argument $name")
 
     /**
-     * Retrieves the an required [Int] option by [name].
+     * Retrieves the required [Int] option by [name].
      */
     fun int(name: String): Int = long(name).toInt()
 
     /**
-     * Retrieves the an required [Long] option by [name].
+     * Retrieves the required [Long] option by [name].
      */
     fun long(name: String): Long = typedArgument<Long>(name).value
 
     /**
-     * Retrieves the an required [User] option by [name].
+     * Retrieves the required [User] option by [name].
      */
     fun user(name: String): User = typedArgument<User>(name).value
 
     /**
-     * Retrieves the an required [Member] option by [name].
+     * Retrieves the required [Member] option by [name].
      */
     fun member(name: String): Member = typedArgument<Member>(name).value
 
     /**
-     * Retrieves the an required [Role] option by [name].
+     * Retrieves the required [Role] option by [name].
      */
     fun role(name: String): Role = typedArgument<Role>(name).value
 
     /**
-     * Retrieves the an required [MessageChannel] option by [name].
+     * Retrieves the required [MessageChannel] option by [name].
      */
     fun channel(name: String): MessageChannel = typedArgument<MessageChannel>(name).value
 }

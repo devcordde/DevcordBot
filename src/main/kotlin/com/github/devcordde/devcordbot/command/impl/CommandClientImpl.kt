@@ -97,7 +97,7 @@ class CommandClientImpl(
         val command = resolveCommand(interaction.command) ?: return // No command found
         val executableCommand = command as? ExecutableCommand<*> ?: error("$command is not executable")
 
-        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is send from a TextChannel
+        @Suppress("ReplaceNotNullAssertionWithElvisReturn") // Cannot be null in this case since it is sent from a TextChannel
         val member = interaction.member.asMember()
 
         val user = newSuspendedTransaction { DatabaseDevCordUser.findOrCreateById(interaction.user.id) }

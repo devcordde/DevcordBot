@@ -28,7 +28,7 @@ import dev.kord.rest.builder.message.EmbedBuilder
 object Embeds {
 
     /**
-     * Creates a info embed with the given [title] and [description] and applies the [builder] to it.
+     * Creates an info embed with the given [title] and [description] and applies the [builder] to it.
      * @see EmbedCreator
      */
     inline fun info(title: String, description: String? = null, builder: EmbedCreator = {}): EmbedBuilder =
@@ -51,7 +51,7 @@ object Embeds {
         }.apply(builder)
 
     /**
-     * Creates a error embed with the given [title] and [description] and applies the [builder] to it.
+     * Creates an error embed with the given [title] and [description] and applies the [builder] to it.
      * @see EmbedCreator
      * @see EmbedBuilder
      */

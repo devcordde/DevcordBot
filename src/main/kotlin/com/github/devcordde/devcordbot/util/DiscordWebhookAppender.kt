@@ -33,12 +33,13 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import kotlinx.coroutines.*
 import kotlinx.datetime.Instant
+import org.slf4j.Marker
 import org.slf4j.MarkerFactory
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.abs
 import java.awt.Color as JColor
 
-val marker = MarkerFactory.getMarker("LOG_TO_DISCORD")
+val marker: Marker = MarkerFactory.getMarker("LOG_TO_DISCORD")
 
 private data class WebhookInfo(val id: Snowflake, val token: String)
 
@@ -47,7 +48,7 @@ private data class WebhookInfo(val id: Snowflake, val token: String)
  */
 class DiscordWebhookAppender : UnsynchronizedAppenderBase<LoggingEvent>(), CoroutineScope {
 
-    var webhookUrl: String? = null
+    private var webhookUrl: String? = null
 
     override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
     private val webhookClient = run {
@@ -68,7 +69,7 @@ class DiscordWebhookAppender : UnsynchronizedAppenderBase<LoggingEvent>(), Corou
      * Initializes the appender.
      */
     override fun start() {
-        webhook = parseUrl(webhookUrl!!)
+        webhook = parseUrl(webhookUrl ?: return)
         started = true
     }
 
@@ -100,7 +101,7 @@ class DiscordWebhookAppender : UnsynchronizedAppenderBase<LoggingEvent>(), Corou
                 // append throwable if attached
                 val throwable = (eventObject.throwableProxy as ThrowableProxy?)?.throwable
                 if (throwable != null) {
-                    // the linebreaks and code blocks also require some characters (we hardcode this value)
+                    // the linebreaks and code blocks also require some characters (we hardcoded this value)
                     val lineChars = "\n\nst``````".length
 
                     @Suppress("DEPRECATION")

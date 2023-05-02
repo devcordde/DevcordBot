@@ -248,7 +248,7 @@ class Config internal constructor(private val config: Konfig) {
         val key: String? by config.property(ConfigSpec.Cse.key)
 
         /**
-         * Id of CSE.
+         * ID of CSE.
          *
          * Default: Empty
          * Key: `CSE_ID`
@@ -263,7 +263,7 @@ class Config internal constructor(private val config: Konfig) {
      */
     inner class Redeployment internal constructor() {
         /**
-         * Host of the redeploy hook.
+         * Host of the redeployment hook.
          *
          * Default: Empty
          * Key: `REDEPLOY_HOST`
@@ -271,7 +271,7 @@ class Config internal constructor(private val config: Konfig) {
         val host: String? by config.property(ConfigSpec.Redeployment.host)
 
         /**
-         * Token to authenticate with the redeploy hook.
+         * Token to authenticate with the redeployment hook.
          *
          * Default: Empty
          * Key: `REDEPLOY_TOKEN`

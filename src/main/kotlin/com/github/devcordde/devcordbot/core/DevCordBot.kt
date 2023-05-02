@@ -27,7 +27,6 @@ import dev.kord.core.event.gateway.ReadyEvent
 import io.ktor.client.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
-import me.schlaubi.autohelp.AutoHelp
 
 /**
  * Main class of the bot
@@ -88,11 +87,6 @@ interface DevCordBot : CoroutineScope {
      * @see Config
      */
     val config: Config
-
-    /**
-     * The autohelp instance of the bot.
-     */
-    val autoHelp: AutoHelp
 
     val discordLogger: DiscordLogger
 }

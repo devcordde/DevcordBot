@@ -40,10 +40,4 @@ interface CommandRegistry<T : AbstractCommand> {
      * Registers the [commands].
      */
     fun registerCommands(vararg commands: T): Unit = commands.forEach { registerCommand(it) }
-
-    /**
-     * Unregisters the [command].
-     * @return whether a command got removed or not
-     */
-    fun unregisterCommand(command: T): Boolean = commandAssociations.remove(command.name) != null
 }
