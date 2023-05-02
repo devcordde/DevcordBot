@@ -16,7 +16,7 @@
 
 plugins {
     application
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm") version "1.8.21"
     kotlin("plugin.serialization") version "1.5.31"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
 }
@@ -87,7 +87,7 @@ dependencies {
 
     // Testing
     testImplementation("org.mockito", "mockito-core", "4.0.0")
-    testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "4.0.0")
+    testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
     testImplementation(platform("org.junit:junit-bom:5.8.1"))
     testImplementation("org.junit.jupiter", "junit-jupiter-api")
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine")
@@ -97,10 +97,16 @@ application {
     mainClass.set("com.github.devcordde.devcordbot.LauncherKt")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
+    }
+}
+
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions {
-            jvmTarget = "16"
             freeCompilerArgs =
                 freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn" + "-Xopt-in=dev.kord.common.annotation.KordPreview" + "-Xopt-in=dev.kord.common.annotation.KordExperimental" + "-Xopt-in=kotlin.time.ExperimentalTime" + "-Xopt-in=kotlin.contracts.ExperimentalContracts"
         }
