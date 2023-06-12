@@ -48,7 +48,8 @@ class SourceCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
         val command = commandName?.let { findCommand(it, context) } ?: return run {
             context.respond(
                 Embeds.info(
-                    "Quellcode", "Den Code vom Bot findest du [hier]($GITHUB_BASE)"
+                    "Quellcode",
+                    "Den Code vom Bot findest du [hier]($GITHUB_BASE)"
                 )
             )
         }
@@ -83,8 +84,9 @@ class SourceCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
             if (childAssociations?.isNotEmpty() == true && next != null && childAssociations.commandAssociations.containsKey(
                     next
                 )
-            )
+            ) {
                 return find(args, index + 1, childAssociations.commandAssociations)
+            }
             return currentCommand
         }
 

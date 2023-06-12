@@ -34,6 +34,6 @@ interface PermissionHandler {
         executor: Member?,
         devCordUser: DevCordUser?,
         acknowledgeBlacklist: Boolean = true,
-        isSlashCommand: Boolean = false,
+        isSlashCommand: Boolean = false
     ): PermissionState
 }
