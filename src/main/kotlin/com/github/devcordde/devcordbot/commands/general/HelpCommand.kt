@@ -97,7 +97,7 @@ class HelpCommand : AbstractSingleCommand<InteractionResponseBehavior>() {
                 "Befehls-Hilfe",
                 """Dies ist eine Liste aller Befehle, die du benutzen kannst,
             | um mehr über einen Befehl zu erfahren, kannst du `/help [command]` ausführen.
-        """.trimMargin()
+                """.trimMargin()
             ) {
                 val commands = context.commandClient.registeredCommands.filter {
                     context.commandClient.permissionHandler.isCovered(
