@@ -51,7 +51,7 @@ fun <S1, S2> similarity(
  * Invokes the UPPER function on [expression].
  */
 fun <S1> upper(
-    expression: ExpressionWithColumnType<S1>,
+    expression: ExpressionWithColumnType<S1>
 ): ExpressionWithColumnType<String?> = CustomStringFunction("UPPER", expression)
 
 /**

@@ -71,8 +71,12 @@ class GoogleCommand : AbstractSingleCommand<PublicInteractionResponseBehavior>()
             "**${it.title}**\n\"${it.snippet?.replace("\n", "") ?: "..."}\"\n[${it.displayLink}](${it.link})"
         }
         Paginator(
-            items = displayResults, itemsPerPage = 1, title = "Suchergebnisse",
-            context = context, user = context.author.asUser(), timeout = 25.seconds
+            items = displayResults,
+            itemsPerPage = 1,
+            title = "Suchergebnisse",
+            context = context,
+            user = context.author.asUser(),
+            timeout = 25.seconds
         )
     }
 }

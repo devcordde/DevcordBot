@@ -35,7 +35,7 @@ import kotlinx.datetime.Clock
  * Sends an event to the Devmarkt bot on emote action.
  */
 class DevmarktRequestUpdater(
-    private val bot: DevCordBot,
+    private val bot: DevCordBot
 ) {
 
     private val config: Config.Devmarkt get() = bot.config.devmarkt
@@ -203,7 +203,6 @@ class DevmarktRequestUpdater(
         reason: String? = null,
         action: String
     ) {
-
         bot.httpClient.post<Unit>(config.baseUrl) {
             url {
                 path("process.php")

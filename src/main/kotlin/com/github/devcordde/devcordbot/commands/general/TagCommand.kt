@@ -500,7 +500,8 @@ class TagCommand : AbstractRootCommand() {
         if (tag != null) {
             context.respond(
                 Embeds.error(
-                    "Tag existiert bereits!", "Dieser Tag existiert bereits."
+                    "Tag existiert bereits!",
+                    "Dieser Tag existiert bereits."
                 )
             )
             return true
@@ -513,7 +514,9 @@ class TagCommand : AbstractRootCommand() {
         if (checkReservedName(name, context)) return null
 
         val foundTag = Tag.findByIdentifier(name)
-        return if (foundTag != null) foundTag else {
+        return if (foundTag != null) {
+            foundTag
+        } else {
             val similarTag =
                 Tag.find { Tags.name similar name }.orderBy(similarity(Tags.name, name) to SortOrder.DESC).firstOrNull()
             val similarTagHint = if (similarTag != null) " Meinst du vielleicht `${similarTag.name}`?" else ""

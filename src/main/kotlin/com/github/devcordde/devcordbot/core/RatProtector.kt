@@ -38,9 +38,14 @@ class RatProtector(private val bot: DevCordBot) {
             val user = user.asUser()
             val member = getUserAsMember()
             if (user.isBot || channelId != bot.config.devrat.channelId || member?.roles?.any { it.id == bot.config.devrat.roleId } == true || bot.commandClient.permissionHandler.isCovered(
-                    Permission.MODERATOR, member, null, false
+                    Permission.MODERATOR,
+                    member,
+                    null,
+                    false
                 ) == PermissionState.ACCEPTED
-            ) return@on
+            ) {
+                return@on
+            }
 
             message.deleteReaction(
                 userId,

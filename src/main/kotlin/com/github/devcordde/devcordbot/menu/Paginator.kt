@@ -105,7 +105,7 @@ class Paginator internal constructor(
     private val color: Color = Colors.BLUE,
     private var currentPage: Int,
     private val pages: Int,
-    private val message: LiveMessage,
+    private val message: LiveMessage
 ) : CoroutineScope by bot {
 
     init {

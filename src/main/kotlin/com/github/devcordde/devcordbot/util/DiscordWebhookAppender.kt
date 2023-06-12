@@ -134,10 +134,11 @@ class DiscordWebhookAppender : UnsynchronizedAppenderBase<LoggingEvent>(), Corou
      * Appends [eventObject].
      */
     override fun append(eventObject: LoggingEvent) {
-        if (eventObject.marker == marker)
+        if (eventObject.marker == marker) {
             launch {
                 appendAsync(eventObject)
             }
+        }
     }
 
     /**
@@ -164,7 +165,9 @@ class DiscordWebhookAppender : UnsynchronizedAppenderBase<LoggingEvent>(), Corou
             }
             return if (level === Level.ERROR) {
                 JColor.RED
-            } else JColor.GRAY
+            } else {
+                JColor.GRAY
+            }
         }
 
         return produceJavaColor().kColor
