@@ -18,7 +18,7 @@ plugins {
     application
     kotlin("jvm") version "1.8.22"
     kotlin("plugin.serialization") version "1.8.21"
-    id("org.jlleitschuh.gradle.ktlint") version "11.3.2"
+    id("org.jlleitschuh.gradle.ktlint") version "11.4.0"
 }
 
 group = "com.github.devcord.devcordbot"
