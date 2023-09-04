@@ -72,7 +72,7 @@ dependencies {
     implementation("net.gcardone.junidecode", "junidecode", "0.4.1")
 
     // Http
-    implementation(platform("io.ktor:ktor-bom:1.6.4"))
+    implementation(platform("io.ktor:ktor-bom:2.3.4"))
     implementation("io.ktor", "ktor-client")
     implementation("io.ktor", "ktor-client-okhttp")
     implementation("io.ktor", "ktor-client-serialization-jvm")
