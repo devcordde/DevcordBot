@@ -45,8 +45,8 @@ dependencies {
     implementation("io.github.microutils", "kotlin-logging", "2.0.11")
     implementation("org.slf4j", "slf4j-api", "2.0.0alpha5")
     implementation("ch.qos.logback", "logback-classic", "1.4.7")
-    implementation(platform("io.sentry:sentry-bom:6.32.0"))
-    implementation(platform("io.sentry:sentry-bom:6.32.0"))
+    implementation(platform("io.sentry:sentry-bom:6.33.1"))
+    implementation(platform("io.sentry:sentry-bom:6.33.1"))
     implementation("io.sentry", "sentry")
     implementation("io.sentry", "sentry-logback")
 
