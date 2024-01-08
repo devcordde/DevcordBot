@@ -51,7 +51,7 @@ dependencies {
     implementation("io.sentry", "sentry-logback")
 
     // Database
-    implementation(platform("org.jetbrains.exposed:exposed-bom:0.44.1"))
+    implementation(platform("org.jetbrains.exposed:exposed-bom:0.46.0"))
     implementation("org.jetbrains.exposed", "exposed-core")
     implementation("org.jetbrains.exposed", "exposed-dao")
     implementation("org.jetbrains.exposed", "exposed-jdbc")
