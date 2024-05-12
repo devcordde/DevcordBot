@@ -118,13 +118,13 @@ class RankCommand : AbstractRootCommand() {
         }
 
         override suspend fun execute(context: Context<InteractionResponseBehavior>) {
-            var offset = context.args.optionalInt("offset") ?: 0
+            var offset = context.args.optionalLong("offset") ?: 0
             var invalidOffset = false
-            var maxOffset = 0
+            var maxOffset = 0L
             if (offset < 0) offset = 0
-            if (offset != 0) {
+            if (offset != 0L) {
                 newSuspendedTransaction {
-                    maxOffset = DatabaseDevCordUser.all().count().toInt()
+                    maxOffset = DatabaseDevCordUser.all().count()
                     if (maxOffset <= offset) {
                         invalidOffset = true
                         offset = if (maxOffset < 10) {
@@ -137,7 +137,7 @@ class RankCommand : AbstractRootCommand() {
             }
 
             val users = newSuspendedTransaction {
-                DatabaseDevCordUser.all().limit(10, offset.toLong())
+                DatabaseDevCordUser.all().limit(10, offset)
                     .orderBy(Users.level to SortOrder.DESC, Users.experience to SortOrder.DESC)
                     .mapIndexed { index, it ->
                         val name =
