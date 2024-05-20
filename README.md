@@ -1,5 +1,8 @@
 # DevcordBot
 
+> [!WARNING]  
+> The repository has been archived due to a lack of maintainers. Issues will be fixed in a future rewrite.
+
 ## setup dev environment
 - copy .env.example to .env
 - enter at minimum DISCORD_TOKEN and GUILD_ID (and all you want to test)
