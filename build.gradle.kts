@@ -44,7 +44,7 @@ dependencies {
     // Logging
     implementation("io.github.microutils", "kotlin-logging", "2.0.11")
     implementation("org.slf4j", "slf4j-api", "2.0.0alpha5")
-    implementation("ch.qos.logback", "logback-classic", "1.3.0-alpha5")
+    implementation("ch.qos.logback", "logback-classic", "1.5.7")
     implementation(platform("io.sentry:sentry-bom:7.9.0"))
     implementation(platform("io.sentry:sentry-bom:7.9.0"))
     implementation("io.sentry", "sentry")
@@ -79,7 +79,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.3.0")
 
     // Config
-    implementation("com.github.uchuhimo.konf", "konf", "master-SNAPSHOT")
+    implementation("com.github.uchuhimo.konf", "konf-core", "master-SNAPSHOT")
     implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.13.+")
 
     // Testing
