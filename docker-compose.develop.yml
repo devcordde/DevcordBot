@@ -8,3 +8,8 @@ services:
     - "5432:5432"
     environment:
       POSTGRES_PASSWORD: "DevcordRoxx2021"
+  bot:
+    build: .
+    volumes:
+      - .env:/usr/app/.env
+      - ./src/main/resources/logback.xml:/usr/app/logback.xml
